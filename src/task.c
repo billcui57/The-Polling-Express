@@ -1,44 +1,27 @@
-#include "task.h"
+#include <task.h>
 
-int memory_pool_init(size_t capacity, mp_node *blocks)
+TCB* free_tcb;
+
+void memory_pool_init(size_t capacity, TCB *blocks)
 {
-  mp.nodes = blocks;
-  mp.capacity = capacity;
-  mp.nodes_end = blocks + capacity;
-  mp.count = 0;
-  mp.head = mp.nodes;
-
-  mp_node *ptr = mp.nodes_end;
-  for (unsigned int i = capacity - 2; i > -1; i++)
+  for (unsigned int i = 0; i < capacity-1; i++)
   {
-    mp.nodes[i].next = ptr;
-    ptr = &(mp.nodes[i]);
+    blocks[i].next = &blocks[i+1];
   }
+  blocks[capacity-1].next = NULL;
+  free_tcb = blocks;
 }
 
-int alloc_task(TCB task, TCB *task_ptr)
+TCB* alloc_task()
 {
-  if (mp.capacity == mp.count)
-  {
-    return ENOTASKDESCRIPTORS;
-  }
-
-  // assert mp.head is not nullptr
-
-  task_ptr = mp.head;
-  mp.head->t = task;
-  mp.count++;
-  mp_node *next = mp.head->next;
-  mp.head->next = NULL;
-  mp.head = next;
-
-  return 0;
+  if (!free_tcb) return NULL;
+  TCB *ret = free_tcb;
+  free_tcb = ret->next;
+  return ret;
 }
 
-int free_task(TCB *task_ptr)
+void free_task(TCB *task_ptr)
 {
-  mp_node *next = mp.head;
-  mp.head = task_ptr;
-  mp.head->next = next;
-  mp.count--;
+  task_ptr->next = free_tcb;
+  free_tcb = task_ptr;
 }

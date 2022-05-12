@@ -1,0 +1,24 @@
+#pragma once
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#define COM1	0
+#define COM2	1
+
+typedef struct {
+    void *base_addr;
+} uart;
+
+bool uart_init(uart *u, int channel);
+bool uart_can_read(uart *u);
+bool uart_can_write(uart *u);
+void uart_put_char(uart *u, uint8_t c);
+uint8_t uart_get_char(uart *u);
+
+void uart_put_str_block(uart *u, char *s);
+void panic(char *s);
+
+void timer_init();
+uint32_t timer_read();
+uint32_t timer_raw();
