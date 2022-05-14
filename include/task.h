@@ -27,7 +27,9 @@ void scheduler_init(TCB **_heap);
 
 TCB *alloc_task(unsigned int priority, char name);
 
-void remove_from_ready_queue(TCB *t);
+void add_to_ready_queue(TCB *t);
+
+TCB *pop_ready_queue();
 
 void free_task(TCB *task_ptr);
 

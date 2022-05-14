@@ -29,7 +29,7 @@ void swap(unsigned int a, unsigned int b) {
 
 void bottom_up_heapify(unsigned int i) {
 
-  KASSERT((i >= 0) && (i < count), 12);
+  KASSERT((i >= 0) && (i < count), "Heap index should be in bounds");
 
   if (i == 0) {
     return;
@@ -66,8 +66,6 @@ void top_down_heapify(unsigned int i) {
   }
 }
 
-void heap_pop() {}
-
 TCB *alloc_task(unsigned int priority, char name) {
   if (!free_tcb)
     return NULL;
@@ -77,32 +75,32 @@ TCB *alloc_task(unsigned int priority, char name) {
   ret->name = name;
   ret->priority = priority;
 
-  KASSERT(count < capacity, 23);
-
-  // priority queue
-  ready_queue[count] = ret;
-  count++;
-  bottom_up_heapify(count - 1);
-
   return ret;
 }
 
-void remove_from_ready_queue(TCB *t) {
-  KASSERT(t != NULL, 1);
-  KASSERT(count > 0, 2);
-  t->priority = 100;
+void add_to_ready_queue(TCB *t) {
+  KASSERT(t != NULL, "TCB should not be NULL");
+  KASSERT(count < capacity, "Ready queue should have space to add");
 
-  for (unsigned int i = 0; i < capacity; i++) {
-    if (ready_queue[i] == t) {
-      bottom_up_heapify(i);
-    }
-  }
+  ready_queue[count] = t;
+  count++;
+
+  bottom_up_heapify(count - 1);
+}
+
+TCB *pop_ready_queue() {
+
+  KASSERT(count > 0, "Ready queue should contain TCB's to pop");
+
+  TCB *ret = ready_queue[0];
 
   ready_queue[0] = ready_queue[count - 1];
 
   count--;
 
   top_down_heapify(0);
+
+  return ret;
 }
 
 void free_task(TCB *task_ptr) {

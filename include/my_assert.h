@@ -1,15 +1,12 @@
-#include "stdint.h"
-#include "stdbool.h"
 #include "hal.h"
+#include "stdbool.h"
+#include "stdint.h"
 
-#define KASSERT(expr, id) \
-  do                      \
-  {                       \
-    if (!(expr))          \
-    {                     \
-      my_assert(id);      \
-    }                     \
+#define KASSERT(expr, str)                                                     \
+  do {                                                                         \
+    if (!(expr)) {                                                             \
+      my_assert(str);                                                          \
+    }                                                                          \
   } while (0)
 
 void assert_init(uart *u);
-
