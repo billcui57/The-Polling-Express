@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.rmd": "markdown",
+    "task.h": "c",
+    "my_assert.h": "c"
+  }
+}
