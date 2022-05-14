@@ -1,30 +1,44 @@
 #include <hal.h>
+#include <kprintf.h>
 #include <my_assert.h>
 #include <task.h>
 
 void kmain() {
   uart pc;
   uart_init(&pc, COM2);
-  uart_put_str_block(&pc, "Hi\r\n");
   size_t capacity = 10;
   TCB backing[capacity];
   TCB *stash[capacity];
   memory_pool_init(capacity, backing);
+
+  TCB *heap[capacity];
+  scheduler_init(heap);
+
+  print_uart = &pc;
+
   assert_init(&pc);
 
   for (unsigned int i = 0; i < capacity; i++) {
-    TCB *t = alloc_task();
-    t->name = 'a' + i;
-    t->val = i;
+    TCB *t = alloc_task(i, 'a' + i);
     stash[i] = t;
   }
-  if (alloc_task())
-    uart_put_str_block(&pc, "?\r\rn");
+
+  // for (unsigned int i = 0; i < capacity; i++) {
+  //   free_task(stash[i]);
+  // }
+
   for (unsigned int i = 0; i < capacity; i++) {
-    free_task(stash[i]);
+    printf("%c:%d,", heap[i]->name, heap[i]->priority);
   }
 
-  KASSERT(4 < 2, 2);
+  printf("\r\n");
 
-  uart_put_str_block(&pc, "No Crash!!! \r\n");
+  remove_from_ready_queue(stash[3]);
+
+  for (unsigned int i = 0; i < capacity; i++) {
+    printf("%c:%d,", heap[i]->name, heap[i]->priority);
+  }
+  printf("\r\n");
+
+  printf("No Crash!!! \r\n");
 }
