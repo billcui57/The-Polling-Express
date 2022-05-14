@@ -23,7 +23,7 @@ typedef struct TCB {
 
 void memory_pool_init(size_t cap, TCB *blocks);
 
-void scheduler_init(TCB **_heap);
+void scheduler_init(TCB **ready_queue);
 
 TCB *alloc_task(unsigned int priority, char name);
 

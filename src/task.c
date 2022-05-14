@@ -4,7 +4,7 @@
 TCB *free_tcb;
 size_t capacity;
 
-TCB **ready_queue;
+TCB **_ready_queue;
 unsigned int count;
 
 void memory_pool_init(size_t cap, TCB *blocks) {
@@ -16,15 +16,15 @@ void memory_pool_init(size_t cap, TCB *blocks) {
   capacity = cap;
 }
 
-void scheduler_init(TCB **_heap) {
-  ready_queue = _heap;
+void scheduler_init(TCB **ready_queue) {
+  _ready_queue = ready_queue;
   count = 0;
 }
 
 void swap(unsigned int a, unsigned int b) {
-  TCB *temp = ready_queue[a];
-  ready_queue[a] = ready_queue[b];
-  ready_queue[b] = temp;
+  TCB *temp = _ready_queue[a];
+  _ready_queue[a] = _ready_queue[b];
+  _ready_queue[b] = temp;
 }
 
 void bottom_up_heapify(unsigned int i) {
@@ -37,7 +37,7 @@ void bottom_up_heapify(unsigned int i) {
 
   unsigned int parent = (i - 1) / 2;
 
-  if (ready_queue[i]->priority > ready_queue[parent]->priority) {
+  if (_ready_queue[i]->priority > _ready_queue[parent]->priority) {
     swap(i, parent);
     // Recursively heapify the parent node
     bottom_up_heapify(parent);
@@ -50,11 +50,11 @@ void top_down_heapify(unsigned int i) {
   unsigned int r = 2 * i + 2; // right = 2*i + 2
 
   // If left child is larger than root
-  if (l < count && ready_queue[l] > ready_queue[largest])
+  if (l < count && _ready_queue[l] > _ready_queue[largest])
     largest = l;
 
   // If right child is larger than largest so far
-  if (r < count && ready_queue[r] > ready_queue[largest])
+  if (r < count && _ready_queue[r] > _ready_queue[largest])
     largest = r;
 
   // If largest is not root
@@ -82,7 +82,7 @@ void add_to_ready_queue(TCB *t) {
   KASSERT(t != NULL, "TCB should not be NULL");
   KASSERT(count < capacity, "Ready queue should have space to add");
 
-  ready_queue[count] = t;
+  _ready_queue[count] = t;
   count++;
 
   bottom_up_heapify(count - 1);
@@ -92,9 +92,9 @@ TCB *pop_ready_queue() {
 
   KASSERT(count > 0, "Ready queue should contain TCB's to pop");
 
-  TCB *ret = ready_queue[0];
+  TCB *ret = _ready_queue[0];
 
-  ready_queue[0] = ready_queue[count - 1];
+  _ready_queue[0] = _ready_queue[count - 1];
 
   count--;
 
