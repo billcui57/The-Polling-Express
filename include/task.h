@@ -32,15 +32,4 @@ void add_to_ready_queue(TCB *t);
 TCB *pop_ready_queue();
 
 void free_task(TCB *task_ptr);
-
-int Create(int priority, void (*function)());
-
-int MyTid();
-
-int MyParentTid();
-
-void Yield();
-
-void Exit();
-
 #endif /* INC_TASK_H */

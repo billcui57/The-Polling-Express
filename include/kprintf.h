@@ -41,8 +41,6 @@
 extern "C" {
 #endif
 
-uart *print_uart;
-
 /**
  * Output a character to a custom device like UART, used by the printf()
  * function This function is declared here only. You have to write your custom
