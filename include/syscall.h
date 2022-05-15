@@ -1,5 +1,6 @@
 #pragma once
 
+#define SYSCALL_IRQ 0
 #define SYSCALL_CREATE 1
 #define SYSCALL_MYTID 2
 #define SYSCALL_MYPARENTTID 3

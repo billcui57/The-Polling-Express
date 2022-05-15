@@ -30,8 +30,9 @@ typedef struct user_task {
 } user_task;
 
 void init_user_task(user_task *t, void (*func)());
-
+int run_user(registers *r, int *data);
+void set_return(registers *r, int data);
 void switch_user(registers *r);
-extern void return_irq();
-extern void return_swi();
+void return_irq();
+void return_swi();
 extern registers kernel_reg;

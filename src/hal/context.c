@@ -19,3 +19,14 @@ void init_user_task(user_task *t, void (*func)()) {
   t->reg.r15 = func;
   t->reg.psr = (1 << 7) | (0b10000);
 }
+
+int run_user(registers *r, int *data) {
+  switch_user(r);
+  if (r->r15 & 1) {
+    r->r15--;
+    return SYSCALL_IRQ;
+  }
+  *data = r->r0;
+  return (*(uint32_t *)(r->r15 - 4)) & 0xFFFFFF;
+}
+void set_return(registers *r, int data) { r->r0 = data; }
