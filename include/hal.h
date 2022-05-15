@@ -1,13 +1,13 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#define COM1	0
-#define COM2	1
+#define COM1 0
+#define COM2 1
 
 typedef struct {
-    void *base_addr;
+  void *base_addr;
 } uart;
 
 bool uart_init(uart *u, int channel);
