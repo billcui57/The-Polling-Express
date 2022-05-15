@@ -7,16 +7,14 @@ size_t capacity;
 TCB **_ready_queue;
 unsigned int count;
 
-void memory_pool_init(size_t cap, TCB *blocks) {
+void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue) {
   for (unsigned int i = 0; i < cap - 1; i++) {
+    blocks[i].tid = i;
     blocks[i].next = &blocks[i + 1];
   }
   blocks[cap - 1].next = NULL;
   free_tcb = blocks;
   capacity = cap;
-}
-
-void scheduler_init(TCB **ready_queue) {
   _ready_queue = ready_queue;
   count = 0;
 }
@@ -66,16 +64,18 @@ void top_down_heapify(unsigned int i) {
   }
 }
 
-TCB *alloc_task(unsigned int priority, char name) {
+int scheduler_add(int priority, void (*func)(), int parentTid) {
   if (!free_tcb)
-    return NULL;
+    return ENOTASKDESCRIPTORS;
   TCB *ret = free_tcb;
   free_tcb = ret->next;
   ret->next = NULL;
-  ret->name = name;
+  ret->parentTid = parentTid;
   ret->priority = priority;
-
-  return ret;
+  ret->state = READY;
+  init_user_task(&ret->context, func);
+  add_to_ready_queue(ret);
+  return ret->tid;
 }
 
 void add_to_ready_queue(TCB *t) {
@@ -107,3 +107,5 @@ void free_task(TCB *task_ptr) {
   task_ptr->next = free_tcb;
   free_tcb = task_ptr;
 }
+
+bool scheduler_empty() { return count == 0; }

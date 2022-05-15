@@ -1,3 +1,5 @@
+#pragma once
+
 #include "hal.h"
 #include "stdbool.h"
 #include "stdint.h"
@@ -10,3 +12,4 @@
   } while (0)
 
 void assert_init(uart *u);
+void my_assert(char *str);
