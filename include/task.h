@@ -17,15 +17,4 @@ void memory_pool_init(size_t capacity, TCB *blocks);
 TCB *alloc_task();
 
 void free_task(TCB *task_ptr);
-
-int Create(int priority, void (*function)());
-
-int MyTid();
-
-int MyParentTid();
-
-void Yield();
-
-void Exit();
-
 #endif /* INC_TASK_H */

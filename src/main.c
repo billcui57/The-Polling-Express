@@ -1,25 +1,20 @@
+#include <context.h>
 #include <hal.h>
-#include <task.h>
+#include <user.h>
+
+registers kernel_reg;
+user_task u;
+uart pc;
 
 void kmain() {
-  uart pc;
   uart_init(&pc, COM2);
-  uart_put_str_block(&pc, "Hi\r\n");
-  size_t capacity = 10;
-  TCB backing[capacity];
-  TCB *stash[capacity];
-  memory_pool_init(capacity, backing);
-
-  for (unsigned int i = 0; i < capacity; i++) {
-    TCB *t = alloc_task();
-    t->name = 'a' + i;
-    t->val = i;
-    stash[i] = t;
+  uart_put_str_block(&pc, "Kernel Init\r\n");
+  *((void (**)())0x28) = &return_swi;
+  __asm__ volatile("mov r9, %0" ::"irm"(&kernel_reg));
+  init_user_task(&u, task_test1);
+  while (true) {
+    uart_put_str_block(&pc, "Kernel Loop\r\n");
+    switch_user(&u.reg);
   }
-  if (alloc_task())
-    uart_put_str_block(&pc, "?\r\rn");
-  for (unsigned int i = 0; i < capacity; i++) {
-    free_task(stash[i]);
-  }
-  uart_put_str_block(&pc, "No Crash!!! \r\n");
+  uart_put_str_block(&pc, "Exiting\r\n");
 }

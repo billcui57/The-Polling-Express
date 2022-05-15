@@ -10,6 +10,8 @@ typedef struct {
   void *base_addr;
 } uart;
 
+extern uart pc;
+
 bool uart_init(uart *u, int channel);
 bool uart_can_read(uart *u);
 bool uart_can_write(uart *u);
