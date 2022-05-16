@@ -4,8 +4,6 @@
 #include "ts7200.h"
 #include <stdbool.h>
 
-#define NOTDEFINED -99999
-
 #define PMODE 1     // periodic mode
 #define FMODE 0     // freerunning mode
 #define SLOWCLOCK 0 // 2kHz
@@ -15,23 +13,19 @@
 
 #define TIMER3INITVAL 4294967295
 
-#define ETDNE 1 // Timer num does not exist
-
-typedef struct timer
-{
+typedef struct timer {
   int num;
   bool is_enabled;
-  int *control; // actual register for changing
-  int *load;
-  int *value;
+  unsigned int *control; // actual register for changing
+  unsigned int *load;
+  unsigned int *value;
   int clock_rate;
 } timer;
 
-int timer_init(timer *t, int timer_num);
-int stop_timer(timer *t);
-int start_timer(timer *t);
-int read_timer(timer *t, unsigned int *val);
-int wait(timer *t, unsigned int ticks);
+void timer_init(timer *t, int timer_num);
+void stop_timer(timer *t);
+void start_timer(timer *t);
+void read_timer(timer *t, unsigned int *val);
 bool has_time_elapsed(timer *t, unsigned int start_time, unsigned int ticks);
 void get_formatted_curr_time(timer *t, int *result);
 

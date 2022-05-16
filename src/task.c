@@ -9,6 +9,8 @@ size_t capacity;
 TCB **_ready_queue;
 unsigned int count;
 
+int cmp_priority(unsigned int a, unsigned int b);
+
 void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t) {
   for (unsigned int i = 0; i < cap - 1; i++) {
     blocks[i].tid = i;
