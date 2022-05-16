@@ -8,7 +8,8 @@ int Create(int priority, void (*function)()) {
                    "swi %[syscall] \n\t"
                    "mov %[ret], r0"
                    : [ret] "=r"(ret)
-                   : [syscall] "i"(SYSCALL_CREATE), [arg] "r"(&a));
+                   : [syscall] "i"(SYSCALL_CREATE), [arg] "r"(&a)
+                   : "r0");
   return ret;
 }
 
@@ -17,7 +18,8 @@ int MyTid() {
   __asm__ volatile("swi %[syscall] \n\t"
                    "mov %[ret], r0"
                    : [ret] "=r"(ret)
-                   : [syscall] "i"(SYSCALL_MYTID));
+                   : [syscall] "i"(SYSCALL_MYTID)
+                   : "r0");
   return ret;
 }
 int MyParentTid() {
@@ -25,7 +27,8 @@ int MyParentTid() {
   __asm__ volatile("swi %[syscall] \n\t"
                    "mov %[ret], r0"
                    : [ret] "=r"(ret)
-                   : [syscall] "i"(SYSCALL_MYPARENTTID));
+                   : [syscall] "i"(SYSCALL_MYPARENTTID)
+                   : "r0");
   return ret;
 }
 
