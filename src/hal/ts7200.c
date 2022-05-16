@@ -55,17 +55,3 @@ void panic(char *s) {
     i++;
   }
 }
-
-void timer_init() {
-  uint32_t *load = (uint32_t *)(TIMER3_BASE + LDR_OFFSET);
-  uint32_t *ctrl = (uint32_t *)(TIMER3_BASE + CRTL_OFFSET);
-  *ctrl = 0;
-  *load = 0;
-  *ctrl = ENABLE_MASK | CLKSEL_MASK;
-}
-
-uint32_t timer_read() {
-  return (0xffffffff - *(uint32_t *)(TIMER3_BASE + VAL_OFFSET)) / 508;
-}
-
-uint32_t timer_raw() { return *(uint32_t *)(TIMER3_BASE + VAL_OFFSET); }

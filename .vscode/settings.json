@@ -4,6 +4,12 @@
     "task.h": "c",
     "my_assert.h": "c",
     "chrono": "c",
-    "sstream": "c"
+    "sstream": "c",
+    "syscall.h": "c",
+    "array": "c",
+    "fstream": "c",
+    "system_error": "c",
+    "thread": "c",
+    "bit": "c"
   }
 }

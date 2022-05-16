@@ -4,6 +4,7 @@
 #include <context.h>
 #include <math.h>
 #include <stddef.h>
+#include <timer.h>
 
 #define EINVALIDPRIORITY -1   // invalid priority
 #define ENOTASKDESCRIPTORS -2 // kernel is out of task descriptors
@@ -28,9 +29,11 @@ typedef struct TCB {
   tcb_state state;
   int parentTid;
   user_task context;
+
+  unsigned int added_time;
 } TCB;
 
-void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue);
+void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t);
 
 int scheduler_add(int priority, void (*func)(), int parentTid);
 

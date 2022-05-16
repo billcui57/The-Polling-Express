@@ -18,9 +18,10 @@ void task_k1init() {
 
 void task_k1test() {
   int me = MyTid();
+  printf(&pc, "Task %d: running\r\n", me);
   int parent = MyParentTid();
-  printf(&pc, "Me: %d Parent: %d \r\n", me, parent);
+  printf(&pc, "Task %d: yielding\r\n", me);
   Yield();
-  printf(&pc, "Me: %d Parent: %d \r\n", me, parent);
+  printf(&pc, "Task %d: exiting\r\n", me);
   Exit();
 }

@@ -7,6 +7,10 @@
  *
  */
 
+#define TIMER1 0 // 16 bits
+#define TIMER2 1 // 16 bits
+#define TIMER3 2 // 32 bits
+
 #define TIMER1_BASE 0x80810000
 #define TIMER2_BASE 0x80810020
 #define TIMER3_BASE 0x80810080

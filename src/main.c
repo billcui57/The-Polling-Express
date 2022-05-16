@@ -4,17 +4,22 @@
 #include <my_assert.h>
 #include <syscall.h>
 #include <task.h>
+#include <timer.h>
 #include <user.h>
 
 registers kernel_reg;
 uart pc;
 
 void kmain() {
+  timer t;
+  timer_init(&t, TIMER3);
+  start_timer(&t);
+
   uart_init(&pc, COM2);
   size_t capacity = 10;
   TCB backing[capacity];
   TCB *heap[capacity];
-  scheduler_init(capacity, backing, heap);
+  scheduler_init(capacity, backing, heap, &t);
 
   assert_init(&pc);
 

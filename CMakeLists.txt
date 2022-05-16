@@ -15,5 +15,6 @@ src/syscall.c
 src/my_assert.c
 src/kprintf.c
 src/user.c
+src/timer.c
 )
 target_link_libraries(kernel -static gcc)
