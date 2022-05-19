@@ -7,7 +7,6 @@
 #include <timer.h>
 #include <user.h>
 
-registers kernel_reg;
 uart pc;
 
 void kmain() {
@@ -24,7 +23,6 @@ void kmain() {
   assert_init(&pc);
 
   *((void (**)())0x28) = &return_swi;
-  __asm__ volatile("mov r9, %0" ::"irm"(&kernel_reg));
 
   scheduler_add(0, task_k1init, -1);
 

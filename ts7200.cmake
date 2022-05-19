@@ -10,7 +10,7 @@ ENDIF()
 
 set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
 
-set(CMAKE_C_FLAGS_INIT "-fPIC -ffreestanding -Wall -mcpu=arm920t -O0 -ggdb -msoft-float")
+set(CMAKE_C_FLAGS_INIT "-fPIC -ffreestanding -Wall -mcpu=arm920t -msoft-float")
 set(CMAKE_CXX_FLAGS_INIT "-fPIC -ffreestanding -Wall -mcpu=arm920t -msoft-float")
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-T ${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld -nostdlib -Wl,-nmagic")
 
