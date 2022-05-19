@@ -1,5 +1,9 @@
 #include <context.h>
 #include <syscall.h>
+
+registers kernel_reg;
+registers *user_reg;
+
 void init_user_task(user_task *t, void (*func)()) {
   t->reg.r0 = 0;
   t->reg.r1 = 0;
@@ -10,7 +14,7 @@ void init_user_task(user_task *t, void (*func)()) {
   t->reg.r6 = 0;
   t->reg.r7 = 0;
   t->reg.r8 = 0;
-  t->reg.r9 = &t->reg;
+  t->reg.r9 = 0;
   t->reg.r10 = 0;
   t->reg.r11 = 0;
   t->reg.r12 = 0;
@@ -21,7 +25,8 @@ void init_user_task(user_task *t, void (*func)()) {
 }
 
 int run_user(registers *r, int *data) {
-  switch_user(r);
+  user_reg = r;
+  switch_user();
   if (r->r15 & 1) {
     r->r15--;
     return SYSCALL_IRQ;
