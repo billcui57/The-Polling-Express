@@ -6,6 +6,7 @@ uart *term;
 void assert_init(uart *t) { term = t; }
 
 void my_assert(char *str) {
+  assert_thrown = true;
 
   printf(term, "                  "
                "_-====-__-======-__-========-_____-============-__\r\n");

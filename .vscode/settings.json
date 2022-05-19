@@ -10,6 +10,8 @@
     "fstream": "c",
     "system_error": "c",
     "thread": "c",
-    "bit": "c"
+    "bit": "c",
+    "ts7200.h": "c",
+    "timer.h": "c"
   }
 }
