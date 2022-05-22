@@ -2,6 +2,7 @@
 #include "kprintf.h"
 
 uart *term;
+bool assert_thrown;
 
 void assert_init(uart *t) { term = t; }
 

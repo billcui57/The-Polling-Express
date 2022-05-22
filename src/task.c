@@ -16,6 +16,7 @@ void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t) {
     blocks[i].tid = i;
     blocks[i].next = &blocks[i + 1];
   }
+  blocks[cap - 1].tid = cap - 1;
   blocks[cap - 1].next = NULL;
   free_tcb = blocks;
   capacity = cap;
@@ -89,7 +90,6 @@ void add_to_ready_queue(TCB *t) {
 
   read_timer(_timer, &(t->added_time));
 
-  _ready_queue[count] = t;
   count++;
 
   unsigned int i = count - 1;

@@ -27,6 +27,7 @@ void init_user_task(user_task *t, void (*func)()) {
 int run_user(registers *r, int *data) {
   user_reg = r;
   switch_user();
+  user_reg = 0;
   if (r->r15 & 1) {
     r->r15--;
     return SYSCALL_IRQ;
