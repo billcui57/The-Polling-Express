@@ -3,9 +3,12 @@ Edwin Zhang and Bill Cui
 
 ## Path to executable
 
-`/u7/b22cui/cs452/cs452-a1/build/kernel`
+`cs452-a1/build/kernel`
 
 ## Access, make, operate
+`git clone ist-git@git.uwaterloo.ca:b22cui/cs452-a1.git`
+
+`cd cs452-a1`
 
 `chmod a+x compile_target.sh`
 
@@ -15,13 +18,13 @@ Edwin Zhang and Bill Cui
 
 Then, move the `kernel` onto the track computer
 
-`cp kernel /u/cs452/tftp/ARM/b22cui`
+`cp kernel /u/cs452/tftp/ARM/e42zhang`
 
-`chmod o+r /u/cs452/tftp/ARM/b22cui/kernel`
+`chmod o+r /u/cs452/tftp/ARM/e42zhang/kernel`
 
 To run the program, issue the following:
 
-1. `load -h 10.15.167.5 ARM/b22cui/kernel`
+1. `load -h 10.15.167.5 ARM/e42zhang/kernel`
 
 2. `go`
 
@@ -29,7 +32,7 @@ To run the program, issue the following:
 
 To run the program, issue the following:
 
-1. `load -h 10.15.167.5 ARM/b22cui/kernel`
+1. `load -h 10.15.167.5 ARM/e42zhang/kernel`
 
 2. `go`
 
@@ -51,9 +54,7 @@ Tasks contain the stack (an array of 32 bit integers), and its register struct. 
 
 Since the word size of ARM is 4 bytes, the stack is an array of `uint32_t`.
 
-The stack size was chosen to be $2048 \cdot word_size$. This allows for, theoretically, $\frac{32 \cdot 10^{6}}{2048 \cdot 4} \approx 3906$ tasks. In reality that is definitely not the case because available memory would have been used to store other data structures as well. Thus, each task has a stack size of $2048 \cdot wordsize = 8192$ bytes. 
-
-TODO: WHY stack size
+The stack size was chosen to be $2048 \cdot wordsize$. This allows for, theoretically, $\frac{32 \cdot 10^{6}}{2048 \cdot 4} \approx 3906$ tasks. In reality that is definitely not the case because available memory would have been used to store other data structures as well. Thus, each task has a stack size of $2048 \cdot wordsize = 8192$ bytes. 
 
 For K1, the maximum number of tasks allowed (`MAX_NUM_TASKS`) was chosen to be 10. This is because only a small fixed number of tasks are executed in this version of the kernel. This number will be increased for K2.
 
@@ -61,7 +62,7 @@ For K1, the maximum number of tasks allowed (`MAX_NUM_TASKS`) was chosen to be 1
 
 The scheduler uses a fixed size array based heap that stores the pointers of the TCB's. The actual contents of the TCB's are stored in the TCB array declared on the stack of the kernel's main function.
 
-The heap is a max heap and thus allows for tasks with the highest priorities to be popped in $O(log(n))$ time. For tasks that have equivalent priorities, the timestamp of when they were added to the queue is used as a tie breaker. This also ensures that the heap behaves like a FIFO queue when all the tasks have the same priorities.
+The heap is a max heap and thus allows for tasks with the highest priorities to be popped in $O(\log(n))$ time. For tasks that have equivalent priorities, the timestamp of when they were added to the queue is used as a tie breaker. This also ensures that the heap behaves like a FIFO queue when all the tasks have the same priorities.
 
 
 ### Context Switching
@@ -75,9 +76,11 @@ to reference the register structs directly in assembly. Registers can be accesse
 
 The context switching implementation can be better explained by following through with a walkthrough of a sample program flow:
 
-Upon creating and adding the first task, the kernel goes into a continuous loop. It first takes the task at the head of the ready queue and selects for it to be executed. The task register pointer `user_reg` is updated to point to the register struct of the chosen task. `switch_user` is then called which saves the kernel registers. In particular, the return address of `switch_user` is stored as the PC regisiter in the register struct, so that when kernel state is restored the execution will resume past `switch_user`. The user task's registers are then loaded, and thus the user task continues execution.
+Upon creating and adding the first task, the kernel goes into a continuous loop. It first takes the task at the head of the ready queue and selects for it to be executed. The task register pointer `user_reg` is updated to point to the register struct of the chosen task. `switch_user` is then called which saves the kernel registers. In particular, the return address of `switch_user` is stored as the PC register in the register struct, so that when kernel state is restored the execution will resume past `switch_user`. The user task's registers are then loaded, and thus the user task continues execution.
 
-When the user task performs a syscall, for example `Create(...)`, the arguments are placed on to `r0`. Then a software interrupt is triggered. PC is then set to `return_swi` by the hardware. User task registers are stored and the kernel state is reloaded. As mentioned earlier, since the PC of the kernel was saved to be the return register of `switch_user`, the kernel continues execution at the instructin right after `switch_user`. The arguments are then retrieved from the user task's `r0`. The type of the syscall is retrieved by retrieving the parameter of the `swi [...]` instruction that was executed by the user task. Since that instruction was the last instruction to be executed by the user task before the software interrupt, we were able to retrieve it by just decrementing the PC of the user task by 4. Once the system call has been serviced, the return result is stored in user task's `r0`. The user task is then placed back into the ready queue to be executed in the future. When the user task is selected in the future to continue execution, and once its registers and PC are restored, it would continue execution from the point after the `swi` instruction. The return result is stored in `r0`, which is retrieved and returned as a C function return. From the user task's point of view, it has simply called a function and the function has returned a value. This luxury of simplicity enjoyed by the user task is the materialization of the blood, sweat, and tears of kernel developers (me).
+When the user task performs a syscall, for example `Create(...)`, the arguments are placed on to `r0`. Then a software interrupt is triggered. PC is then set to `return_swi` by the hardware. User task registers are stored and the kernel state is reloaded. As mentioned earlier, since the PC of the kernel was saved to be the return register of `switch_user`, the kernel continues execution at the instruction right after `switch_user`. `switch_user` and `return_swi` combine to create the appearance that running the user task is as simple as calling a function. From the kernel's point of view, it has simply called a function and the function has returned what to do next. This luxury of simplicity enjoyed by the kernel is the materialization of the blood, sweat, and tears of assembly developers (me). 
+
+The arguments are then retrieved from the user task's `r0`. The type of the syscall is retrieved by retrieving the parameter of the `swi [...]` instruction that was executed by the user task. Since that instruction was the last instruction to be executed by the user task before the software interrupt, we were able to retrieve it by just decrementing the PC of the user task by 4. Once the system call has been serviced, the return result is stored in user task's `r0`. The user task is then placed back into the ready queue to be executed in the future. When the user task is selected in the future to continue execution, and once its registers and PC are restored, it would continue execution from the point after the `swi` instruction. The return result is stored in `r0`, which is retrieved and returned as a C function return. From the user task's point of view, it has simply called a function and the function has returned a value. This luxury of simplicity enjoyed by the user task is the materialization of the blood, sweat, and tears of kernel developers (also me). 
 
 ### Program Output Explained
 
@@ -106,3 +109,7 @@ Me: 2 Parent: 0
 ```
 
 Finally, both tasks complete and the kernel has no more tasks in the ready queue. The while loop terminates and the kernel exits.
+
+### Creating your own user tasks
+
+Since user task's have their lr's initialized to call Exit(), there is no need for users to explicitly include `Exit()` in their user tasks.
