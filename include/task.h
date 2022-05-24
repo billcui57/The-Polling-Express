@@ -9,6 +9,8 @@
 #define EINVALIDPRIORITY -1   // invalid priority
 #define ENOTASKDESCRIPTORS -2 // kernel is out of task descriptors
 
+#define MAX_NUM_TASKS 10
+
 typedef enum tcb_state {
   ACTIVE,
   READY,

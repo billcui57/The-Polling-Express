@@ -15,10 +15,9 @@ void kmain() {
   start_timer(&t);
 
   uart_init(&pc, COM2);
-  size_t capacity = 10;
-  TCB backing[capacity];
-  TCB *heap[capacity];
-  scheduler_init(capacity, backing, heap, &t);
+  TCB backing[MAX_NUM_TASKS];
+  TCB *heap[MAX_NUM_TASKS];
+  scheduler_init(MAX_NUM_TASKS, backing, heap, &t);
 
   assert_init(&pc);
 
