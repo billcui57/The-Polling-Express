@@ -6,9 +6,6 @@
 #include <stddef.h>
 #include <timer.h>
 
-#define EINVALIDPRIORITY -1   // invalid priority
-#define ENOTASKDESCRIPTORS -2 // kernel is out of task descriptors
-
 #define MAX_NUM_TASKS 10
 
 typedef enum tcb_state {
@@ -33,6 +30,9 @@ typedef struct TCB {
   user_task context;
 
   unsigned int added_time;
+
+  struct TCB *want_send;
+  struct TCB *want_send_end;
 } TCB;
 
 void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t);

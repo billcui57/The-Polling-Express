@@ -8,6 +8,16 @@
 #define SYSCALL_EXIT 5
 #define SYSCALL_DESTROY 6
 
+#define SYSCALL_SEND 7
+#define SYSCALL_RECEIVE 8
+#define SYSCALL_REPLY 9
+
+#define EINVALIDPRIORITY -1   // invalid priority
+#define ENOTASKDESCRIPTORS -2 // kernel is out of task descriptors
+
+#define EINVALIDTID -1   // tid isn't an active task
+#define ENOTREPLYWAIT -2 // target isn't waiting for reply
+
 typedef struct {
   int priority;
   void (*function)();

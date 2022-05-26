@@ -1,4 +1,5 @@
 #include "my_assert.h"
+#include <syscall.h>
 #include <task.h>
 
 timer *_timer;
@@ -12,11 +13,15 @@ unsigned int count;
 int cmp_priority(unsigned int a, unsigned int b);
 
 void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t) {
-  for (unsigned int i = 0; i < cap - 1; i++) {
+  for (unsigned int i = 0; i < cap; i++) {
+    blocks[i].state = ZOMBIE;
     blocks[i].tid = i;
+    blocks[i].want_send = NULL;
+    blocks[i].want_send_end = NULL;
+  }
+  for (unsigned int i = 0; i < cap - 1; i++) {
     blocks[i].next = &blocks[i + 1];
   }
-  blocks[cap - 1].tid = cap - 1;
   blocks[cap - 1].next = NULL;
   free_tcb = blocks;
   capacity = cap;

@@ -30,7 +30,8 @@ typedef struct user_task {
 } user_task;
 
 void init_user_task(user_task *t, void (*func)());
-int run_user(registers *r, int *data);
+int run_user(registers *r);
+int get_data(registers *r);
 void set_return(registers *r, int data);
 void switch_user();
 void return_irq();
