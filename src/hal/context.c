@@ -24,7 +24,7 @@ void init_user_task(user_task *t, void (*func)()) {
   t->reg.psr = (1 << 7) | (0b10000);
 }
 
-int run_user(registers *r, int *data) {
+int run_user(registers *r) {
   user_reg = r;
   switch_user();
   user_reg = 0;
@@ -32,7 +32,8 @@ int run_user(registers *r, int *data) {
     r->r15--;
     return SYSCALL_IRQ;
   }
-  *data = r->r0;
   return (*(uint32_t *)(r->r15 - 4)) & 0xFFFFFF;
 }
+
+int get_data(registers *r) { return r->r0; }
 void set_return(registers *r, int data) { r->r0 = data; }
