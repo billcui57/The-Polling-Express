@@ -8,7 +8,7 @@ void task_k1init() {
   ret = Create(-10, nameserver);
 
   Create(-10, task1);
-  Create(-10, task2);
+  // Create(-10, task2);
 }
 
 void task1() {
@@ -109,49 +109,62 @@ void task_send() {
   unsigned int end = start - read_timer3();
   Reply(who, (char *)&end, sizeof(unsigned int));
 
-  char send_msg[MAX_MSG_LEN];
+  nameserver_request rq;
+
+  char body[4] = {'a', 'b', 'c', '\0'};
+  request_init(&rq, REQUEST_REGISTER_AS, body, 4);
+
+  char *request_buffer = (char *)&rq; // Serialize
+
   char receive_msg[MAX_MSG_LEN];
-
-  send_msg[0] = REQUEST_REGISTER_AS;
-  send_msg[1] = 'a';
-  send_msg[2] = 'b';
-  send_msg[3] = 'c';
-  send_msg[4] = '\0';
-
-  Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+  Send(1, request_buffer, sizeof(nameserver_request), receive_msg, MAX_MSG_LEN);
 
   for (;;) {
 
-    send_msg[0] = REQUEST_WHO_IS;
-    send_msg[1] = 'a';
-    send_msg[2] = 'b';
-    send_msg[3] = 'c';
-    send_msg[4] = '\0';
-    Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
-    printf(&pc, "%d\r\n", *receive_msg);
+    char body[4] = {'a', 'b', 'c', '\0'};
+    request_init(&rq, REQUEST_WHO_IS, body, 4);
+    char *request_buffer = (char *)&rq; // Serialize
+
+    char response_buffer[sizeof(nameserver_response)];
+    Send(1, request_buffer, sizeof(nameserver_request), response_buffer,
+         sizeof(nameserver_response));
+
+    nameserver_response *response =
+        (nameserver_response *)response_buffer; // Deserialize
+
+    if (response->type == RESPONSE_ERROR) {
+      printf(&pc, "An error has occurred\r\n");
+    } else {
+      printf(&pc, "%d\r\n", (response->body)[0]);
+    }
   }
 }
 
 void task2() {
 
-  char send_msg[MAX_MSG_LEN];
+  nameserver_request rq;
+
+  char body[4] = {'b', 'c', 'd', '\0'};
+  request_init(&rq, REQUEST_REGISTER_AS, body, 4);
+
+  char *request_buffer = (char *)&rq; // Serialize
+
   char receive_msg[MAX_MSG_LEN];
-
-  send_msg[0] = REQUEST_REGISTER_AS;
-  send_msg[1] = 'c';
-  send_msg[2] = 'd';
-  send_msg[3] = 'e';
-  send_msg[4] = '\0';
-
-  Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+  Send(1, request_buffer, sizeof(nameserver_request), receive_msg, MAX_MSG_LEN);
 
   for (;;) {
 
-    send_msg[0] = REQUEST_WHO_IS;
-    send_msg[1] = 'c';
-    send_msg[2] = 'd';
-    send_msg[3] = 'e';
-    send_msg[4] = '\0';
-    Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+    // Serialize
+    char body[4] = {'b', 'c', 'd', '\0'};
+    request_init(&rq, REQUEST_WHO_IS, body, 4);
+    char *request_buffer = (char *)&rq;
+
+    char response_buffer[sizeof(nameserver_response)];
+    Send(1, request_buffer, sizeof(nameserver_request), response_buffer,
+         sizeof(nameserver_response));
+
+    nameserver_response *response =
+        (nameserver_response *)response_buffer; // Deserialize
+    printf(&pc, "%d\r\n", (response->body)[0]);
   }
 }
