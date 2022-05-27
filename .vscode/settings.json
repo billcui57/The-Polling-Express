@@ -14,7 +14,11 @@
     "ts7200.h": "c",
     "timer.h": "c",
     "context.h": "c",
+<<<<<<< HEAD
     "typeinfo": "c",
     "hashtable.h": "c"
+=======
+    "typeinfo": "c"
+>>>>>>> 1af272c (name server works)
   }
 }

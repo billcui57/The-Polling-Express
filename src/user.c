@@ -108,4 +108,50 @@ void task_send() {
   }
   unsigned int end = start - read_timer3();
   Reply(who, (char *)&end, sizeof(unsigned int));
+
+  char send_msg[MAX_MSG_LEN];
+  char receive_msg[MAX_MSG_LEN];
+
+  send_msg[0] = REQUEST_REGISTER_AS;
+  send_msg[1] = 'a';
+  send_msg[2] = 'b';
+  send_msg[3] = 'c';
+  send_msg[4] = '\0';
+
+  Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+
+  for (;;) {
+
+    send_msg[0] = REQUEST_WHO_IS;
+    send_msg[1] = 'a';
+    send_msg[2] = 'b';
+    send_msg[3] = 'c';
+    send_msg[4] = '\0';
+    Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+    printf(&pc, "%d\r\n", *receive_msg);
+  }
+}
+
+void task2() {
+
+  char send_msg[MAX_MSG_LEN];
+  char receive_msg[MAX_MSG_LEN];
+
+  send_msg[0] = REQUEST_REGISTER_AS;
+  send_msg[1] = 'c';
+  send_msg[2] = 'd';
+  send_msg[3] = 'e';
+  send_msg[4] = '\0';
+
+  Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+
+  for (;;) {
+
+    send_msg[0] = REQUEST_WHO_IS;
+    send_msg[1] = 'c';
+    send_msg[2] = 'd';
+    send_msg[3] = 'e';
+    send_msg[4] = '\0';
+    Send(1, send_msg, 5, receive_msg, MAX_MSG_LEN);
+  }
 }

@@ -15,8 +15,7 @@ void ht_init(hashtable *ht, size_t capacity, void **arr) {
   ht->capacity = capacity;
   ht->arr = arr;
 
-  memset(ht->arr, capacity* sizeof(void *), NULL);
-
+  memset(ht->arr, capacity * sizeof(void *), NULL);
 }
 
 int ht_insert(hashtable *ht, char *key, void *value) {
@@ -31,11 +30,11 @@ int ht_insert(hashtable *ht, char *key, void *value) {
 int ht_get(hashtable *ht, char *key, void **ret) {
   unsigned int index = hash_function(ht, key);
 
-  if((ht->arr)[index] == NULL){
+  if ((ht->arr)[index] == NULL) {
     return E_KEY_MISSING;
   }
 
-  *ret = (void*)(ht->arr)[index];
+  *ret = (void *)(ht->arr)[index];
 
   return 0;
 }

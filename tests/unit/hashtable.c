@@ -29,7 +29,7 @@ void basic() {
   //   }
   // }
 
-  void * b ;
+  void *b;
   status = ht_get(&ht, "hello", &b);
   // printf("===============================\r\n");
 
@@ -39,7 +39,7 @@ void basic() {
 
   assert(status != E_KEY_MISSING);
 
-  assert(a == (unsigned int) b);
+  assert(a == (unsigned int)b);
 }
 
 // void override() {

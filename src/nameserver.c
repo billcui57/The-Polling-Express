@@ -76,9 +76,9 @@ void nameserver() {
 
     } else if (request->type == REQUEST_WHO_IS) {
 
-      void* lookup_tid_void;
+      void *lookup_tid_void;
 
-      ht_status = ht_get(&ht, request->body,&lookup_tid_void);
+      ht_status = ht_get(&ht, request->body, &lookup_tid_void);
 
       task_tid lookup_tid = (task_tid)lookup_tid_void;
 
