@@ -4,6 +4,7 @@ nameserver_tid = -1;
 
 unsigned long min(unsigned int a, unsigned int b) { return a < b ? a : b; }
 
+<<<<<<< HEAD
 void nameserver_request_init(nameserver_request *rq,
                              nameserver_request_type type,
                              char body[MAX_BODY_LENGTH],
@@ -33,7 +34,19 @@ void nameserver_response_init(nameserver_response *rs,
   rs->body_length = body_length;
   memcpy(rs->body, body,
          min(sizeof(char) * (MAX_BODY_LENGTH), sizeof(char) * body_length));
+=======
+void request_init(nameserver_request *rq, request_type type, char *body) {
+  rq->type = type;
+  rq->body = body;
 }
+
+void response_init(nameserver_response *rs, response_type type, char *body) {
+  rs->type = type;
+  rs->body = body;
+>>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
+}
+
+nameserver_tid = -1;
 
 void nameserver() {
 
@@ -68,11 +81,25 @@ void nameserver() {
       case E_COLLISION: // collisions are fine
         rt = RESPONSE_GOOD;
         break;
+<<<<<<< HEAD
+=======
+      case E_KEY_MISSING:
+        rt = RESPONSE_NAME_DNE;
+        break;
+>>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
       default:
         break;
       }
 
+<<<<<<< HEAD
       body_len = 0;
+=======
+      nameserver_response *response;
+      size_t body_len = 1;
+      char response_body[body_len];
+      response_body[0] = lookup_tid;
+      response_init(&response, rt, response_body);
+>>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
 
     } else if (request->type == REQUEST_WHO_IS) {
 

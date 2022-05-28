@@ -15,25 +15,21 @@
 typedef char request_type;
 
 #define RESPONSE_GOOD 0
-#define RESPONSE_ERROR 1
+#define RESPONSE_NAME_DNE 1
 typedef char response_type;
 
 typedef struct nameserver_request {
   request_type type;
   char *body;
-  size_t body_len;
 } nameserver_request;
 
 typedef struct nameserver_response {
   response_type type;
   char *body;
-  size_t body_len;
 } nameserver_response;
 
-void request_init(nameserver_request *rq, request_type type, char *body,
-                  size_t body_len);
+void request_init(nameserver_request *rq, request_type type, char *body);
 
-void response_init(nameserver_response *rs, response_type type, char *body,
-                   size_t body_len);
+void response_init(nameserver_response *rs, response_type type, char *body);
 
 void nameserver();

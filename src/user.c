@@ -8,10 +8,11 @@ void task_k1init() {
   ret = Create(-10, nameserver);
 
   Create(-10, task1);
-  // Create(-10, task2);
+  Create(-10, task2);
 }
 
 void task1() {
+<<<<<<< HEAD
   while (RegisterAs("abc") != 0)
     ;
 
@@ -119,52 +120,40 @@ void task_send() {
   char receive_msg[MAX_MSG_LEN];
   Send(1, request_buffer, sizeof(nameserver_request), receive_msg, MAX_MSG_LEN);
 
+=======
+  RegisterAs("abc");
+>>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
   for (;;) {
 
-    char body[4] = {'a', 'b', 'c', '\0'};
-    request_init(&rq, REQUEST_WHO_IS, body, 4);
-    char *request_buffer = (char *)&rq; // Serialize
+    task_tid tid = WhoIs("abc");
 
-    char response_buffer[sizeof(nameserver_response)];
-    Send(1, request_buffer, sizeof(nameserver_request), response_buffer,
-         sizeof(nameserver_response));
-
-    nameserver_response *response =
-        (nameserver_response *)response_buffer; // Deserialize
-
-    if (response->type == RESPONSE_ERROR) {
-      printf(&pc, "An error has occurred\r\n");
+    if (tid == -1) {
+      printf(&pc, "ERROR\r\n");
     } else {
-      printf(&pc, "%d\r\n", (response->body)[0]);
+
+      if (tid == 3) {
+        RegisterAs("abc");
+      }
+      printf(&pc, "%d\r\n", tid);
     }
   }
 }
 
 void task2() {
-
-  nameserver_request rq;
-
-  char body[4] = {'b', 'c', 'd', '\0'};
-  request_init(&rq, REQUEST_REGISTER_AS, body, 4);
-
-  char *request_buffer = (char *)&rq; // Serialize
-
-  char receive_msg[MAX_MSG_LEN];
-  Send(1, request_buffer, sizeof(nameserver_request), receive_msg, MAX_MSG_LEN);
-
+  RegisterAs("abc");
   for (;;) {
 
-    // Serialize
-    char body[4] = {'b', 'c', 'd', '\0'};
-    request_init(&rq, REQUEST_WHO_IS, body, 4);
-    char *request_buffer = (char *)&rq;
+    task_tid tid = WhoIs("abc");
 
-    char response_buffer[sizeof(nameserver_response)];
-    Send(1, request_buffer, sizeof(nameserver_request), response_buffer,
-         sizeof(nameserver_response));
+    if (tid == -1) {
+      printf(&pc, "ERROR\r\n");
+    } else {
 
-    nameserver_response *response =
-        (nameserver_response *)response_buffer; // Deserialize
-    printf(&pc, "%d\r\n", (response->body)[0]);
+      if (tid == 2) {
+        RegisterAs("abc");
+      }
+
+      printf(&pc, "%d\r\n", tid);
+    }
   }
 }
