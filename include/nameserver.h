@@ -12,11 +12,11 @@
 
 #define REQUEST_REGISTER_AS 1
 #define REQUEST_WHO_IS 2
-typedef char nameserver_request_type;
+typedef int nameserver_request_type;
 
 #define RESPONSE_GOOD 0
 #define RESPONSE_NAME_DNE -2
-typedef char nameserver_response_type;
+typedef int nameserver_response_type;
 
 typedef struct nameserver_request {
   nameserver_request_type type;
