@@ -2,6 +2,18 @@
 
 struct game *free_game;
 
+void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type,
+                            char *body) {
+  rq->type = type;
+  rq->body = body;
+}
+
+void rpsserver_response_init(rpsserver_response *rs,
+                             rpsserver_response_type type, char *body) {
+  rs->type = type;
+  rs->body = body;
+}
+
 void rpsserver() {
 
   while (RegisterAs("rpsserver") != 0)
