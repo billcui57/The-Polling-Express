@@ -17,13 +17,13 @@
 #define MOVE_PAPER 3
 #define MOVE_SCISSOR 4
 
-typedef char rpsserver_request_type;
+typedef int rpsserver_request_type;
 
 #define RESPONSE_GOOD 0
 
-typedef char rpsserver_response_type;
+typedef int rpsserver_response_type;
 
-typedef char rps_move;
+typedef int rps_move;
 
 typedef struct game {
   task_tid player1;
