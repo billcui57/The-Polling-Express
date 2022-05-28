@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hashtable.h>
-#include <kprintf.h>
 #include <my_assert.h>
 #include <syscall.h>
 #include <task.h>

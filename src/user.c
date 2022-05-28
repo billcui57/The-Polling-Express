@@ -12,8 +12,6 @@ void task_k1init() {
 }
 
 void task1() {
-<<<<<<< HEAD
-<<<<<<< HEAD
   while (RegisterAs("abc") != 0)
     ;
 
@@ -121,14 +119,6 @@ void task_send() {
   char receive_msg[MAX_MSG_LEN];
   Send(1, request_buffer, sizeof(nameserver_request), receive_msg, MAX_MSG_LEN);
 
-=======
-  RegisterAs("abc");
->>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
-=======
-  while (RegisterAs("abc") != 0)
-    ;
-
->>>>>>> 33d84e5 (works)
   for (;;) {
 
     task_tid tid = WhoIs("abc");
@@ -138,8 +128,7 @@ void task_send() {
     } else {
 
       if (tid == 3) {
-        while (RegisterAs("abc") != 0)
-          ;
+        RegisterAs("abc");
       }
       printf(&pc, "%d\r\n", tid);
     }
@@ -147,8 +136,7 @@ void task_send() {
 }
 
 void task2() {
-  while (RegisterAs("abc") != 0)
-    ;
+  RegisterAs("abc");
   for (;;) {
 
     task_tid tid = WhoIs("abc");
@@ -158,8 +146,7 @@ void task2() {
     } else {
 
       if (tid == 2) {
-        while (RegisterAs("abc") != 0)
-          ;
+        RegisterAs("abc");
       }
 
       printf(&pc, "%d\r\n", tid);

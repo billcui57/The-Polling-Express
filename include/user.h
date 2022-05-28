@@ -1,5 +1,6 @@
 #pragma once
 
+#include "rpsserver.h"
 #include <kprintf.h>
 #include <my_memory.h>
 #include <nameserver.h>
