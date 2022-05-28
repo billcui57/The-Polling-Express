@@ -12,26 +12,28 @@
 
 #define REQUEST_REGISTER_AS 1
 #define REQUEST_WHO_IS 2
-typedef char request_type;
+typedef char nameserver_request_type;
 
 #define RESPONSE_GOOD 0
 #define RESPONSE_NAME_DNE -2
-typedef char response_type;
+typedef char nameserver_response_type;
 
 typedef struct nameserver_request {
-  request_type type;
+  nameserver_request_type type;
   char *body;
 } nameserver_request;
 
 typedef struct nameserver_response {
-  response_type type;
+  nameserver_response_type type;
   char *body;
 } nameserver_response;
 
 task_tid nameserver_tid;
 
-void request_init(nameserver_request *rq, request_type type, char *body);
+void nameserver_request_init(nameserver_request *rq,
+                             nameserver_request_type type, char *body);
 
-void response_init(nameserver_response *rs, response_type type, char *body);
+void nameserver_response_init(nameserver_response *rs,
+                              nameserver_response_type type, char *body);
 
 void nameserver();
