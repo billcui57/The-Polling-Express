@@ -15,7 +15,7 @@
 typedef char request_type;
 
 #define RESPONSE_GOOD 0
-#define RESPONSE_NAME_DNE 1
+#define RESPONSE_NAME_DNE -2
 typedef char response_type;
 
 typedef struct nameserver_request {
@@ -27,6 +27,8 @@ typedef struct nameserver_response {
   response_type type;
   char *body;
 } nameserver_response;
+
+task_tid nameserver_tid;
 
 void request_init(nameserver_request *rq, request_type type, char *body);
 

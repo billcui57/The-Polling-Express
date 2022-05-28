@@ -1,9 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD
 #include "my_assert.h"
-=======
->>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
 #include "my_string.h"
 #include "nameserver.h"
 
@@ -72,13 +69,8 @@ int RegisterAs(const char *name);
 Returns:
 -1 if nameserver tid does not exist
 tid if good
-<<<<<<< HEAD
 -2 name does not exist
 -3 other errors
-=======
-1 if task with name does not exist
-2 other errors
->>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
 */
 int WhoIs(const char *name);
 

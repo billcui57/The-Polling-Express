@@ -1,6 +1,7 @@
 #include <nameserver.h>
 
 nameserver_tid = -1;
+<<<<<<< HEAD
 
 unsigned long min(unsigned int a, unsigned int b) { return a < b ? a : b; }
 
@@ -20,6 +21,8 @@ void nameserver_request_init(nameserver_request *rq,
   memcpy(rq->body, body,
          min(sizeof(char) * (MAX_BODY_LENGTH), sizeof(char) * body_length));
 }
+=======
+>>>>>>> 33d84e5 (works)
 
 void nameserver_response_init(nameserver_response *rs,
                               nameserver_response_type type,
@@ -46,8 +49,6 @@ void response_init(nameserver_response *rs, response_type type, char *body) {
 >>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
 }
 
-nameserver_tid = -1;
-
 void nameserver() {
 
   nameserver_tid = MyTid();
@@ -58,6 +59,7 @@ void nameserver() {
 
   task_tid who;
   char msg[sizeof(nameserver_request)];
+  char *response_body;
 
   char response_body[MAX_BODY_LENGTH];
 
@@ -68,8 +70,13 @@ void nameserver() {
 
     int ht_status = 0;
 
+<<<<<<< HEAD
     nameserver_response_type rt;
     nameserver_response response;
+=======
+    response_type rt;
+    nameserver_response *response;
+>>>>>>> 33d84e5 (works)
     size_t body_len;
 
     if (request->type == REQUEST_REGISTER_AS) {
@@ -101,14 +108,33 @@ void nameserver() {
       response_init(&response, rt, response_body);
 >>>>>>> 22eb0ee (checkpoint - before checking for valid nameserver tid)
 
+<<<<<<< HEAD
+=======
+      switch (ht_status) {
+      case 0:
+      case E_COLLISION: // collisions are fine
+        rt = RESPONSE_GOOD;
+        break;
+      default:
+        break;
+      }
+
+      body_len = 0;
+      char _response_body[body_len];
+      response_body = _response_body;
+
+>>>>>>> 33d84e5 (works)
     } else if (request->type == REQUEST_WHO_IS) {
 
       void *lookup_tid_void;
 
       ht_status = ht_get(&ht, request->body, &lookup_tid_void);
 
+<<<<<<< HEAD
       task_tid lookup_tid = (task_tid)lookup_tid_void;
 
+=======
+>>>>>>> 33d84e5 (works)
       switch (ht_status) {
       case 0:
         rt = RESPONSE_GOOD;
@@ -120,9 +146,17 @@ void nameserver() {
         break;
       }
       body_len = 1;
+<<<<<<< HEAD
       response_body[0] = lookup_tid;
     }
     nameserver_response_init(&response, rt, response_body, body_len);
+=======
+      char _response_body[body_len];
+      response_body = _response_body;
+      response_body[0] = lookup_tid;
+    }
+    response_init(&response, rt, response_body);
+>>>>>>> 33d84e5 (works)
     char *response_buffer = (char *)&response; // serialize
     Reply(who, response_buffer, sizeof(nameserver_response));
   }
