@@ -24,7 +24,7 @@ typedef struct timer {
 
 void timer_init(timer *t, int timer_num);
 void stop_timer(timer *t);
-void start_timer(timer *t);
+//void start_timer(timer *t); INTERNAL USE ONLY! HAS SPECIAL REQUIRMENTS
 void read_timer(timer *t, unsigned int *val);
 bool has_time_elapsed(timer *t, unsigned int start_time, unsigned int ticks);
 void get_formatted_curr_time(timer *t, int *result);

@@ -1,4 +1,5 @@
 #include "timer.h"
+void start_timer(timer *t);
 
 void timer_init(timer *t, int timer_num) {
   switch (timer_num) {
@@ -8,9 +9,9 @@ void timer_init(timer *t, int timer_num) {
     t->value = (unsigned int *)(TIMER3_BASE + VAL_OFFSET);
 
     // FASTCLOCK
-    // PMODE
-    *(t->control) = *(t->control) | CLKSEL_MASK | MODE_MASK;
-    *(t->load) = *(t->load) | TIMER3INITVAL;
+    // FMODE
+    *(t->load) = 0;
+    *(t->control) = CLKSEL_MASK;
     t->clock_rate = FASTCLOCKRATE;
     break;
   default:
@@ -19,6 +20,7 @@ void timer_init(timer *t, int timer_num) {
   }
   t->is_enabled = false;
   t->num = timer_num;
+  start_timer(t);
 }
 
 void stop_timer(timer *t) {

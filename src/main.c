@@ -28,16 +28,15 @@ void handle_send(TCB *src, TCB *dst) {
 }
 
 void kmain() {
+  uart_init(&pc, COM2);
+  assert_init(&pc);
   timer t;
   timer_init(&t, TIMER3);
-  start_timer(&t);
 
-  uart_init(&pc, COM2);
   TCB backing[MAX_NUM_TASKS];
   TCB *heap[MAX_NUM_TASKS];
   scheduler_init(MAX_NUM_TASKS, backing, heap, &t);
 
-  assert_init(&pc);
 
   *((void (**)())0x28) = &return_swi;
 
