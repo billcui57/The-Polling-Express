@@ -7,51 +7,63 @@
 void task_k1init() {
   int ret;
   ret = Create(-10, nameserver);
+  ret = Create(-10, rpsserver);
 
   Create(-10, task1);
   Create(-10, task2);
 }
 
 void task1() {
-  while (RegisterAs("abc") != 0)
-    ;
+  int game_id;
+  int status = SignUp(&game_id);
 
-  for (;;) {
-
-    task_tid tid = WhoIs("abc");
-
-    if (tid == -1) {
-      printf(&pc, "ERROR\r\n");
-    } else {
-
-      if (tid == 3) {
-        while (RegisterAs("abc") != 0)
-          ;
-      }
-      printf(&pc, "%d\r\n", tid);
-    }
+  if (status == RESPONSE_NO_FREE_GAMES) {
+    printf(&pc, "1: All games full \r\n");
+    Exit();
   }
+  int result = Play(game_id, MOVE_PAPER);
+
+  if (result == RESPONSE_YOU_LOST) {
+    printf(&pc, "1: I lost\r\n");
+  } else if (result == RESPONSE_TIE) {
+    printf(&pc, "1: I tied r\n");
+  } else if (result == RESPONSE_YOU_WON) {
+    printf(&pc, "1: I won \r\n");
+  } else if (result == RESPONSE_NOT_YOUR_GAME) {
+    printf(&pc, "1: Not my game \r\n");
+  } else {
+    printf(&pc, "1: Uh oh \r\n");
+  }
+
+  Create(-10, task2);
 }
 
 void task2() {
-  while (RegisterAs("abc") != 0)
-    ;
-  for (;;) {
+  int game_id;
+  int status = SignUp(&game_id);
 
-    task_tid tid = WhoIs("abc");
-
-    if (tid == -1) {
-      printf(&pc, "ERROR\r\n");
-    } else {
-
-      if (tid == 2) {
-        while (RegisterAs("abc") != 0)
-          ;
-      }
-
-      printf(&pc, "%d\r\n", tid);
-    }
+  if (status == RESPONSE_NO_FREE_GAMES) {
+    printf(&pc, "2: All games full \r\n");
+    Exit();
   }
+
+  printf(&pc, "2: I am in game %d\r\n", game_id);
+
+  int result = Play(game_id, MOVE_ROCK);
+
+  if (result == RESPONSE_YOU_LOST) {
+    printf(&pc, "2: I lost\r\n");
+  } else if (result == RESPONSE_TIE) {
+    printf(&pc, "2: I tied r\n");
+  } else if (result == RESPONSE_YOU_WON) {
+    printf(&pc, "2: I won \r\n");
+  } else if (result == RESPONSE_NOT_YOUR_GAME) {
+    printf(&pc, "2: Not my game \r\n");
+  } else {
+    printf(&pc, "2: Uh oh \r\n");
+  }
+
+  Create(-10, task1);
 }
 
 void task_k2perf() {
