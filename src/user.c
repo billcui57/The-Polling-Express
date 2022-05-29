@@ -2,6 +2,7 @@
 #include <syscall.h>
 #include <timer.h>
 #include <user.h>
+#include <string.h>
 
 void task_k1init() {
   int ret;

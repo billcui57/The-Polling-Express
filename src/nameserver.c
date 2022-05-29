@@ -1,17 +1,17 @@
 #include <nameserver.h>
 
-nameserver_tid = -1;
+task_tid nameserver_tid = -1;
 
 unsigned long min(unsigned int a, unsigned int b) { return a < b ? a : b; }
 
 void nameserver_request_init(nameserver_request *rq,
                              nameserver_request_type type,
-                             char body[MAX_BODY_LENGTH],
+                             const char *body,
                              unsigned int body_length) {
   KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
           "name must fit in body arr");
 
-  memset(rq, sizeof(nameserver_request), 0);
+  memset(rq, 0, sizeof(nameserver_request));
 
   rq->type = type;
   rq->body_length = body_length;
@@ -22,12 +22,12 @@ void nameserver_request_init(nameserver_request *rq,
 
 void nameserver_response_init(nameserver_response *rs,
                               nameserver_response_type type,
-                              char body[MAX_BODY_LENGTH],
+                              const char *body,
                               unsigned int body_length) {
   KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
           "name must fit in body arr");
 
-  memset(rs, sizeof(nameserver_request), 0);
+  memset(rs, 0, sizeof(nameserver_request));
 
   rs->type = type;
   rs->body_length = body_length;
@@ -43,7 +43,7 @@ void nameserver() {
 
   void *backing[MAX_NAMES];
   struct hashtable ht;
-  ht_init(&ht, MAX_NAMES, &backing);
+  ht_init(&ht, MAX_NAMES, backing);
 
   task_tid who;
   char msg[sizeof(nameserver_request)];
@@ -51,7 +51,7 @@ void nameserver() {
   char response_body[MAX_BODY_LENGTH];
 
   for (;;) {
-    int status = Receive(&who, &msg, sizeof(nameserver_request));
+    int status = Receive(&who, msg, sizeof(nameserver_request));
 
     nameserver_request *request = (nameserver_request *)msg; // Deserialize
 

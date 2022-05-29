@@ -1,7 +1,7 @@
 #pragma once
 
-#include "my_string.h"
-#include <my_memory.h>
+#include <string.h>
+#include <memory.h>
 #include <stdbool.h>
 #include <stddef.h>
 typedef struct hashtable {

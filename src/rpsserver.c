@@ -1,15 +1,17 @@
 #include "rpsserver.h"
 
+unsigned long min(unsigned int a, unsigned int b);
+
 struct game *free_game;
 
 void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type,
-                            char body[MAX_BODY_LENGTH],
+                            char *body,
                             unsigned int body_length) {
 
   KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
           "command must fit in body arr");
 
-  memset(rq, sizeof(rpsserver_request), 0);
+  memset(rq, 0, sizeof(rpsserver_request));
 
   rq->type = type;
   rq->body_length = body_length;
@@ -19,12 +21,12 @@ void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type,
 
 void rpsserver_response_init(rpsserver_response *rs,
                              rpsserver_response_type type,
-                             char body[MAX_BODY_LENGTH],
+                             char *body,
                              unsigned int body_length) {
   KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
           "command must fit in body arr");
 
-  memset(rs, sizeof(rpsserver_response), 0);
+  memset(rs, 0, sizeof(rpsserver_response));
 
   rs->type = type;
   rs->body_length = body_length;
@@ -62,7 +64,7 @@ void rpsserver() {
   }
 
   for (;;) {
-    int status = Receive(&who, &msg, sizeof(rpsserver_request));
+    int status = Receive(&who, msg, sizeof(rpsserver_request));
 
     rpsserver_request *request = (rpsserver_request *)msg; // Deserialize
 

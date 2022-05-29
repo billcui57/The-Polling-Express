@@ -47,11 +47,11 @@ typedef struct rpsserver_response {
    unsigned int body_length;
 } rpsserver_response;
 
-void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type, char body[MAX_BODY_LENGTH],
+void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type, char *body,
    unsigned int body_length);
 
 void rpsserver_response_init(rpsserver_response *rs,
-                             rpsserver_response_type type, char body[MAX_BODY_LENGTH],
+                             rpsserver_response_type type, char *body,
    unsigned int body_length);
 
 void rpsserver();

@@ -4,7 +4,7 @@ unsigned int hash_function(hashtable *ht, char *key) {
   unsigned long hash = 5381;
   int c;
 
-  while (c = *key++) {
+  while ((c = *key++)) {
     hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   }
 
@@ -15,7 +15,7 @@ void ht_init(hashtable *ht, size_t capacity, void **arr) {
   ht->capacity = capacity;
   ht->arr = arr;
 
-  memset(ht->arr, capacity * sizeof(void *), NULL);
+  memset(ht->arr, 0, capacity * sizeof(void *));
 }
 
 int ht_insert(hashtable *ht, char *key, void *value) {

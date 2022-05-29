@@ -29,16 +29,16 @@ typedef struct nameserver_response {
   unsigned int body_length;
 } nameserver_response;
 
-task_tid nameserver_tid;
+extern task_tid nameserver_tid;
 
 void nameserver_request_init(nameserver_request *rq,
                              nameserver_request_type type,
-                             char body[MAX_BODY_LENGTH],
+                             const char *body,
                              unsigned int body_length);
 
 void nameserver_response_init(nameserver_response *rs,
                               nameserver_response_type type,
-                              char body[MAX_BODY_LENGTH],
+                              const char *body,
                               unsigned int body_length);
 
 void nameserver();
