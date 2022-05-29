@@ -1,5 +1,9 @@
 #pragma once
 
+#include "my_assert.h"
+#include "my_string.h"
+#include "nameserver.h"
+
 #define SYSCALL_IRQ 0
 #define SYSCALL_CREATE 1
 #define SYSCALL_MYTID 2
@@ -53,5 +57,21 @@ typedef struct {
 int Send(int tid, const char *msg, int msglen, char *reply, int rplen);
 int Receive(int *tid, char *msg, int msglen);
 int Reply(int tid, const char *reply, int rplen);
+
+/*
+Returns:
+-1 if nameserver tid does not exist
+0 if good
+*/
+int RegisterAs(const char *name);
+
+/*
+Returns:
+-1 if nameserver tid does not exist
+tid if good
+-2 name does not exist
+-3 other errors
+*/
+int WhoIs(const char *name);
 
 int AwaitEvent(int eventid);

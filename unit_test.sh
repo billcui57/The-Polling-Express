@@ -7,8 +7,8 @@ cmake . -B build -DCMAKE_TOOLCHAIN_FILE=linux.cmake
 
 cd ./build
 
-cmake --build . --target sample
-ctest
+cmake --build . --target hashtable
+ctest --verbose
 
 
 

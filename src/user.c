@@ -1,26 +1,51 @@
-#include <kprintf.h>
-#include <syscall.h>
 #include <user.h>
 
 void task_k1init() {
   int ret;
-  ret = Create(-10, task_k1test);
-  printf(&pc, "Created: %d\r\n", ret);
-  ret = Create(-10, task_k1test);
-  printf(&pc, "Created: %d\r\n", ret);
-  ret = Create(10, task_k1test);
-  printf(&pc, "Created: %d\r\n", ret);
-  ret = Create(10, task_k1test);
-  printf(&pc, "Created: %d\r\n", ret);
-  printf(&pc, "FirstUserTask: exiting\r\n");
-  Exit();
+  ret = Create(-10, nameserver);
+
+  Create(-10, task1);
+  Create(-10, task2);
 }
 
-void task_k1test() {
-  int me = MyTid();
-  int parent = MyParentTid();
-  printf(&pc, "Me: %d Parent: %d \r\n", me, parent);
-  Yield();
-  printf(&pc, "Me: %d Parent: %d \r\n", me, parent);
-  Exit();
+void task1() {
+  while (RegisterAs("abc") != 0)
+    ;
+
+  for (;;) {
+
+    task_tid tid = WhoIs("abc");
+
+    if (tid == -1) {
+      printf(&pc, "ERROR\r\n");
+    } else {
+
+      if (tid == 3) {
+        while (RegisterAs("abc") != 0)
+          ;
+      }
+      printf(&pc, "%d\r\n", tid);
+    }
+  }
+}
+
+void task2() {
+  while (RegisterAs("abc") != 0)
+    ;
+  for (;;) {
+
+    task_tid tid = WhoIs("abc");
+
+    if (tid == -1) {
+      printf(&pc, "ERROR\r\n");
+    } else {
+
+      if (tid == 2) {
+        while (RegisterAs("abc") != 0)
+          ;
+      }
+
+      printf(&pc, "%d\r\n", tid);
+    }
+  }
 }
