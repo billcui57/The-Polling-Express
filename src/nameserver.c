@@ -1,12 +1,9 @@
 #include <nameserver.h>
 
-task_tid nameserver_tid = -1;
-
 unsigned long min(unsigned int a, unsigned int b) { return a < b ? a : b; }
 
 void nameserver_request_init(nameserver_request *rq,
-                             nameserver_request_type type,
-                             const char *body,
+                             nameserver_request_type type, const char *body,
                              unsigned int body_length) {
   KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
           "name must fit in body arr");
@@ -21,8 +18,7 @@ void nameserver_request_init(nameserver_request *rq,
 }
 
 void nameserver_response_init(nameserver_response *rs,
-                              nameserver_response_type type,
-                              const char *body,
+                              nameserver_response_type type, const char *body,
                               unsigned int body_length) {
   KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
           "name must fit in body arr");

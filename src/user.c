@@ -1,8 +1,8 @@
 #include <kprintf.h>
+#include <string.h>
 #include <syscall.h>
 #include <timer.h>
 #include <user.h>
-#include <string.h>
 
 void task_k1init() {
   int ret;
@@ -109,48 +109,4 @@ void task_send() {
   }
   unsigned int end = start - read_timer3();
   Reply(who, (char *)&end, sizeof(unsigned int));
-
-  nameserver_request rq;
-
-  char body[4] = {'a', 'b', 'c', '\0'};
-  request_init(&rq, REQUEST_REGISTER_AS, body, 4);
-
-  char *request_buffer = (char *)&rq; // Serialize
-
-  char receive_msg[MAX_MSG_LEN];
-  Send(1, request_buffer, sizeof(nameserver_request), receive_msg, MAX_MSG_LEN);
-
-  for (;;) {
-
-    task_tid tid = WhoIs("abc");
-
-    if (tid == -1) {
-      printf(&pc, "ERROR\r\n");
-    } else {
-
-      if (tid == 3) {
-        RegisterAs("abc");
-      }
-      printf(&pc, "%d\r\n", tid);
-    }
-  }
-}
-
-void task2() {
-  RegisterAs("abc");
-  for (;;) {
-
-    task_tid tid = WhoIs("abc");
-
-    if (tid == -1) {
-      printf(&pc, "ERROR\r\n");
-    } else {
-
-      if (tid == 2) {
-        RegisterAs("abc");
-      }
-
-      printf(&pc, "%d\r\n", tid);
-    }
-  }
 }

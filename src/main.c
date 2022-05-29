@@ -42,7 +42,8 @@ void kmain() {
 
   *((void (**)())0x28) = &return_swi;
 
-  scheduler_add(0, task_k2perf, -1);
+  // scheduler_add(0, task_k2perf, -1);
+  scheduler_add(0, task_k1init, -1);
 
   while (!scheduler_empty()) {
     TCB *cur = pop_ready_queue();
