@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project(kernel C ASM)
 
+# set(CMAKE_C_FLAGS " ${CMAKE_C_FLAGS} -O3")
+
 include_directories(include)
 
 add_executable(kernel
