@@ -4,7 +4,7 @@
 #include <syscall.h>
 #include <task.h>
 
-#define MAX_NUM_GAMES 1000
+#define MAX_NUM_GAMES 10
 #define MAX_BODY_LENGTH 128 
 
 #define REQUEST_SIGNUP 1
