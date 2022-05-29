@@ -12,6 +12,9 @@
     "thread": "c",
     "bit": "c",
     "ts7200.h": "c",
-    "timer.h": "c"
+    "timer.h": "c",
+    "context.h": "c",
+    "typeinfo": "c",
+    "hashtable.h": "c"
   }
 }

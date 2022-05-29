@@ -69,17 +69,23 @@ void kmain() {
       if (target->state == ZOMBIE) {
         set_return(&cur->context, EINVALIDTID);
         add_to_ready_queue(cur);
-      } else if (target->state == RECEIVE) {
-        handle_send(cur, target);
       } else {
-        cur->state = SEND;
-        cur->next = NULL;
-        if (target->want_send_end) {
-          target->want_send_end->next = cur;
+        TCB *target = &backing[args->tid];
+        if (target->state == ZOMBIE) {
+          set_return(&cur->context.reg, EINVALIDTID);
+          add_to_ready_queue(cur);
+        } else if (target->state == RECEIVE) {
+          handle_send(cur, target);
         } else {
-          target->want_send = cur;
+          cur->state = SEND;
+          cur->next = NULL;
+          if (target->want_send_end) {
+            target->want_send_end->next = cur;
+          } else {
+            target->want_send = cur;
+          }
+          target->want_send_end = cur;
         }
-        target->want_send_end = cur;
       }
     } else if (why == SYSCALL_RECEIVE) {
       if (cur->want_send) {

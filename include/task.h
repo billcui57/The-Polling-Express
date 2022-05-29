@@ -18,6 +18,8 @@ typedef enum tcb_state {
   EVENT
 } tcb_state;
 
+typedef int task_tid;
+
 typedef struct TCB {
   // TCB is free
   struct TCB *next;
