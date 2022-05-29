@@ -1,3 +1,7 @@
+#include <kprintf.h>
+#include <string.h>
+#include <syscall.h>
+#include <timer.h>
 #include <user.h>
 
 void task_k1init() {
@@ -10,54 +14,70 @@ void task_k1init() {
 }
 
 void task1() {
-  task_tid rpsserver_tid;
-  do {
+  int game_id;
+  int status = SignUp(&game_id);
 
-    char query_string[] = "rpsserver";
-    rpsserver_tid = WhoIs(query_string);
-    printf(&pc, "stucks\r\n");
-  } while (rpsserver_tid == -1);
+  printf(&pc, "1: I am in game %d\r\n", game_id);
 
-  printf(&pc, "rps tid %d\r\n", rpsserver_tid);
+  for (int i = 0;; i++) {
 
-  rpsserver_request rq;
-  rpsserver_request_init(&rq, REQUEST_SIGNUP, "", 0);
+    int move = (i % 3) + 2;
+    printf(&pc, "1: Move: %d\r\n", move);
 
-  char *request_buffer = (char *)&rq; // Serialize
+    int result = Play(game_id, move);
 
-  char response_buffer[sizeof(rpsserver_response)];
+    if (result == RESPONSE_YOU_LOST) {
+      printf(&pc, "1: I lost\r\n");
+    } else if (result == RESPONSE_TIE) {
+      printf(&pc, "1: I tied \r\n");
+    } else if (result == RESPONSE_YOU_WON) {
+      printf(&pc, "1: I won \r\n");
+    } else if (result == RESPONSE_NOT_YOUR_GAME) {
+      printf(&pc, "1: Not my game \r\n");
+    } else if (result == RESPONSE_GAME_ENDED) {
+      printf(&pc, "1: Other player quit \r\n");
+      break;
+    } else {
+      printf(&pc, "1: Uh oh \r\n");
+    }
+  }
 
-  Send(rpsserver_tid, request_buffer, sizeof(rpsserver_request),
-       response_buffer, sizeof(rpsserver_response));
-
-  nameserver_response *response =
-      (nameserver_response *)response_buffer; // Deserialize
-
-  printf(&pc, "1: I am in game %d\r\n", response->body[0]);
+  // Create(-10, task2); <- uncomment for stress test
+  // Create(-10, task1);
 }
 
 void task2() {
-  task_tid rpsserver_tid;
-  do {
-    char query_string[] = "rpsserver";
-    rpsserver_tid = WhoIs(query_string);
-    printf(&pc, "stucks\r\n");
-  } while (rpsserver_tid == -1);
+  int game_id;
+  int status = SignUp(&game_id);
 
-  printf(&pc, "rps tid %d\r\n", rpsserver_tid);
+  for (int i = 0; i < 100; i++) {
+    int move = ((i % 7) % 3) + 2;
+    printf(&pc, "2: Move: %d\r\n", move);
+    int result = Play(game_id, move);
 
-  rpsserver_request rq;
-  rpsserver_request_init(&rq, REQUEST_SIGNUP, "", 0);
+    if (result == RESPONSE_YOU_LOST) {
+      printf(&pc, "2: I lost\r\n");
+    } else if (result == RESPONSE_TIE) {
+      printf(&pc, "2: I tied \r\n");
+    } else if (result == RESPONSE_YOU_WON) {
+      printf(&pc, "2: I won \r\n");
+    } else if (result == RESPONSE_NOT_YOUR_GAME) {
+      printf(&pc, "2: Not my game \r\n");
+    } else if (result == RESPONSE_GAME_ENDED) {
+      printf(&pc, "2: Other player quit \r\n");
+      break;
+    } else {
+      printf(&pc, "2: Uh oh \r\n");
+    }
+  }
 
-  char *request_buffer = (char *)&rq; // Serialize
+  printf(&pc, "2: About to quit \r\n");
+  status = Quit(game_id);
 
-  char response_buffer[sizeof(rpsserver_response)];
+  if (status == RESPONSE_GOOD) {
+    printf(&pc, "2: Successfully quit game \r\n");
+  }
 
-  Send(rpsserver_tid, request_buffer, sizeof(rpsserver_request),
-       response_buffer, sizeof(rpsserver_response));
-
-  nameserver_response *response =
-      (nameserver_response *)response_buffer; // Deserialize
-
-  printf(&pc, "2: I am in game %d\r\n", response->body[0]);
+  // Create(-10, task1);
+  // Create(-10, task2);
 }
