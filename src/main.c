@@ -30,6 +30,9 @@ void handle_send(TCB *src, TCB *dst) {
 void kmain() {
   uart_init(&pc, COM2);
   assert_init(&pc);
+
+  enable_cache();
+
   timer t;
   timer_init(&t, TIMER3);
 

@@ -55,3 +55,23 @@ void panic(char *s) {
     i++;
   }
 }
+
+// must invalide caches before enabling
+/*
+ * Need to clean and invalidate D cache index by index
+ * Need to invalidate I cache
+ * Finally turn D and I cache on
+ */
+void enable_cache() {
+  for (int seg = 0 ; seg < 7; seg ++) {
+    for (int idx = 0; idx< 63; idx ++) {
+      int val = idx << 26 | seg << 5;
+      __asm__ volatile ( "MCR p15,0,%[val],c7,c14,2" :: [val] "r" (val));
+    }
+  }
+  __asm__ volatile ( "MCR p15,0,%[zero],c7,c5,0" :: [zero] "r" (0));
+  int reg;
+  __asm__ volatile ( "MRC p15,0,%[reg],c1,c0,0" : [reg] "=r" (reg));
+  reg = reg | 1 << 12 | 1 << 2;
+  __asm__ volatile ( "MCR p15,0,%[reg],c1,c0,0" :: [reg] "r" (reg));
+}
