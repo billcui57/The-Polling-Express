@@ -1,6 +1,6 @@
 #include <syscall.h>
 int Create(int priority, void (*function)()) {
-  create_args a;
+  volatile create_args a;
   a.priority = priority;
   a.function = function;
   int ret;
@@ -41,7 +41,7 @@ void Exit() {
 }
 
 int Send(int tid, const char *msg, int msglen, char *reply, int rplen) {
-  send_args a;
+  volatile send_args a;
   a.tid = tid;
   a.msg = msg;
   a.msglen = msglen;
@@ -58,7 +58,7 @@ int Send(int tid, const char *msg, int msglen, char *reply, int rplen) {
 }
 
 int Receive(int *tid, char *msg, int msglen) {
-  receive_args a;
+  volatile receive_args a;
   a.tid = tid;
   a.msg = msg;
   a.msglen = msglen;
@@ -73,7 +73,7 @@ int Receive(int *tid, char *msg, int msglen) {
 }
 
 int Reply(int tid, const char *reply, int rplen) {
-  reply_args a;
+  volatile reply_args a;
   a.tid = tid;
   a.reply = reply;
   a.rplen = rplen;
