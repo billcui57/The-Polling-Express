@@ -3,15 +3,33 @@
 struct game *free_game;
 
 void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type,
-                            char *body) {
+                            char body[MAX_BODY_LENGTH],
+                            unsigned int body_length) {
+
+  KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
+          "command must fit in body arr");
+
+  memset(rq, sizeof(rpsserver_request), 0);
+
   rq->type = type;
-  rq->body = body;
+  rq->body_length = body_length;
+  memcpy(rq->body, body,
+         min(sizeof(char) * (MAX_BODY_LENGTH), sizeof(char) * body_length));
 }
 
 void rpsserver_response_init(rpsserver_response *rs,
-                             rpsserver_response_type type, char *body) {
+                             rpsserver_response_type type,
+                             char body[MAX_BODY_LENGTH],
+                             unsigned int body_length) {
+  KASSERT(sizeof(char) * body_length < sizeof(char) * (MAX_BODY_LENGTH),
+          "command must fit in body arr");
+
+  memset(rs, sizeof(rpsserver_response), 0);
+
   rs->type = type;
-  rs->body = body;
+  rs->body_length = body_length;
+  memcpy(rs->body, body,
+         min(sizeof(char) * (MAX_BODY_LENGTH), sizeof(char) * body_length));
 }
 
 void rpsserver() {
@@ -19,9 +37,11 @@ void rpsserver() {
   while (RegisterAs("rpsserver") != 0)
     ;
 
+  // KASSERT(WhoIs("rpsserver") == MyTid(), "Rpsserver should be registered");
+
   task_tid who;
   char msg[sizeof(rpsserver_request)];
-  char *response_body;
+  char response_body[MAX_BODY_LENGTH];
 
   struct game game_backing[MAX_NUM_GAMES];
   free_game = &(game_backing[0]);
@@ -63,11 +83,9 @@ void rpsserver() {
         rt = RESPONSE_GOOD;
 
         body_len = 1;
-        char _response_body[body_len];
-        response_body = _response_body;
         response_body[0] = game_id;
 
-        rpsserver_response_init(&response, rt, response_body);
+        rpsserver_response_init(&response, rt, response_body, body_len);
         char *response_buffer = (char *)&response; // serialize
         Reply(free_game->player1, response_buffer, sizeof(rpsserver_response));
         Reply(free_game->player2, response_buffer, sizeof(rpsserver_response));

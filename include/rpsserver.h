@@ -5,6 +5,7 @@
 #include <task.h>
 
 #define MAX_NUM_GAMES 1000
+#define MAX_BODY_LENGTH 128 
 
 #define REQUEST_SIGNUP 1
 #define REQUEST_PLAY 2
@@ -36,18 +37,21 @@ typedef struct game {
 
 typedef struct rpsserver_request {
   rpsserver_request_type type;
-  char *body;
+   char body[MAX_BODY_LENGTH];
+   unsigned int body_length;
 } rpsserver_request;
 
 typedef struct rpsserver_response {
   rpsserver_response_type type;
-  char *body;
+   char body[MAX_BODY_LENGTH];
+   unsigned int body_length;
 } rpsserver_response;
 
-void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type,
-                            char *body);
+void rpsserver_request_init(rpsserver_request *rq, rpsserver_request_type type, char body[MAX_BODY_LENGTH],
+   unsigned int body_length);
 
 void rpsserver_response_init(rpsserver_response *rs,
-                             rpsserver_response_type type, char *body);
+                             rpsserver_response_type type, char body[MAX_BODY_LENGTH],
+   unsigned int body_length);
 
 void rpsserver();
