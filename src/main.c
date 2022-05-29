@@ -40,7 +40,6 @@ void kmain() {
   TCB *heap[MAX_NUM_TASKS];
   scheduler_init(MAX_NUM_TASKS, backing, heap, &t);
 
-
   *((void (**)())0x28) = &return_swi;
 
   scheduler_add(0, task_k2perf, -1);

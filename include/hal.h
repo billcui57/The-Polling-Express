@@ -21,5 +21,5 @@ uint8_t uart_get_char(uart *u);
 void uart_put_str_block(uart *u, char *s);
 void panic(char *s);
 
-//KERNEL ONLY
+// KERNEL ONLY
 void enable_cache();

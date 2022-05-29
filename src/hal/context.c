@@ -1,6 +1,6 @@
 #include <context.h>
-#include <syscall.h>
 #include <my_assert.h>
+#include <syscall.h>
 
 registers kernel_reg;
 registers *user_reg;
