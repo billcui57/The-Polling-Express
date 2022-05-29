@@ -27,14 +27,13 @@ typedef int rpsserver_request_type;
 #define RESPONSE_TIE 1
 #define RESPONSE_YOU_WON 2
 #define RESPONSE_YOU_LOST 3
+#define RESPONSE_GAME_ENDED 4
 
 typedef int rpsserver_response_type;
 
 typedef int rps_move;
 
 typedef struct game {
-  bool started;
-
   task_tid player1;
   task_tid player2;
 
@@ -68,3 +67,4 @@ User Facing Interface
 */
 int SignUp(int *game_id);
 int Play(int game_id, rps_move move);
+int Quit(int game_id);

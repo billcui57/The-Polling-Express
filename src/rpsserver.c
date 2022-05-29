@@ -103,7 +103,7 @@ int Quit(int game_id) {
 
   body[0] = game_id;
 
-  rpsserver_request_init(&rq, REQUEST_PLAY, body, body_len);
+  rpsserver_request_init(&rq, REQUEST_QUIT, body, body_len);
 
   char *request_buffer = (char *)&rq; // Serialize
 
@@ -146,6 +146,19 @@ int Play(int game_id, rps_move move) {
       (rpsserver_response *)response_buffer; // Deserialize
 
   return response->type;
+}
+
+bool game_in_play(game *g) {
+  return ((g->player1 != NULL) && (g->player2 != NULL));
+}
+
+void free_used_game(game *g) {
+  g->player1 = PLAYER_NULL;
+  g->player2 = PLAYER_NULL;
+  g->player1_move = MOVE_NULL;
+  g->player2_move = MOVE_NULL;
+  g->next = free_game;
+  free_game = g;
 }
 
 void rpsserver() {
@@ -222,10 +235,64 @@ void rpsserver() {
       }
     } else if (request->type == REQUEST_QUIT) {
 
-      // case 1: game is in play
+      int game_id = request->body[0];
+      game *curr_game = &(game_backing[game_id]);
 
-      // case 2: game has not started
-      
+      if ((curr_game->player1 != who) && (curr_game->player2 != who)) {
+        rt = RESPONSE_NOT_YOUR_GAME;
+        body_len = 0;
+        rpsserver_response_init(&response, rt, response_body, body_len);
+        char *response_buffer = (char *)&response; // serialize
+        Reply(who, response_buffer, sizeof(rpsserver_response));
+        continue;
+      }
+
+      // if game does not have both players filled, then recycle the game
+      // if game has both players filled, then inform the other and recycle the
+      // game
+
+      if (game_in_play(curr_game)) {
+        printf(&pc, "Game in play, one player has quit\r\n");
+
+        task_tid other_player;
+
+        if (who == curr_game->player1) {
+          curr_game->player1 = PLAYER_NULL;
+          other_player = curr_game->player2;
+        } else {
+          curr_game->player2 = PLAYER_NULL;
+          other_player = curr_game->player1;
+        }
+
+        // has the other player gone first before I can quit? The other player
+        // would be waiting for a response
+
+        rps_move other_player_move = other_player == curr_game->player1
+                                         ? curr_game->player1_move
+                                         : curr_game->player2_move;
+
+        if (other_player_move != MOVE_NULL) {
+          // we can clean up this game
+
+          free_used_game(curr_game);
+
+          rt = RESPONSE_GAME_ENDED;
+          body_len = 0;
+          rpsserver_response_init(&response, rt, response_body, body_len);
+          char *response_buffer = (char *)&response; // serialize
+          Reply(other_player, response_buffer, sizeof(rpsserver_response));
+        }
+
+      } else {
+        // game isnt in play, one player is missing so we can directly free this
+        free_used_game(curr_game);
+      }
+
+      rt = RESPONSE_GOOD;
+      body_len = 0;
+      rpsserver_response_init(&response, rt, response_body, body_len);
+      char *response_buffer = (char *)&response; // serialize
+      Reply(who, response_buffer, sizeof(rpsserver_response));
 
     } else if (request->type == REQUEST_PLAY) {
 
@@ -233,6 +300,25 @@ void rpsserver() {
       int move = request->body[1];
 
       game *curr_game = &(game_backing[game_id]);
+
+      // has the other player quit?
+      if ((curr_game->player1 == PLAYER_NULL) ||
+          (curr_game->player2 == PLAYER_NULL)) {
+
+        printf(&pc, "Other player had quit, we tell current player that\r\n");
+
+        // we can clean up this game
+
+        free_used_game(curr_game);
+
+        rt = RESPONSE_GAME_ENDED;
+        body_len = 0;
+        rpsserver_response_init(&response, rt, response_body, body_len);
+        char *response_buffer = (char *)&response; // serialize
+        Reply(who, response_buffer, sizeof(rpsserver_response));
+        continue;
+      }
+
       // printf(&pc, "Referring to game %d\r\n", game_id);
 
       if (curr_game->player1 == who) {
