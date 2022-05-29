@@ -26,13 +26,14 @@ typedef struct registers {
 
 typedef struct user_task {
   uint32_t stack[STACK_SIZE];
+  int stack_check;
   registers reg;
 } user_task;
 
 void init_user_task(user_task *t, void (*func)());
-int run_user(registers *r);
-int get_data(registers *r);
-void set_return(registers *r, int data);
+int run_user(user_task *t);
+int get_data(user_task *t);
+void set_return(user_task *t, int data);
 void switch_user();
 void return_irq();
 void return_swi();

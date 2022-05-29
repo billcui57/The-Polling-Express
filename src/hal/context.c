@@ -1,10 +1,12 @@
 #include <context.h>
 #include <syscall.h>
+#include <my_assert.h>
 
 registers kernel_reg;
 registers *user_reg;
 
 void init_user_task(user_task *t, void (*func)()) {
+  t->stack_check = t;
   t->reg.r0 = 0;
   t->reg.r1 = 0;
   t->reg.r2 = 0;
@@ -24,16 +26,18 @@ void init_user_task(user_task *t, void (*func)()) {
   t->reg.psr = (1 << 7) | (0b10000);
 }
 
-int run_user(registers *r) {
-  user_reg = r;
+int run_user(user_task *t) {
+  KASSERT(t->stack_check == t, "STACK PREBROKEN");
+  user_reg = &t->reg;
   switch_user();
   user_reg = 0;
-  if (r->r15 & 1) {
-    r->r15--;
+  KASSERT(t->stack_check == t, "STACK POSTBROKEN");
+  if (t->reg.r15 & 1) {
+    t->reg.r15--;
     return SYSCALL_IRQ;
   }
-  return (*(uint32_t *)(r->r15 - 4)) & 0xFFFFFF;
+  return (*(uint32_t *)(t->reg.r15 - 4)) & 0xFFFFFF;
 }
 
-int get_data(registers *r) { return r->r0; }
-void set_return(registers *r, int data) { r->r0 = data; }
+int get_data(user_task *t) { return t->reg.r0; }
+void set_return(user_task *t, int data) { t->reg.r0 = data; }

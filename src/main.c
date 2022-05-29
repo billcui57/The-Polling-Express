@@ -19,11 +19,11 @@ int msg_copy(const char *src, int srclen, char *dest, int destlen) {
 void handle_send(TCB *src, TCB *dst) {
   src->state = REPLY;
   dst->state = READY;
-  send_args *s_args = (send_args *)get_data(&src->context.reg);
-  receive_args *r_args = (receive_args *)get_data(&dst->context.reg);
+  send_args *s_args = (send_args *)get_data(&src->context);
+  receive_args *r_args = (receive_args *)get_data(&dst->context);
   *r_args->tid = src->tid;
   int ret = msg_copy(s_args->msg, s_args->msglen, r_args->msg, r_args->msglen);
-  set_return(&dst->context.reg, ret);
+  set_return(&dst->context, ret);
   add_to_ready_queue(dst);
 }
 
@@ -44,18 +44,18 @@ void kmain() {
 
   while (!scheduler_empty()) {
     TCB *cur = pop_ready_queue();
-    int why = run_user(&cur->context.reg);
-    int data = get_data(&cur->context.reg);
+    int why = run_user(&cur->context);
+    int data = get_data(&cur->context);
     if (why == SYSCALL_CREATE) {
       create_args *args = (create_args *)data;
       int ret = scheduler_add(args->priority, args->function, cur->tid);
-      set_return(&cur->context.reg, ret);
+      set_return(&cur->context, ret);
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_MYTID) {
-      set_return(&cur->context.reg, cur->tid);
+      set_return(&cur->context, cur->tid);
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_MYPARENTTID) {
-      set_return(&cur->context.reg, cur->parentTid);
+      set_return(&cur->context, cur->parentTid);
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_YIELD) {
       add_to_ready_queue(cur);
@@ -65,7 +65,7 @@ void kmain() {
       send_args *args = (send_args *)data;
       TCB *target = &backing[args->tid];
       if (target->state == ZOMBIE) {
-        set_return(&cur->context.reg, EINVALIDTID);
+        set_return(&cur->context, EINVALIDTID);
         add_to_ready_queue(cur);
       } else if (target->state == RECEIVE) {
         handle_send(cur, target);
@@ -95,19 +95,19 @@ void kmain() {
       reply_args *args = (reply_args *)data;
       TCB *target = &backing[args->tid];
       if (target->state == ZOMBIE) {
-        set_return(&cur->context.reg, EINVALIDTID);
+        set_return(&cur->context, EINVALIDTID);
         add_to_ready_queue(cur);
       } else if (target->state != REPLY) {
-        set_return(&cur->context.reg, ENOTREPLYWAIT);
+        set_return(&cur->context, ENOTREPLYWAIT);
         add_to_ready_queue(cur);
       } else {
-        send_args *s_args = (send_args *)get_data(&target->context.reg);
+        send_args *s_args = (send_args *)get_data(&target->context);
         target->state = READY;
         int ret =
             msg_copy(args->reply, args->rplen, s_args->reply, s_args->rplen);
-        set_return(&target->context.reg, ret);
+        set_return(&target->context, ret);
         add_to_ready_queue(target);
-        set_return(&cur->context.reg, ret);
+        set_return(&cur->context, ret);
         add_to_ready_queue(cur);
       }
     } else {
