@@ -3,6 +3,7 @@
 #include "rpsserver.h"
 #include <kprintf.h>
 #include <my_memory.h>
+#include <my_string.h>
 #include <nameserver.h>
 #include <syscall.h>
 

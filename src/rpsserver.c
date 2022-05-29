@@ -34,7 +34,9 @@ void rpsserver_response_init(rpsserver_response *rs,
 
 void rpsserver() {
 
-  while (RegisterAs("rpsserver") != 0)
+  char my_name[] = "rpsserver";
+
+  while (RegisterAs(my_name) != 0)
     ;
 
   // KASSERT(WhoIs("rpsserver") == MyTid(), "Rpsserver should be registered");

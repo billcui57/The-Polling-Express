@@ -9,19 +9,22 @@ void task_k1init() {
 }
 
 void task1() {
-  while (RegisterAs("abc") != 0)
+
+  char abc[] = "abc";
+
+  while (RegisterAs(abc) != 0)
     ;
 
   for (;;) {
 
-    task_tid tid = WhoIs("abc");
+    task_tid tid = WhoIs(abc);
 
     if (tid == -1) {
       printf(&pc, "ERROR\r\n");
     } else {
 
       if (tid == 3) {
-        while (RegisterAs("abc") != 0)
+        while (RegisterAs(abc) != 0)
           ;
       }
       printf(&pc, "%d\r\n", tid);
@@ -30,18 +33,20 @@ void task1() {
 }
 
 void task2() {
-  while (RegisterAs("abc") != 0)
+  char abc[] = "abc";
+
+  while (RegisterAs(abc) != 0)
     ;
   for (;;) {
 
-    task_tid tid = WhoIs("abc");
+    task_tid tid = WhoIs(abc);
 
     if (tid == -1) {
       printf(&pc, "ERROR\r\n");
     } else {
 
       if (tid == 2) {
-        while (RegisterAs("abc") != 0)
+        while (RegisterAs(abc) != 0)
           ;
       }
 
