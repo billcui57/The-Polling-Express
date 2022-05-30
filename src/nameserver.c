@@ -31,6 +31,14 @@ void nameserver_response_init(nameserver_response *rs,
          min(sizeof(char) * (MAX_BODY_LENGTH), sizeof(char) * body_length));
 }
 
+int get_tid_from_nameserver_response(nameserver_response *rs) {
+
+  KASSERT(rs->body_length >= 4, "Must hold 4 bytes");
+
+  return (rs->body[0] << 24) | (rs->body[1] << 16) | (rs->body[2] << 8) |
+         rs->body[3];
+}
+
 int nameserver_tid = -1;
 
 void nameserver() {
@@ -90,8 +98,12 @@ void nameserver() {
       default:
         break;
       }
-      body_len = 1;
-      response_body[0] = lookup_tid;
+      body_len = 4;
+
+      response_body[0] = (lookup_tid >> 24) & 0xFF;
+      response_body[1] = (lookup_tid >> 16) & 0xFF;
+      response_body[2] = (lookup_tid >> 8) & 0xFF;
+      response_body[3] = lookup_tid & 0xFF;
     }
     nameserver_response_init(&response, rt, response_body, body_len);
     char *response_buffer = (char *)&response; // serialize

@@ -32,13 +32,13 @@ typedef struct nameserver_response {
 extern task_tid nameserver_tid;
 
 void nameserver_request_init(nameserver_request *rq,
-                             nameserver_request_type type,
-                             const char *body,
+                             nameserver_request_type type, const char *body,
                              unsigned int body_length);
 
 void nameserver_response_init(nameserver_response *rs,
-                              nameserver_response_type type,
-                              const char *body,
+                              nameserver_response_type type, const char *body,
                               unsigned int body_length);
+
+int get_tid_from_nameserver_response(nameserver_response *rs);
 
 void nameserver();

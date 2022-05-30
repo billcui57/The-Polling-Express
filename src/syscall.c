@@ -106,7 +106,7 @@ int WhoIs(const char *name) {
       (nameserver_response *)response_buffer; // Deserialize
 
   if (response->type == RESPONSE_GOOD) {
-    return (response->body)[0];
+    return get_tid_from_nameserver_response(response);
   } else if (response->type == RESPONSE_NAME_DNE) {
     return -2;
   } else {
