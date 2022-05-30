@@ -78,7 +78,7 @@ void kmain() {
         } else {
           TCB *target = &backing[args->tid];
           if (target->state == ZOMBIE) {
-            set_return(&cur->context.reg, EINVALIDTID);
+            set_return(&cur->context, EINVALIDTID);
             add_to_ready_queue(cur);
           } else if (target->state == RECEIVE) {
             handle_send(cur, target);

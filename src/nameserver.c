@@ -31,7 +31,7 @@ void nameserver_response_init(nameserver_response *rs,
          min(sizeof(char) * (MAX_BODY_LENGTH), sizeof(char) * body_length));
 }
 
-nameserver_tid = -1;
+int nameserver_tid = -1;
 
 void nameserver() {
 

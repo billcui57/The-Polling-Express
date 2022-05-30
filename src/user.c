@@ -89,8 +89,8 @@ void task1() {
 
   char input[MAX_INPUT_LENGTH];
   char output[MAX_OUTPUT_LENGTH];
-  memset(input, "\0", MAX_INPUT_LENGTH);
-  memset(input, "\0", MAX_OUTPUT_LENGTH);
+  memset(input, 0, MAX_INPUT_LENGTH);
+  memset(input, 0, MAX_OUTPUT_LENGTH);
 
   int game_id;
 
