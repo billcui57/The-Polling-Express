@@ -252,7 +252,7 @@ void rpsserver() {
       // game
 
       if (game_in_play(curr_game)) {
-        printf(&pc, "Game in play, one player has quit\r\n");
+        // printf(&pc, "Game in play, one player has quit\r\n");
 
         task_tid other_player;
 
@@ -305,7 +305,8 @@ void rpsserver() {
       if ((curr_game->player1 == PLAYER_NULL) ||
           (curr_game->player2 == PLAYER_NULL)) {
 
-        printf(&pc, "Other player had quit, we tell current player that\r\n");
+        // printf(&pc, "Other player had quit, we tell current player
+        // that\r\n");
 
         // we can clean up this game
 

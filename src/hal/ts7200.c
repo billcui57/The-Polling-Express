@@ -46,6 +46,12 @@ uint8_t uart_get_char(uart *u) {
   return *(char *)(u->base_addr + UART_DATA_OFFSET);
 }
 
+uint8_t bw_uart_get_char(uart *u) {
+  while (!uart_can_read(u))
+    ;
+  return uart_get_char(u);
+}
+
 void panic(char *s) {
   uart u;
   u.base_addr = UART2_BASE;
@@ -71,7 +77,7 @@ void enable_cache() {
   }
   __asm__ volatile("MCR p15,0,%[zero],c7,c5,0" ::[zero] "r"(0));
   int reg;
-  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [reg] "=r"(reg));
+  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [ reg ] "=r"(reg));
   reg = reg | 1 << 12 | 1 << 2;
   __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
 }

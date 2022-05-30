@@ -18,6 +18,8 @@ bool uart_can_write(uart *u);
 void uart_put_char(uart *u, uint8_t c);
 uint8_t uart_get_char(uart *u);
 
+uint8_t bw_uart_get_char(uart *u);
+
 void uart_put_str_block(uart *u, char *s);
 void panic(char *s);
 

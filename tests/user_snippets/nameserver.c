@@ -3,7 +3,6 @@
 void task_k1init() {
   int ret;
   ret = Create(-10, nameserver);
-
   Create(-10, task1);
   Create(-10, task2);
 }
