@@ -133,6 +133,8 @@ int Play(int game_id, rps_move move) {
   body[0] = game_id;
   body[1] = move;
 
+  // printf(&pc, "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\tPlaying %d\r\n", body[1]);
+
   rpsserver_request_init(&rq, REQUEST_PLAY, body, body_len);
 
   char *request_buffer = (char *)&rq; // Serialize
@@ -247,45 +249,38 @@ void rpsserver() {
         continue;
       }
 
-      // if game does not have both players filled, then recycle the game
       // if game has both players filled, then inform the other and recycle the
       // game
 
-      if (game_in_play(curr_game)) {
-        // printf(&pc, "Game in play, one player has quit\r\n");
+      // printf(&pc, "Game in play, one player has quit\r\n");
 
-        task_tid other_player;
+      task_tid other_player;
 
-        if (who == curr_game->player1) {
-          curr_game->player1 = PLAYER_NULL;
-          other_player = curr_game->player2;
-        } else {
-          curr_game->player2 = PLAYER_NULL;
-          other_player = curr_game->player1;
-        }
-
-        // has the other player gone first before I can quit? The other player
-        // would be waiting for a response
-
-        rps_move other_player_move = other_player == curr_game->player1
-                                         ? curr_game->player1_move
-                                         : curr_game->player2_move;
-
-        if (other_player_move != MOVE_NULL) {
-          // we can clean up this game
-
-          free_used_game(curr_game);
-
-          rt = RESPONSE_GAME_ENDED;
-          body_len = 0;
-          rpsserver_response_init(&response, rt, response_body, body_len);
-          char *response_buffer = (char *)&response; // serialize
-          Reply(other_player, response_buffer, sizeof(rpsserver_response));
-        }
-
+      if (who == curr_game->player1) {
+        curr_game->player1 = PLAYER_NULL;
+        other_player = curr_game->player2;
       } else {
-        // game isnt in play, one player is missing so we can directly free this
+        curr_game->player2 = PLAYER_NULL;
+        other_player = curr_game->player1;
+      }
+
+      // has the other player gone first before I can quit? The other player
+      // would be waiting for a response
+
+      rps_move other_player_move = other_player == curr_game->player1
+                                       ? curr_game->player1_move
+                                       : curr_game->player2_move;
+
+      if (other_player_move != MOVE_NULL) {
+        // we can clean up this game
+
         free_used_game(curr_game);
+
+        rt = RESPONSE_GAME_ENDED;
+        body_len = 0;
+        rpsserver_response_init(&response, rt, response_body, body_len);
+        char *response_buffer = (char *)&response; // serialize
+        Reply(other_player, response_buffer, sizeof(rpsserver_response));
       }
 
       rt = RESPONSE_GOOD;
@@ -293,7 +288,6 @@ void rpsserver() {
       rpsserver_response_init(&response, rt, response_body, body_len);
       char *response_buffer = (char *)&response; // serialize
       Reply(who, response_buffer, sizeof(rpsserver_response));
-
     } else if (request->type == REQUEST_PLAY) {
 
       int game_id = request->body[0];
@@ -338,20 +332,19 @@ void rpsserver() {
       }
       // printf(&pc, "HERE\r\n");
 
-      // printf(&pc, "Once again, Player 1 played %d\r\n",
-      //        curr_game->player1_move);
-      // printf(&pc, "Once again, Player 2 played %d\r\n",
-      //        curr_game->player2_move);
-
       if ((curr_game->player1_move != MOVE_NULL) &&
           (curr_game->player2_move != MOVE_NULL)) {
         // printf(&pc, "About to judge\r\n");
         int winner = who_won(curr_game->player1_move, curr_game->player2_move);
+        // printf(&pc, "\033[10;1H");
+        // printf(&pc, "\t\t\t%d won\r\n", winner);
+        printf(&pc, "\r\n\r\n\r\nOnce again, Player 1 played %d\r\n",
+               curr_game->player1_move);
+        printf(&pc, "Once again, Player 2 played %d\r\n",
+               curr_game->player2_move);
 
-        // printf(&pc, "%d won\r\n", winner);
-
-        task_tid winner_tid;
-
+        curr_game->player1_move = MOVE_NULL;
+        curr_game->player2_move = MOVE_NULL;
         if (winner == 0) {
           rt = RESPONSE_TIE;
           body_len = 0;
@@ -376,9 +369,6 @@ void rpsserver() {
           Reply(winner == 1 ? curr_game->player2 : curr_game->player1,
                 response_buffer2, sizeof(rpsserver_response));
         }
-
-        curr_game->player1_move = MOVE_NULL;
-        curr_game->player2_move = MOVE_NULL;
       }
     }
   }
