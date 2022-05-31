@@ -1,7 +1,6 @@
 #pragma once
 
 #include "my_assert.h"
-#include "my_string.h"
 #include "nameserver.h"
 
 #define SYSCALL_IRQ 0

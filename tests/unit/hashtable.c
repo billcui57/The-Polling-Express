@@ -9,7 +9,7 @@ void basic() {
 
   struct hashtable ht;
 
-  ht_init(&ht, capacity, &backing);
+  ht_init(&ht, capacity, backing);
 
   // for (unsigned int i = 0; i < ht.capacity; i++) {
   //   for (unsigned int j = 0; j < ht.size; j++) {
@@ -29,7 +29,7 @@ void basic() {
   //   }
   // }
 
-  void * b ;
+  void *b;
   status = ht_get(&ht, "hello", &b);
   // printf("===============================\r\n");
 
@@ -39,7 +39,7 @@ void basic() {
 
   assert(status != E_KEY_MISSING);
 
-  assert(a == (unsigned int) b);
+  assert(a == (unsigned int)b);
 }
 
 // void override() {

@@ -43,6 +43,7 @@ void kmain() {
   *((void (**)())0x28) = &return_swi;
 
   scheduler_add(0, task_k2perf, -1);
+  scheduler_add(0, task_k2rpsinit, -1);
 
   while (!scheduler_empty()) {
     TCB *cur = pop_ready_queue();
@@ -65,28 +66,35 @@ void kmain() {
       cur->state = ZOMBIE;
     } else if (why == SYSCALL_SEND) {
       send_args *args = (send_args *)data;
-      TCB *target = &backing[args->tid];
-      if (target->state == ZOMBIE) {
+
+      if ((args->tid < 0) || (args->tid > MAX_NUM_TASKS)) {
         set_return(&cur->context, EINVALIDTID);
         add_to_ready_queue(cur);
       } else {
         TCB *target = &backing[args->tid];
         if (target->state == ZOMBIE) {
-          set_return(&cur->context.reg, EINVALIDTID);
+          set_return(&cur->context, EINVALIDTID);
           add_to_ready_queue(cur);
-        } else if (target->state == RECEIVE) {
-          handle_send(cur, target);
         } else {
-          cur->state = SEND;
-          cur->next = NULL;
-          if (target->want_send_end) {
-            target->want_send_end->next = cur;
+          TCB *target = &backing[args->tid];
+          if (target->state == ZOMBIE) {
+            set_return(&cur->context, EINVALIDTID);
+            add_to_ready_queue(cur);
+          } else if (target->state == RECEIVE) {
+            handle_send(cur, target);
           } else {
-            target->want_send = cur;
+            cur->state = SEND;
+            cur->next = NULL;
+            if (target->want_send_end) {
+              target->want_send_end->next = cur;
+            } else {
+              target->want_send = cur;
+            }
+            target->want_send_end = cur;
           }
-          target->want_send_end = cur;
         }
       }
+
     } else if (why == SYSCALL_RECEIVE) {
       if (cur->want_send) {
         TCB *src = cur->want_send;

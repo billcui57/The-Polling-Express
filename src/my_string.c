@@ -1,7 +1,7 @@
-#include "my_string.h"
+#include <string.h>
 
-void strncpy(char *dest, const char *src, size_t n) {
-
+char *strncpy(char *dest, const char *src, size_t n) {
+  char *dest_saved = dest;
   while (*src && n >= 0) {
     *dest = *src;
     dest++;
@@ -9,6 +9,7 @@ void strncpy(char *dest, const char *src, size_t n) {
     n--;
   }
   *dest = '\0';
+  return dest_saved;
 }
 
 unsigned int strlen(const char *str) {
