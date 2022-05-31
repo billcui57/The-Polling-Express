@@ -103,6 +103,9 @@ void task_k2rpsbot2() {
     } else {
       printf(&pc, "Something terrible has happened\r\n");
     }
+
+    int result = Play(game_id, move);
+    printf(&pc, "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\tReturning |%d|\r\n", result);
   }
 
   status = Quit(game_id);
@@ -113,13 +116,21 @@ void task_k2perf() {
   int sz[] = {4, 64, 256};
   int echo;
   int send;
+  int a = 0;
+  unsigned int timer;
   unsigned int time_diff;
+  int cal = Create(100, task_calibrate);
+
+  Send(cal, (char *)&a, 0, (char *)&timer, sizeof(unsigned int));
+  printf(&pc, "Timer Calibration: %d\r\n", (timer * 1000) / 508);
+
   for (int i = 0; i < 3; i++) {
     echo = Create(10, task_echo);
     int params[] = {sz[i], echo};
     send = Create(5, task_send);
     Send(send, (char *)&params, 2 * sizeof(int), (char *)&time_diff,
          sizeof(unsigned int));
+    time_diff -= timer;
     printf(&pc, "noopt cache R %d %d \r\n", sz[i], (time_diff * 10) / 508);
   }
   for (int i = 0; i < 3; i++) {
@@ -128,12 +139,30 @@ void task_k2perf() {
     send = Create(5, task_send);
     Send(send, (char *)&params, 2 * sizeof(int), (char *)&time_diff,
          sizeof(unsigned int));
+    time_diff -= timer;
     printf(&pc, "noopt cache S %d %d \r\n", sz[i], (time_diff * 10) / 508);
   }
 }
 
-unsigned int read_timer3() {
-  return *(unsigned int *)(TIMER3_BASE + VAL_OFFSET);
+volatile unsigned int read_timer3() {
+  return *(volatile unsigned int *)(TIMER3_BASE + VAL_OFFSET);
+}
+
+void task_calibrate() {
+  int who;
+  int a = 0;
+  Receive(&who, (char *)&a, 0);
+  unsigned int all = 0;
+  for (int j = 0; j<100; j++){
+    unsigned int start = read_timer3();
+    for (int i = 0; i < 100; i++) {
+      __asm__("nop");
+    }
+    unsigned int end = start - read_timer3();
+    all += end;
+  }
+  all = all / 100;
+  Reply(who, (char *)&all, sizeof(unsigned int));
 }
 
 void task_echo() {
