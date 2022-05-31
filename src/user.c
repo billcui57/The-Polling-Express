@@ -103,9 +103,6 @@ void task_k2rpsbot2() {
     } else {
       printf(&pc, "Something terrible has happened\r\n");
     }
-
-    int result = Play(game_id, move);
-    printf(&pc, "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\tReturning |%d|\r\n", result);
   }
 
   status = Quit(game_id);
@@ -131,7 +128,7 @@ void task_k2perf() {
     Send(send, (char *)&params, 2 * sizeof(int), (char *)&time_diff,
          sizeof(unsigned int));
     time_diff -= timer;
-    printf(&pc, "noopt cache R %d %d \r\n", sz[i], (time_diff * 10) / 508);
+    printf(&pc, "R %d %d \r\n", sz[i], (time_diff * 10) / 508);
   }
   for (int i = 0; i < 3; i++) {
     echo = Create(-5, task_echo);
@@ -140,7 +137,7 @@ void task_k2perf() {
     Send(send, (char *)&params, 2 * sizeof(int), (char *)&time_diff,
          sizeof(unsigned int));
     time_diff -= timer;
-    printf(&pc, "noopt cache S %d %d \r\n", sz[i], (time_diff * 10) / 508);
+    printf(&pc, "S %d %d \r\n", sz[i], (time_diff * 10) / 508);
   }
 }
 
