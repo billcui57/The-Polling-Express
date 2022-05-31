@@ -261,6 +261,7 @@ void task_k2perf() {
   int echo;
   int send;
   unsigned int time_diff;
+  Create(100, task_calibrate);
   for (int i = 0; i < 3; i++) {
     echo = Create(10, task_echo);
     int params[] = {sz[i], echo};
@@ -279,8 +280,21 @@ void task_k2perf() {
   }
 }
 
-unsigned int read_timer3() {
-  return *(unsigned int *)(TIMER3_BASE + VAL_OFFSET);
+volatile unsigned int read_timer3() {
+  return *(volatile unsigned int *)(TIMER3_BASE + VAL_OFFSET);
+}
+
+void task_calibrate() {
+  unsigned int all = 0;
+  for (int j = 0; j<100; j++){
+    unsigned int start = read_timer3();
+    for (int i = 0; i < 100; i++) {
+      __asm__("nop");
+    }
+    unsigned int end = start - read_timer3();
+    all += end;
+  }
+  printf(&pc, "Timer Calibration: %d\r\n", (all * 10) / 508);
 }
 
 void task_echo() {

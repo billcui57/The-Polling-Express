@@ -15,6 +15,7 @@ void task_k2rpsbot();
 void task_k2perf();
 void task_echo();
 void task_send();
+void task_calibrate();
 
 // K1 Context switching test
 void task_k1init();
