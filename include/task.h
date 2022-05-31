@@ -6,7 +6,7 @@
 #include <stddef.h>
 #include <timer.h>
 
-#define MAX_NUM_TASKS 100
+#define MAX_NUM_TASKS 1000
 
 typedef enum tcb_state {
   ACTIVE,

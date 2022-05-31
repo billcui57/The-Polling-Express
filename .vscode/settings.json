@@ -15,6 +15,7 @@
     "timer.h": "c",
     "context.h": "c",
     "typeinfo": "c",
-    "hashtable.h": "c"
+    "hashtable.h": "c",
+    "cstdio": "c"
   }
 }
