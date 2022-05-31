@@ -34,9 +34,6 @@ void rpsserver_response_init(rpsserver_response *rs,
 
 int who_won(rps_move player1_move, rps_move player2_move) {
 
-  // printf(&pc, "Player 1 move: %d, Player 2 move: %d\r\n", player1_move,
-  //        player2_move);
-
   if ((player1_move == MOVE_PAPER) && (player2_move == MOVE_PAPER)) {
     return 0;
   } else if ((player1_move == MOVE_PAPER) && (player2_move == MOVE_ROCK)) {
@@ -132,8 +129,6 @@ int Play(int game_id, rps_move move) {
 
   body[0] = game_id;
   body[1] = move;
-
-  // printf(&pc, "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\tPlaying %d\r\n", body[1]);
 
   rpsserver_request_init(&rq, REQUEST_PLAY, body, body_len);
 
@@ -252,8 +247,6 @@ void rpsserver() {
       // if game has both players filled, then inform the other and recycle the
       // game
 
-      // printf(&pc, "Game in play, one player has quit\r\n");
-
       task_tid other_player;
 
       if (who == curr_game->player1) {
@@ -299,11 +292,6 @@ void rpsserver() {
       if ((curr_game->player1 == PLAYER_NULL) ||
           (curr_game->player2 == PLAYER_NULL)) {
 
-        // printf(&pc, "Other player had quit, we tell current player
-        // that\r\n");
-
-        // we can clean up this game
-
         free_used_game(curr_game);
 
         rt = RESPONSE_GAME_ENDED;
@@ -314,14 +302,12 @@ void rpsserver() {
         continue;
       }
 
-      // printf(&pc, "Referring to game %d\r\n", game_id);
-
-      if (curr_game->player1 == who) {
+      if ((curr_game->player1 == who) &&
+          (curr_game->player1_move == MOVE_NULL)) {
         curr_game->player1_move = move;
-        // printf(&pc, "Player 1 played %d\r\n", move);
-      } else if (curr_game->player2 == who) {
+      } else if ((curr_game->player2 == who) &&
+                 (curr_game->player2_move == MOVE_NULL)) {
         curr_game->player2_move = move;
-        // printf(&pc, "Player 2 played %d\r\n", move);
       } else {
         rt = RESPONSE_NOT_YOUR_GAME;
         body_len = 0;
@@ -330,18 +316,10 @@ void rpsserver() {
         Reply(who, response_buffer, sizeof(rpsserver_response));
         continue;
       }
-      // printf(&pc, "HERE\r\n");
 
       if ((curr_game->player1_move != MOVE_NULL) &&
           (curr_game->player2_move != MOVE_NULL)) {
-        // printf(&pc, "About to judge\r\n");
         int winner = who_won(curr_game->player1_move, curr_game->player2_move);
-        // printf(&pc, "\033[10;1H");
-        // printf(&pc, "\t\t\t%d won\r\n", winner);
-        printf(&pc, "\r\n\r\n\r\nOnce again, Player 1 played %d\r\n",
-               curr_game->player1_move);
-        printf(&pc, "Once again, Player 2 played %d\r\n",
-               curr_game->player2_move);
 
         curr_game->player1_move = MOVE_NULL;
         curr_game->player2_move = MOVE_NULL;

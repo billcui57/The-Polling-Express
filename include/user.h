@@ -8,8 +8,8 @@
 
 // K2 RPS
 void task_k2rpsinit();
-void task_k2rpsuser();
-void task_k2rpsbot();
+void task_k2rpsbot1();
+void task_k2rpsbot2();
 
 // K2 Perf
 void task_k2perf();
