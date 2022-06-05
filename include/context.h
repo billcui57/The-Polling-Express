@@ -26,8 +26,9 @@ typedef struct registers {
 } registers;
 
 typedef struct user_task {
+  int stack_check_a;
   uint32_t stack[STACK_SIZE];
-  int stack_check;
+  int stack_check_b;
   registers reg;
 } user_task;
 

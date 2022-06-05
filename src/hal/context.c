@@ -8,7 +8,8 @@ registers *user_reg;
 uint32_t irq_stack[16];
 
 void init_user_task(user_task *t, void (*func)()) {
-  t->stack_check = t;
+  t->stack_check_a = ((int) t) ^ 93;
+  t->stack_check_b = ((int) t) ^ 72;
   t->reg.r0 = 0;
   t->reg.r1 = 0;
   t->reg.r2 = 0;
@@ -29,11 +30,13 @@ void init_user_task(user_task *t, void (*func)()) {
 }
 
 int run_user(user_task *t) {
-  KASSERT(t->stack_check == t, "STACK PREBROKEN");
+  KASSERT(t->stack_check_a == (((int) t) ^ 93), "STACK PREBROKEN_A");
+  KASSERT(t->stack_check_b == (((int) t) ^ 72), "STACK PREBROKEN_B");
   user_reg = &t->reg;
   switch_user();
   user_reg = 0;
-  KASSERT(t->stack_check == t, "STACK POSTBROKEN");
+  KASSERT(t->stack_check_a == (((int) t) ^ 93), "STACK POSTBROKEN_A");
+  KASSERT(t->stack_check_b == (((int) t) ^ 72), "STACK POSTBROKEN_B");
   if (t->reg.r15 & 1) {
     t->reg.r15--;
     return SYSCALL_IRQ;
