@@ -25,3 +25,4 @@ void panic(char *s);
 
 // KERNEL ONLY
 void enable_cache();
+void enable_irq();

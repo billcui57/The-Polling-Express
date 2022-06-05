@@ -81,3 +81,16 @@ void enable_cache() {
   reg = reg | 1 << 12 | 1 << 2;
   __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
 }
+
+void enable_irq() {
+
+  *(int *)(VIC1_BASE + INT_ENABLE_OFFSET) = 0;
+  *(int *)(VIC2_BASE + INT_ENABLE_OFFSET) = 0;
+
+  // enable TC3 interrupt
+  int *enable = (int *)(VIC2_BASE + INT_ENABLE_OFFSET);
+  int *select = (int *)(VIC2_BASE + INT_SELECT_OFFSET);
+
+  *select = *select & ~(1 << 19); // use IRQ
+  *enable = *enable | (1 << 19);
+}

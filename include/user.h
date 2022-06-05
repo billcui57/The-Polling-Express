@@ -20,3 +20,8 @@ void task_calibrate();
 // K1 Context switching test
 void task_k1init();
 void task_k1test();
+
+// K3
+void task_k3init();
+void task_k3_1();
+void task_k3_2();

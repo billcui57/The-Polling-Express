@@ -133,3 +133,14 @@ int RegisterAs(const char *name) {
 
   return 0;
 }
+
+int AwaitEvent(int eventid) {
+  int ret;
+  __asm__ volatile("mov r0, %[arg] \n\t"
+                   "swi %[syscall] \n\t"
+                   "mov %[ret], r0"
+                   : [ ret ] "=r"(ret)
+                   : [ syscall ] "i"(SYSCALL_AWAITEVENT), [ arg ] "r"(eventid)
+                   : "r0");
+  return ret;
+}
