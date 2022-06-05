@@ -15,6 +15,8 @@
 #define SYSCALL_RECEIVE 8
 #define SYSCALL_REPLY 9
 
+#define SYSCALL_AWAITEVENT 10
+
 #define EINVALIDPRIORITY -1   // invalid priority
 #define ENOTASKDESCRIPTORS -2 // kernel is out of task descriptors
 

@@ -8,10 +8,8 @@ void timer_init(timer *t, int timer_num) {
     t->load = (unsigned int *)(TIMER3_BASE + LDR_OFFSET);
     t->value = (unsigned int *)(TIMER3_BASE + VAL_OFFSET);
 
-    // FASTCLOCK
-    // FMODE
-    *(t->load) = 0;
-    *(t->control) = CLKSEL_MASK;
+    *(t->load) = 508 * 10;
+    *(t->control) = CLKSEL_MASK | MODE_MASK;               // FASTCLOCK, PMODE
     t->clock_rate = FASTCLOCKRATE;
     break;
   default:

@@ -5,6 +5,8 @@
 registers kernel_reg;
 registers *user_reg;
 
+uint32_t irq_stack[16];
+
 void init_user_task(user_task *t, void (*func)()) {
   t->stack_check = t;
   t->reg.r0 = 0;
@@ -23,7 +25,7 @@ void init_user_task(user_task *t, void (*func)()) {
   t->reg.r13 = &t->stack[STACK_SIZE - 1];
   t->reg.r14 = &Exit;
   t->reg.r15 = func;
-  t->reg.psr = (1 << 7) | (0b10000);
+  t->reg.psr = (0b10000);
 }
 
 int run_user(user_task *t) {

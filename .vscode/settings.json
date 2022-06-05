@@ -16,6 +16,8 @@
     "context.h": "c",
     "typeinfo": "c",
     "hashtable.h": "c",
-    "cstdio": "c"
+    "cstdio": "c",
+    "event.h": "c",
+    "hal.h": "c"
   }
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory.h>
 #include <stdint.h>
 
 #define STACK_SIZE 2048
@@ -37,5 +38,7 @@ void set_return(user_task *t, int data);
 void switch_user();
 void return_irq();
 void return_swi();
+
 extern registers kernel_reg;
 extern registers *user_reg;
+extern uint32_t irq_stack[16];

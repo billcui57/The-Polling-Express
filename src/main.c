@@ -2,6 +2,7 @@
 #include <hal.h>
 #include <kprintf.h>
 #include <my_assert.h>
+#include <my_event.h>
 #include <syscall.h>
 #include <task.h>
 #include <timer.h>
@@ -33,6 +34,13 @@ void kmain() {
 
   enable_cache();
 
+  TCB *event_mapping[NUMBER_OF_EVENTS];
+  for (unsigned int i = 0; i < NUMBER_OF_EVENTS; i++) {
+    event_mapping[i] = NULL;
+  }
+
+  enable_irq();
+
   timer t;
   timer_init(&t, TIMER3);
 
@@ -40,14 +48,28 @@ void kmain() {
   TCB *heap[MAX_NUM_TASKS];
   scheduler_init(MAX_NUM_TASKS, backing, heap, &t);
 
+  __asm__ volatile(
+    "MRS R0, CPSR\n\t"
+    "BIC R0, R0, #0x1F\n\t"
+    "ORR R0, R0, #0x12\n\r"
+    "MSR CPSR_c, R0\n\r"
+    "MOV SP, %[irq_stack]\n\r"
+    "ORR R0, R0, #1\n\r"
+    "MSR CPSR_c, R0\n\r"
+    :: [irq_stack] "r" (&irq_stack[15])
+    : "r0"
+  );
+
   *((void (**)())0x28) = &return_swi;
+  *((void (**)())0x38) = &return_irq;
 
-  //scheduler_add(0, task_k2perf, -1);
-  scheduler_add(0, task_k2rpsinit, -1);
-
+  scheduler_add(0, task_k3init, -1);
   while (!scheduler_empty()) {
+
     TCB *cur = pop_ready_queue();
+
     int why = run_user(&cur->context);
+
     int data = get_data(&cur->context);
     if (why == SYSCALL_CREATE) {
       create_args *args = (create_args *)data;
@@ -126,6 +148,34 @@ void kmain() {
         set_return(&cur->context, ret);
         add_to_ready_queue(cur);
       }
+    } else if (why == SYSCALL_AWAITEVENT) {
+
+      int event = data;
+
+      KASSERT(event_mapping[event] == NULL,
+              "No other task should be waiting for this event");
+
+      event_mapping[event] = cur;
+
+    } else if (why == SYSCALL_IRQ) {
+
+      // now we determine who caused this interrupt
+
+      int vic1_irq_status = *(volatile int *)(VIC1_BASE + IRQ_STAT_OFFSET);
+      int vic2_irq_status = *(volatile int *)(VIC2_BASE + IRQ_STAT_OFFSET);
+
+      if (vic2_irq_status & VIC_TIMER3_MASK){
+        *(int *)(TIMER3_BASE + CLR_OFFSET) = 1; // clear timer interrupt
+        if (event_mapping[TIMER_TICK] != NULL) {
+          TCB *waiting_task = event_mapping[TIMER_TICK];
+          event_mapping[TIMER_TICK] = NULL;
+          set_return(&(waiting_task->context), 0);
+          add_to_ready_queue(waiting_task);
+        }
+      }
+
+      add_to_ready_queue(cur);
+
     } else {
       KASSERT(0, "Unknown Syscall\r\n");
     }
