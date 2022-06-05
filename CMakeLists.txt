@@ -20,7 +20,6 @@ src/user.c
 src/timer.c
 src/hashtable.c
 src/nameserver.c
-src/rpsserver.c
 src/my_string.c
 src/my_memory.c
 )
