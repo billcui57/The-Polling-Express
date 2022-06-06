@@ -10,5 +10,7 @@
 
 // K3
 void task_k3init();
-void task_k3_1();
+void task_k3_client();
 void task_k3_2();
+
+void idle();

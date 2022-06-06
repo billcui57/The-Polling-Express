@@ -4,6 +4,7 @@
 
 // put list of common events here
 enum Event {
+  ANY_EVENT,
   TIMER_TICK,
   NUMBER_OF_EVENTS // must always be last. First element must either
                    // be =0 or no

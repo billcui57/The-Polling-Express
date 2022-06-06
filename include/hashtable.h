@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string.h>
 #include <memory.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 typedef struct hashtable {
   void **arr;
   size_t capacity;

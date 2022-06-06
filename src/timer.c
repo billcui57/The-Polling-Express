@@ -1,4 +1,7 @@
 #include "timer.h"
+
+#include <stdint.h>
+
 void start_timer(timer *t);
 
 void timer_init(timer *t, int timer_num) {
@@ -9,7 +12,7 @@ void timer_init(timer *t, int timer_num) {
     t->value = (unsigned int *)(TIMER3_BASE + VAL_OFFSET);
 
     *(t->load) = 508 * 10;
-    *(t->control) = CLKSEL_MASK | MODE_MASK;               // FASTCLOCK, PMODE
+    *(t->control) = CLKSEL_MASK | MODE_MASK; // FASTCLOCK, PMODE
     t->clock_rate = FASTCLOCKRATE;
     break;
   default:
@@ -75,4 +78,12 @@ bool has_time_elapsed(timer *t, unsigned int start_time, unsigned int ticks) {
   unsigned int curr_time = 0;
   read_timer(t, &curr_time);
   return start_time - curr_time > ticks;
+}
+
+void timer4_init() { *(unsigned int *)(TIMER4_BASE + 4) = 1 << 8; }
+
+unsigned int timer4_read() {
+  uint64_t a = *(volatile unsigned int *)TIMER4_BASE;
+  uint64_t b = *(volatile unsigned int *)(TIMER4_BASE + 4);
+  return ((b & 0xff) << 32 | a) / 983;
 }
