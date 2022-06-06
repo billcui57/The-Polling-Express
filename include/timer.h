@@ -32,4 +32,6 @@ void get_formatted_curr_time(timer *t, int *result);
 int ticks_to_micro_secs_full(unsigned int ticks, unsigned int clock_rate);
 int tens_secs_to_ticks(unsigned int tens_secs, unsigned int clock_rate);
 
+void timer4_init();
+unsigned int timer4_read();
 #endif // TIMER_H

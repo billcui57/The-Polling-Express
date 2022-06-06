@@ -43,28 +43,28 @@ void kmain() {
 
   timer t;
   timer_init(&t, TIMER3);
+  timer4_init();
 
   TCB backing[MAX_NUM_TASKS];
   TCB *heap[MAX_NUM_TASKS];
   scheduler_init(MAX_NUM_TASKS, backing, heap, &t);
 
-  __asm__ volatile(
-    "MRS R0, CPSR\n\t"
-    "BIC R0, R0, #0x1F\n\t"
-    "ORR R0, R0, #0x12\n\r"
-    "MSR CPSR_c, R0\n\r"
-    "MOV SP, %[irq_stack]\n\r"
-    "ORR R0, R0, #1\n\r"
-    "MSR CPSR_c, R0\n\r"
-    :: [irq_stack] "r" (&irq_stack[15])
-    : "r0"
-  );
+  __asm__ volatile("MRS R0, CPSR\n\t"
+                   "BIC R0, R0, #0x1F\n\t"
+                   "ORR R0, R0, #0x12\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   "MOV SP, %[irq_stack]\n\r"
+                   "ORR R0, R0, #1\n\r"
+                   "MSR CPSR_c, R0\n\r" ::[irq_stack] "r"(&irq_stack[15])
+                   : "r0");
 
   *((void (**)())0x28) = &return_swi;
   *((void (**)())0x38) = &return_irq;
 
+  int interrupt_tasks = 0;
+
   scheduler_add(0, task_k3init, -1);
-  while (!scheduler_empty()) {
+  while (!scheduler_empty() || interrupt_tasks != 0) {
 
     TCB *cur = pop_ready_queue();
 
@@ -155,7 +155,16 @@ void kmain() {
       KASSERT(event_mapping[event] == NULL,
               "No other task should be waiting for this event");
 
-      event_mapping[event] = cur;
+      if (event == ANY_EVENT) {
+        unsigned int start_time = timer4_read();
+        __asm__ volatile("MCR p15,0,%[zero],c7,c0,4" ::[zero] "r"(0));
+        unsigned int end_time = timer4_read();
+        set_return(&cur->context, end_time - start_time);
+        add_to_ready_queue(cur);
+      } else {
+        event_mapping[event] = cur;
+        interrupt_tasks++;
+      }
 
     } else if (why == SYSCALL_IRQ) {
 
@@ -164,11 +173,12 @@ void kmain() {
       int vic1_irq_status = *(volatile int *)(VIC1_BASE + IRQ_STAT_OFFSET);
       int vic2_irq_status = *(volatile int *)(VIC2_BASE + IRQ_STAT_OFFSET);
 
-      if (vic2_irq_status & VIC_TIMER3_MASK){
+      if (vic2_irq_status & VIC_TIMER3_MASK) {
         *(int *)(TIMER3_BASE + CLR_OFFSET) = 1; // clear timer interrupt
         if (event_mapping[TIMER_TICK] != NULL) {
           TCB *waiting_task = event_mapping[TIMER_TICK];
           event_mapping[TIMER_TICK] = NULL;
+          interrupt_tasks--;
           set_return(&(waiting_task->context), 0);
           add_to_ready_queue(waiting_task);
         }
