@@ -14,6 +14,7 @@
 #define TIMER3LOAD 4294967295
 #define TIMER1LOAD 508 * 10 // tick
 
+void timer_init(int timer_num);
 void start_timer(int timer_num);
 void stop_timer(int timer_num);
 void read_timer(int timer_num, unsigned int *val);

@@ -18,6 +18,7 @@
     "hashtable.h": "c",
     "cstdio": "c",
     "event.h": "c",
-    "hal.h": "c"
+    "hal.h": "c",
+    "user.h": "c"
   }
 }

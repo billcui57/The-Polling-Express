@@ -47,5 +47,5 @@ TCB *pop_ready_queue();
 
 void free_task(TCB *task_ptr);
 
-bool scheduler_empty();
+int scheduler_length();
 #endif /* INC_TASK_H */

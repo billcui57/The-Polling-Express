@@ -65,8 +65,10 @@ void kmain() {
 
   int interrupt_tasks = 0;
 
+  scheduler_add(-99, idle, -1);
   scheduler_add(0, task_k3init, -1);
-  while (!scheduler_empty() || interrupt_tasks != 0) {
+
+  while (scheduler_length() > 1 || interrupt_tasks != 0) {
 
     TCB *cur = pop_ready_queue();
 
@@ -157,7 +159,7 @@ void kmain() {
       KASSERT(event_mapping[event] == NULL,
               "No other task should be waiting for this event");
 
-      if (event == ANY_EVENT) {
+      if (event == BREAK_IDLE) {
         unsigned int start_time;
         read_timer(TIMER3, &start_time);
         __asm__ volatile("MCR p15,0,%[zero],c7,c0,4" ::[zero] "r"(0));
@@ -198,3 +200,26 @@ void kmain() {
     }
   }
 }
+
+// void idle() {
+//   // __asm__ volatile("ldr r0, =80930000\n\t" // Syscon base address
+//   //                  "mov r1, #0xaa\n\t"
+//   //                  "str r1, [r0, #0xc0]\n\r"
+//   //                  "ldr r1, [r0, #0x80]\n\r"
+//   //                  "orr r1, r1, #0x1\n\r"
+//   //                  "str r1, [r0, #0x80]\n\r");
+
+//   int *lock = (int *)(SYSCON_BASE + SW_LOCK_OFFSET);
+
+//   *lock = 0xAA; // opens lock
+
+//   int *device_cfg = (int *)(SYSCON_BASE + DEVICE_CFG_OFFSET);
+
+//   *device_cfg = (*device_cfg) | SHENA_MASK;
+
+//   int *halt = (int *)(SYSCON_BASE + HALT_OFFSET);
+
+//   while (true) {
+//     *halt; // request to halt
+//   }
+// }

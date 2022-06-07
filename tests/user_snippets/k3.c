@@ -69,23 +69,3 @@ void task_k3_client() {
     printf(&pc, "TID: %d, Delay: %d, Completed: %d\r\n", tid, params[0], i + 1);
   }
 }
-
-void idle() {
-  unsigned int start;
-
-  read_timer(TIMER3, &start);
-
-  unsigned int sleeping_time = 0;
-  while (true) {
-    unsigned int s = AwaitEvent(ANY_EVENT);
-    sleeping_time += s;
-
-    unsigned int now;
-    read_timer(TIMER3, &now);
-    unsigned int run = start - now;
-
-    int percentage = (100 * sleeping_time) / run;
-    printf(&pc, "Idle: %d%% (%d ms)\r\n", percentage,
-           ticks_to_ms(sleeping_time, FASTCLOCKRATE));
-  }
-}
