@@ -2,8 +2,6 @@
 #include <syscall.h>
 #include <task.h>
 
-timer *_timer;
-
 TCB *free_tcb;
 size_t capacity;
 
@@ -12,7 +10,7 @@ unsigned int count;
 
 int cmp_priority(unsigned int a, unsigned int b);
 
-void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t) {
+void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue) {
   for (unsigned int i = 0; i < cap; i++) {
     blocks[i].state = ZOMBIE;
     blocks[i].tid = i;
@@ -27,7 +25,6 @@ void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t) {
   capacity = cap;
   _ready_queue = ready_queue;
   count = 0;
-  _timer = t;
 }
 
 void swap(unsigned int a, unsigned int b) {
@@ -93,7 +90,7 @@ void add_to_ready_queue(TCB *t) {
   KASSERT(t != NULL, "TCB should not be NULL");
   KASSERT(count < capacity, "Ready queue should have space to add");
 
-  read_timer(_timer, &(t->added_time));
+  read_timer(TIMER3, &(t->added_time));
 
   count++;
 

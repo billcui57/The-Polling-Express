@@ -91,3 +91,4 @@
 #define INT_ENABLE_OFFSET 0x10
 #define INT_SELECT_OFFSET 0xC
 #define VIC_TIMER3_MASK (1 << 19)
+#define VIC_TIMER1_MASK (1 << 4)

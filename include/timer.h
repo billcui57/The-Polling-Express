@@ -11,27 +11,13 @@
 
 #define FASTCLOCKRATE 508000 // 508000 times/sec
 
-#define TIMER3INITVAL 4294967295
+#define TIMER3LOAD 4294967295
+#define TIMER1LOAD 508 * 10 // tick
 
-typedef struct timer {
-  int num;
-  bool is_enabled;
-  unsigned int *control; // actual register for changing
-  unsigned int *load;
-  unsigned int *value;
-  int clock_rate;
-} timer;
+void start_timer(int timer_num);
+void stop_timer(int timer_num);
+void read_timer(int timer_num, unsigned int *val);
 
-void timer_init(timer *t, int timer_num);
-void stop_timer(timer *t);
-// void start_timer(timer *t); INTERNAL USE ONLY! HAS SPECIAL REQUIRMENTS
-void read_timer(timer *t, unsigned int *val);
-bool has_time_elapsed(timer *t, unsigned int start_time, unsigned int ticks);
-void get_formatted_curr_time(timer *t, int *result);
+unsigned int ticks_to_ms(unsigned int ticks, unsigned int clock_rate);
 
-int ticks_to_micro_secs_full(unsigned int ticks, unsigned int clock_rate);
-int tens_secs_to_ticks(unsigned int tens_secs, unsigned int clock_rate);
-
-void timer4_init();
-unsigned int timer4_read();
 #endif // TIMER_H

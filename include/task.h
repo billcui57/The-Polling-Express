@@ -37,7 +37,7 @@ typedef struct TCB {
   struct TCB *want_send_end;
 } TCB;
 
-void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue, timer *t);
+void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue);
 
 int scheduler_add(int priority, void (*func)(), int parentTid);
 
