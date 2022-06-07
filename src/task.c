@@ -130,4 +130,4 @@ void free_task(TCB *task_ptr) {
   free_tcb = task_ptr;
 }
 
-bool scheduler_empty() { return count == 0; }
+int scheduler_length() { return count; }

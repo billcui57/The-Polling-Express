@@ -92,3 +92,11 @@
 #define INT_SELECT_OFFSET 0xC
 #define VIC_TIMER3_MASK (1 << 19)
 #define VIC_TIMER1_MASK (1 << 4)
+
+// SYSCON
+
+#define SYSCON_BASE 0x80930000
+#define SW_LOCK_OFFSET 0xC0
+#define DEVICE_CFG_OFFSET 0x80
+#define SHENA_MASK 0x1
+#define HALT_OFFSET 0x8

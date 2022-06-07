@@ -20,7 +20,6 @@ void task_test() {
 }
 
 void task_k3init() {
-  Create(-99, idle);
   Create(10, nameserver);
   Create(20, clockserver);
 
@@ -76,16 +75,20 @@ void idle() {
   read_timer(TIMER3, &start);
 
   unsigned int sleeping_time = 0;
+
+  int i = 0;
   while (true) {
-    unsigned int s = AwaitEvent(ANY_EVENT);
+    unsigned int s = AwaitEvent(BREAK_IDLE);
     sleeping_time += s;
+    i++;
+    if (i % 10 == 0) {
+      unsigned int now;
+      read_timer(TIMER3, &now);
+      unsigned int run = start - now;
 
-    unsigned int now;
-    read_timer(TIMER3, &now);
-    unsigned int run = start - now;
-
-    int percentage = (100 * sleeping_time) / run;
-    printf(&pc, "Idle: %d%% (%d ms)\r\n", percentage,
-           ticks_to_ms(sleeping_time, FASTCLOCKRATE));
+      int percentage = (100 * sleeping_time) / run;
+      printf(&pc, "Idle: %d%% (%d ms)\r\n", percentage,
+             ticks_to_ms(sleeping_time, FASTCLOCKRATE));
+    }
   }
 }
