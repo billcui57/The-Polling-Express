@@ -41,13 +41,15 @@ void kmain() {
 
   enable_irq();
 
-  timer t;
-  timer_init(&t, TIMER3);
-  timer4_init();
+  timer_init(TIMER1); // for ticks, interrupt enabled
+  start_timer(TIMER1);
+
+  timer_init(TIMER3); // general purpose, interrupt disabled
+  start_timer(TIMER3);
 
   TCB backing[MAX_NUM_TASKS];
   TCB *heap[MAX_NUM_TASKS];
-  scheduler_init(MAX_NUM_TASKS, backing, heap, &t);
+  scheduler_init(MAX_NUM_TASKS, backing, heap);
 
   __asm__ volatile("MRS R0, CPSR\n\t"
                    "BIC R0, R0, #0x1F\n\t"
@@ -156,10 +158,12 @@ void kmain() {
               "No other task should be waiting for this event");
 
       if (event == ANY_EVENT) {
-        unsigned int start_time = timer4_read();
+        unsigned int start_time;
+        read_timer(TIMER3, &start_time);
         __asm__ volatile("MCR p15,0,%[zero],c7,c0,4" ::[zero] "r"(0));
-        unsigned int end_time = timer4_read();
-        set_return(&cur->context, end_time - start_time);
+        unsigned int end_time;
+        read_timer(TIMER3, &end_time);
+        set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
       } else {
         event_mapping[event] = cur;
@@ -173,8 +177,11 @@ void kmain() {
       int vic1_irq_status = *(volatile int *)(VIC1_BASE + IRQ_STAT_OFFSET);
       int vic2_irq_status = *(volatile int *)(VIC2_BASE + IRQ_STAT_OFFSET);
 
-      if (vic2_irq_status & VIC_TIMER3_MASK) {
-        *(int *)(TIMER3_BASE + CLR_OFFSET) = 1; // clear timer interrupt
+      // printf(&pc, "%d\r\n", vic1_irq_status);
+      // printf(&pc, "%d\r\n", vic2_irq_status);
+
+      if (vic1_irq_status & VIC_TIMER1_MASK) {
+        *(int *)(TIMER1_BASE + CLR_OFFSET) = 1; // clear timer interrupt
         if (event_mapping[TIMER_TICK] != NULL) {
           TCB *waiting_task = event_mapping[TIMER_TICK];
           event_mapping[TIMER_TICK] = NULL;
