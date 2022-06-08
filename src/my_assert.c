@@ -1,49 +1,46 @@
 #include "my_assert.h"
 #include "kprintf.h"
 
-uart *term;
 bool assert_thrown;
-
-void assert_init(uart *t) { term = t; }
 
 void my_assert(char *str) {
   assert_thrown = true;
 
-  printf(term, "                  "
+  printf(COM2, "                  "
                "_-====-__-======-__-========-_____-============-__\r\n");
-  printf(term, "               _(                                              "
+  printf(COM2, "               _(                                              "
                "     _)\r\n");
-  printf(term, "            OO(             UH OH! FAILED ASSERTION !!!!!      "
+  printf(COM2, "            OO(             UH OH! FAILED ASSERTION !!!!!      "
                "       )_\r\n");
-  printf(term, "           0  (_              SAD CHOO CHOO NOISES   ):        "
+  printf(COM2, "           0  (_              SAD CHOO CHOO NOISES   ):        "
                "     _)\r\n");
-  printf(term, "         o0     (_                                             "
+  printf(COM2, "         o0     (_                                             "
                "   _)\r\n");
   printf(
-      term,
+      COM2,
 
       "        o         '=-___-===-_____-========-___________-===-==0-='\r\n");
-  printf(term, "      .o                                _________\r\n");
-  printf(term,
+  printf(COM2, "      .o                                _________\r\n");
+  printf(COM2,
          "     . ______          ______________  |         |      _____\r\n");
   printf(
-      term,
+      COM2,
 
       "   _()_||__|| ________ |            |  |_________|   __||___||__\r\n");
   printf(
-      term,
+      COM2,
 
       "  ( CS 452  | |      | |            | __Y______00_| |_         _|\r\n");
-  printf(term, " /"
+  printf(COM2, " /"
                "-OO----OO\"\"=\"OO--OO\"=\"OO--------OO\"=\"OO-------OO\"=\"OO-"
                "------OO\"=P\r\n");
-  printf(term, "###############################################################"
+  printf(COM2, "###############################################################"
                "######\r\n");
-  printf(term, "                                                               "
+  printf(COM2, "                                                               "
                "      \r\n");
-  printf(term, "Cause: %s\r\n", str);
-  printf(term, "                                                               "
+  printf(COM2, "Cause: %s\r\n", str);
+  printf(COM2, "                                                               "
                "      \r\n");
-  printf(term, "###############################################################"
+  printf(COM2, "###############################################################"
                "######\r\n");
 }

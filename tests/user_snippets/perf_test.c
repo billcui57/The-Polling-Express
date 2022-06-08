@@ -8,7 +8,7 @@ void task_k2perf() {
   int cal = Create(100, task_calibrate);
 
   Send(cal, (char *)&a, 0, (char *)&timer, sizeof(unsigned int));
-  printf(&pc, "Timer Calibration: %d\r\n", (timer * 1000) / 508);
+  printf(COM2, "Timer Calibration: %d\r\n", (timer * 1000) / 508);
 
   for (int i = 0; i < 3; i++) {
     echo = Create(10, task_echo);
@@ -17,7 +17,7 @@ void task_k2perf() {
     Send(send, (char *)&params, 2 * sizeof(int), (char *)&time_diff,
          sizeof(unsigned int));
     time_diff -= timer;
-    printf(&pc, "R %d %d \r\n", sz[i], (time_diff * 10) / 508);
+    printf(COM2, "R %d %d \r\n", sz[i], (time_diff * 10) / 508);
   }
   for (int i = 0; i < 3; i++) {
     echo = Create(-5, task_echo);
@@ -26,7 +26,7 @@ void task_k2perf() {
     Send(send, (char *)&params, 2 * sizeof(int), (char *)&time_diff,
          sizeof(unsigned int));
     time_diff -= timer;
-    printf(&pc, "S %d %d \r\n", sz[i], (time_diff * 10) / 508);
+    printf(COM2, "S %d %d \r\n", sz[i], (time_diff * 10) / 508);
   }
 }
 
@@ -55,7 +55,7 @@ void task_echo() {
   char buf[256];
   int who;
   for (int i = 0; i < 100; i++) {
-    // printf(&pc, "Echo will call Receive\r\n");
+    // printf(COM2, "Echo will call Receive\r\n");
     int len = Receive(&who, buf, 256);
     Reply(who, buf, len);
   }
@@ -74,7 +74,7 @@ void task_send() {
   char rbuf[256];
   unsigned int start = read_timer3();
   for (int i = 0; i < 100; i++) {
-    // printf(&pc, "Send will call Send\r\n");
+    // printf(COM2, "Send will call Send\r\n");
     Send(echo, buf, len, rbuf, 256);
   }
   unsigned int end = start - read_timer3();

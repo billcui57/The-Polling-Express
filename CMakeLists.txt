@@ -12,7 +12,6 @@ src/task.c
 src/hal/ts7200.c
 src/hal/context.s
 src/hal/context.c
-src/hal.c
 src/syscall.c
 src/my_assert.c
 src/kprintf.c

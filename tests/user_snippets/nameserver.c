@@ -19,14 +19,14 @@ void task1() {
     task_tid tid = WhoIs(abc);
 
     if (tid == -1) {
-      printf(&pc, "ERROR\r\n");
+      printf(COM2, "ERROR\r\n");
     } else {
 
       if (tid == 3) {
         while (RegisterAs(abc) != 0)
           ;
       }
-      printf(&pc, "%d\r\n", tid);
+      printf(COM2, "%d\r\n", tid);
     }
   }
 }
@@ -41,7 +41,7 @@ void task2() {
     task_tid tid = WhoIs(abc);
 
     if (tid == -1) {
-      printf(&pc, "ERROR\r\n");
+      printf(COM2, "ERROR\r\n");
     } else {
 
       if (tid == 2) {
@@ -49,7 +49,7 @@ void task2() {
           ;
       }
 
-      printf(&pc, "%d\r\n", tid);
+      printf(COM2, "%d\r\n", tid);
     }
   }
 }

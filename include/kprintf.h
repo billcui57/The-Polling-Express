@@ -58,7 +58,7 @@ void _putchar(char character);
  * counting the terminating null character
  */
 #define printf printf_
-int printf_(uart *u, const char *format, ...);
+int printf_(int channel, const char *format, ...);
 
 /**
  * Tiny sprintf implementation
