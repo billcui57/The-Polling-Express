@@ -26,7 +26,7 @@ void uart_init(int channel) {
   case COM2: // 115200 (terminal)
     *low = 0x3;
     *med = 0x0;
-    *high = WLEN_MASK | FEN_MASK | STP2_MASK & ~PEN_MASK; // FIFO enabled
+    *high = WLEN_MASK | FEN_MASK & ~STP2_MASK & ~PEN_MASK; // FIFO enabled
     break;
   }
 }
@@ -65,7 +65,7 @@ void enable_cache() {
   }
   __asm__ volatile("MCR p15,0,%[zero],c7,c5,0" ::[zero] "r"(0));
   int reg;
-  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [reg] "=r"(reg));
+  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [ reg ] "=r"(reg));
   reg = reg | 1 << 12 | 1 << 2;
   __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
 }
