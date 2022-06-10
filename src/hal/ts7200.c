@@ -21,12 +21,12 @@ void uart_init(int channel) {
   case COM1: // 2400 (track)
     *low = 0xBF;
     *med = 0x0;
-    *high = WLEN_MASK & ~FEN_MASK | STP2_MASK & ~PEN_MASK; // FIFO disabled
+    *high = WLEN_MASK | STP2_MASK; // FIFO disabled
     break;
   case COM2: // 115200 (terminal)
     *low = 0x3;
     *med = 0x0;
-    *high = WLEN_MASK | FEN_MASK & ~STP2_MASK & ~PEN_MASK; // FIFO enabled
+    *high = WLEN_MASK | FEN_MASK; // FIFO enabled
     break;
   }
 }

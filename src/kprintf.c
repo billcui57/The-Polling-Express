@@ -36,6 +36,8 @@
 
 #include "kprintf.h"
 
+#include <syscall.h>
+
 task_tid _uart;
 
 // define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H ...) to include the

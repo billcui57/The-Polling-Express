@@ -1,3 +1,5 @@
+#pragma once
+
 #include <memory.h>
 #include <my_assert.h>
 #include <stddef.h>
@@ -15,5 +17,5 @@ typedef struct circular_buffer {
 } circular_buffer;
 
 void cb_init(circular_buffer *cb, void **buffer, size_t capacity);
-int cb_push_back(circular_buffer *cb, const void *item);
+int cb_push_back(circular_buffer *cb, void *item);
 int cb_pop_front(circular_buffer *cb, void **item);

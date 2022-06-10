@@ -79,15 +79,15 @@ void read_timer(int timer_num, unsigned int *val) {
 }
 
 int ticks_to_mins(unsigned int time_passed, unsigned int clock_rate) {
-  return time_passed / (FASTCLOCKRATE * 60);
+  return time_passed / (clock_rate * 60);
 }
 
 int ticks_to_secs(unsigned int time_passed, unsigned int clock_rate) {
-  return (time_passed / FASTCLOCKRATE) % 60;
+  return (time_passed / clock_rate) % 60;
 }
 
 int ticks_to_tens_secs(unsigned int time_passed, unsigned int clock_rate) {
-  return (time_passed / (FASTCLOCKRATE / 10)) % 10;
+  return (time_passed / (clock_rate / 10)) % 10;
 }
 
 unsigned int ticks_to_ms(unsigned int ticks, unsigned int clock_rate) {

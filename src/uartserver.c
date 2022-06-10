@@ -1,5 +1,7 @@
 #include "uartserver.h"
 
+#include <syscall.h>
+
 void uart_com2_tx_notifier() {
   int parent = MyParentTid();
   int junk = 0;
@@ -27,7 +29,7 @@ void uart_com2_tx_server() {
   circular_buffer cb;
   cb_init(&cb, backing, MAX_CAPACITY);
 
-  char *buffered_characters[MAX_NUM_TASKS];
+  char buffered_characters[MAX_NUM_TASKS];
   memset(buffered_characters, 0, sizeof(char) * MAX_NUM_TASKS);
 
   for (;;) {

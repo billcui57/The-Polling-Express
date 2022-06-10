@@ -11,7 +11,7 @@ void cb_init(circular_buffer *cb, void **buffer, size_t capacity) {
   cb->tail = cb->buffer;
 }
 
-int cb_push_back(circular_buffer *cb, const void *item) {
+int cb_push_back(circular_buffer *cb, void *item) {
 
   if (cb->count == cb->capacity) {
     return CB_FULL;

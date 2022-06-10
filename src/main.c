@@ -30,7 +30,7 @@ bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
   if (event_mapping[event_id] != NULL) {
     TCB *waiting_task = event_mapping[event_id];
     event_mapping[event_id] = NULL;
-    *interrupt_tasks--;
+    (*interrupt_tasks)--;
     set_return(&(waiting_task->context), 0);
     add_to_ready_queue(waiting_task);
     return true;
