@@ -40,6 +40,13 @@ bool uart_can_write(int channel) {
 void uart_put_char(int channel, uint8_t c) {
   *(char *)(get_base_addr(channel) + UART_DATA_OFFSET) = c;
 }
+
+void bw_uart_put_char(int channel, uint8_t c) {
+  while (!uart_can_write(channel))
+    ;
+  uart_put_char(channel, c);
+}
+
 uint8_t uart_get_char(int channel) {
   return *(char *)(get_base_addr(channel) + UART_DATA_OFFSET);
 }
@@ -78,7 +85,7 @@ void enable_interrupt(int interrupt_type) {
   int *vic2_select = (int *)(VIC2_BASE + INT_SELECT_OFFSET);
 
   switch (interrupt_type) {
-  case TC3:
+  case TC1:
     *vic1_select = *vic1_select & ~VIC_TIMER1_MASK; // use IRQ
     *vic1_enable = *vic1_enable | VIC_TIMER1_MASK;
     break;
@@ -107,7 +114,7 @@ void disable_interrupt(int interrupt_type) {
   int *vic2_enable = (int *)(VIC2_BASE + INT_ENABLE_OFFSET);
 
   switch (interrupt_type) {
-  case TC3:
+  case TC1:
     *vic1_enable = *vic1_enable & ~VIC_TIMER1_MASK;
     break;
   case UART2RXINTR:
@@ -129,5 +136,5 @@ void enable_irq() {
   *(int *)(VIC1_BASE + INT_ENABLE_OFFSET) = 0;
   *(int *)(VIC2_BASE + INT_ENABLE_OFFSET) = 0;
 
-  // enable_interrupt(TC3);
+  // enable_interrupt(TC1);
 }

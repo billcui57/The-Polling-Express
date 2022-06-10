@@ -96,7 +96,7 @@
 #define VIC_UART2TXINTR_MASK (1 << 26) // vic1
 #define VIC_INT_UART2_MASK (1 << 22)   // vic2
 
-enum InterruptType { TC3, UART2TXINTR, UART2RXINTR, UART2INTR };
+enum InterruptType { TC1, UART2TXINTR, UART2RXINTR, UART2INTR };
 void enable_interrupt(int interrupt_type);
 void disable_interrupt(int interrupt_type);
 

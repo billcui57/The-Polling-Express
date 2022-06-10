@@ -1,10 +1,10 @@
 #pragma once
 
+#include "circularbuffer.h"
 #include "kprintf.h"
 #include "my_assert.h"
 #include "my_event.h"
 #include "ts7200.h"
-#include "circularbuffer.h"
 
 typedef enum { NOTIFIER_TX_GOOD, SEND_CHAR } uartserver_request_type;
 

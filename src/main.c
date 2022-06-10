@@ -199,8 +199,11 @@ void kmain() {
 
       if (vic1_irq_status & VIC_UART2TXINTR_MASK) {
         // cannot clear a level interrupt
-        disable_interrupt(UART2TXINTR); // must disable in kernel mode
-        wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks);
+
+        if (wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks)) {
+          disable_interrupt(UART2TXINTR);
+        }
+        // bw_uart_put_char(COM2, 'I');
       }
 
       add_to_ready_queue(cur);
