@@ -6,7 +6,7 @@
 #include "ts7200.h"
 #include "circularbuffer.h"
 
-typedef enum { UART2_TX_GOOD, SEND_CHAR } uartserver_request_type;
+typedef enum { NOTIFIER_TX_GOOD, SEND_CHAR } uartserver_request_type;
 
 typedef enum { GOOD } uartserver_response_type;
 
@@ -22,4 +22,4 @@ typedef struct {
   int data;
 } uartserver_response;
 
-void uart_com2_server();
+void uart_com2_tx_server();
