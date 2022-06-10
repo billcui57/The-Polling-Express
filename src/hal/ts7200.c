@@ -1,65 +1,53 @@
 #include <hal.h>
 #include <ts7200.h>
 
-bool uart_init(uart *u, int channel) {
+int get_base_addr(int channel) {
   switch (channel) {
   case COM1:
-    u->base_addr = UART1_BASE;
+    return UART1_BASE;
     break;
   case COM2:
-    u->base_addr = UART2_BASE;
-    break;
-  default:
-    return true;
+    return UART2_BASE;
     break;
   }
-  int *line, *high, *low, stp;
-  line = u->base_addr + UART_LCRH_OFFSET;
-  high = u->base_addr + UART_LCRM_OFFSET;
-  low = u->base_addr + UART_LCRL_OFFSET;
+}
+
+void uart_init(int channel) {
+  int *low = get_base_addr(channel) + UART_LCRL_OFFSET;
+  int *med = get_base_addr(channel) + UART_LCRM_OFFSET;
+  int *high = get_base_addr(channel) + UART_LCRH_OFFSET;
+
   switch (channel) {
-  case COM1: // 2400
+  case COM1: // 2400 (track)
     *low = 0xBF;
-    *high = 0x0;
-    stp = STP2_MASK;
+    *med = 0x0;
+    *high = WLEN_MASK & ~FEN_MASK | STP2_MASK & ~PEN_MASK; // FIFO disabled
     break;
-  case COM2: // 115200
+  case COM2: // 115200 (terminal)
     *low = 0x3;
-    *high = 0x0;
-    stp = 0;
+    *med = 0x0;
+    *high = WLEN_MASK | FEN_MASK & ~STP2_MASK & ~PEN_MASK; // FIFO enabled
     break;
   }
-  *line = WLEN_MASK | FEN_MASK | stp;
-  return false;
 }
 
-bool uart_can_read(uart *u) {
-  return !(*(int *)(u->base_addr + UART_FLAG_OFFSET) & RXFE_MASK);
+bool uart_can_read(int channel) {
+  return !(*(int *)(get_base_addr(channel) + UART_FLAG_OFFSET) & RXFE_MASK);
 }
-bool uart_can_write(uart *u) {
-  return !(*(int *)(u->base_addr + UART_FLAG_OFFSET) & TXFF_MASK);
+bool uart_can_write(int channel) {
+  return !(*(int *)(get_base_addr(channel) + UART_FLAG_OFFSET) & TXFF_MASK);
 }
-void uart_put_char(uart *u, uint8_t c) {
-  *(char *)(u->base_addr + UART_DATA_OFFSET) = c;
+void uart_put_char(int channel, uint8_t c) {
+  *(char *)(get_base_addr(channel) + UART_DATA_OFFSET) = c;
 }
-uint8_t uart_get_char(uart *u) {
-  return *(char *)(u->base_addr + UART_DATA_OFFSET);
+uint8_t uart_get_char(int channel) {
+  return *(char *)(get_base_addr(channel) + UART_DATA_OFFSET);
 }
 
-uint8_t bw_uart_get_char(uart *u) {
-  while (!uart_can_read(u))
+uint8_t bw_uart_get_char(int channel) {
+  while (!uart_can_read(channel))
     ;
-  return uart_get_char(u);
-}
-
-void panic(char *s) {
-  uart u;
-  u.base_addr = UART2_BASE;
-  uart_put_str_block(&u, s);
-  while (1) {
-    int i = 0;
-    i++;
-  }
+  return uart_get_char(channel);
 }
 
 // must invalide caches before enabling
@@ -77,7 +65,7 @@ void enable_cache() {
   }
   __asm__ volatile("MCR p15,0,%[zero],c7,c5,0" ::[zero] "r"(0));
   int reg;
-  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [reg] "=r"(reg));
+  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [ reg ] "=r"(reg));
   reg = reg | 1 << 12 | 1 << 2;
   __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
 }

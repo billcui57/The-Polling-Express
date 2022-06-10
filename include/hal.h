@@ -6,22 +6,12 @@
 #define COM1 0
 #define COM2 1
 
-typedef struct {
-  void *base_addr;
-} uart;
-
-extern uart pc;
-
-bool uart_init(uart *u, int channel);
-bool uart_can_read(uart *u);
-bool uart_can_write(uart *u);
-void uart_put_char(uart *u, uint8_t c);
-uint8_t uart_get_char(uart *u);
-
-uint8_t bw_uart_get_char(uart *u);
-
-void uart_put_str_block(uart *u, char *s);
-void panic(char *s);
+void uart_init(int channel);
+bool uart_can_read(int channel);
+bool uart_can_write(int channel);
+void uart_put_char(int channel, uint8_t c);
+uint8_t uart_get_char(int channel);
+uint8_t bw_uart_get_char(int channel);
 
 // KERNEL ONLY
 void enable_cache();

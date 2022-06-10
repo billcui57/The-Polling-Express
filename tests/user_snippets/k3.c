@@ -14,7 +14,7 @@ void task_test() {
   int i = 0;
   while (true) {
     int duc = DelayUntil(clock_tid, start + (i + 1) * 500);
-    printf(&pc, "Tick start: %d, now: %d\r\n", duc, Time(clock_tid));
+    printf(COM2, "Tick start: %d, now: %d\r\n", duc, Time(clock_tid));
     i++;
   }
 }
@@ -66,6 +66,7 @@ void task_k3_client() {
     clock_tid = WhoIs("clockserver");
   for (int i = 0; i < params[1]; i++) {
     Delay(clock_tid, params[0]);
-    printf(&pc, "TID: %d, Delay: %d, Completed: %d\r\n", tid, params[0], i + 1);
+    printf(COM2, "TID: %d, Delay: %d, Completed: %d\r\n", tid, params[0],
+           i + 1);
   }
 }
