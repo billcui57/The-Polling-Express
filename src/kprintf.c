@@ -36,7 +36,7 @@
 
 #include "kprintf.h"
 
-uart *print_uart;
+int _channel;
 
 // define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H ...) to include the
 // printf_config.h header file
@@ -767,9 +767,11 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
                            (unsigned long)(value > 0 ? value : 0 - value),
                            value < 0, base, precision, width, flags);
         } else {
-          const int value = (flags & FLAGS_CHAR)    ? (char)va_arg(va, int)
-                            : (flags & FLAGS_SHORT) ? (short int)va_arg(va, int)
-                                                    : va_arg(va, int);
+          const int value = (flags & FLAGS_CHAR)
+                                ? (char)va_arg(va, int)
+                                : (flags & FLAGS_SHORT)
+                                      ? (short int)va_arg(va, int)
+                                      : va_arg(va, int);
           idx = _ntoa_long(out, buffer, idx, maxlen,
                            (unsigned int)(value > 0 ? value : 0 - value),
                            value < 0, base, precision, width, flags);
@@ -787,10 +789,11 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
                            false, base, precision, width, flags);
         } else {
           const unsigned int value =
-              (flags & FLAGS_CHAR) ? (unsigned char)va_arg(va, unsigned int)
-              : (flags & FLAGS_SHORT)
-                  ? (unsigned short int)va_arg(va, unsigned int)
-                  : va_arg(va, unsigned int);
+              (flags & FLAGS_CHAR)
+                  ? (unsigned char)va_arg(va, unsigned int)
+                  : (flags & FLAGS_SHORT)
+                        ? (unsigned short int)va_arg(va, unsigned int)
+                        : va_arg(va, unsigned int);
           idx = _ntoa_long(out, buffer, idx, maxlen, value, false, base,
                            precision, width, flags);
         }
@@ -910,8 +913,8 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int printf_(uart *u, const char *format, ...) {
-  print_uart = u;
+int printf_(int channel, const char *format, ...) {
+  _channel = channel;
 
   va_list va;
   va_start(va, format);
@@ -958,7 +961,7 @@ int fctprintf(void (*out)(char character, void *arg), void *arg,
 }
 
 void _putchar(char character) {
-  while (!uart_can_write(print_uart))
+  while (!uart_can_write(_channel))
     ;
-  uart_put_char(print_uart, character);
+  uart_put_char(_channel, character);
 }

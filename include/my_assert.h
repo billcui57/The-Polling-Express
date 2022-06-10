@@ -13,5 +13,4 @@
 
 extern bool assert_thrown;
 
-void assert_init(uart *u);
 void my_assert(char *str);

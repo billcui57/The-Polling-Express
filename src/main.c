@@ -8,8 +8,6 @@
 #include <timer.h>
 #include <user.h>
 
-uart pc;
-
 int msg_copy(const char *src, int srclen, char *dest, int destlen) {
   int n = srclen < destlen ? srclen : destlen;
   for (int i = 0; i < n; i++)
@@ -29,8 +27,7 @@ void handle_send(TCB *src, TCB *dst) {
 }
 
 void kmain() {
-  uart_init(&pc, COM2);
-  assert_init(&pc);
+  uart_init(COM2);
 
   enable_cache();
 
@@ -179,8 +176,8 @@ void kmain() {
       int vic1_irq_status = *(volatile int *)(VIC1_BASE + IRQ_STAT_OFFSET);
       int vic2_irq_status = *(volatile int *)(VIC2_BASE + IRQ_STAT_OFFSET);
 
-      // printf(&pc, "%d\r\n", vic1_irq_status);
-      // printf(&pc, "%d\r\n", vic2_irq_status);
+      // printf(COM2, "%d\r\n", vic1_irq_status);
+      // printf(COM2, "%d\r\n", vic2_irq_status);
 
       if (vic1_irq_status & VIC_TIMER1_MASK) {
         *(int *)(TIMER1_BASE + CLR_OFFSET) = 1; // clear timer interrupt
