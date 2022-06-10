@@ -2,6 +2,7 @@
 
 #include "my_assert.h"
 #include "nameserver.h"
+#include "uartserver.h"
 
 #define SYSCALL_IRQ 0
 #define SYSCALL_CREATE 1
@@ -76,3 +77,6 @@ tid if good
 int WhoIs(const char *name);
 
 int AwaitEvent(int eventid);
+
+
+int Putc(int tid, int uart, char ch);

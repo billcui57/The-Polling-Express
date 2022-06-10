@@ -7,7 +7,7 @@ cmake . -B build -DCMAKE_TOOLCHAIN_FILE=linux.cmake
 
 cd ./build
 
-cmake --build . --target hashtable
+cmake --build . --target circularbuffer
 ctest --verbose
 
 

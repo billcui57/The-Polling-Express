@@ -92,6 +92,13 @@
 #define INT_SELECT_OFFSET 0xC
 #define VIC_TIMER3_MASK (1 << 19)
 #define VIC_TIMER1_MASK (1 << 4)
+#define VIC_UART2RXINTR_MASK (1 << 25) // vic1
+#define VIC_UART2TXINTR_MASK (1 << 26) // vic1
+#define VIC_INT_UART2_MASK (1 << 22)   // vic2
+
+enum InterruptType { TC3, UART2TXINTR, UART2RXINTR, UART2INTR };
+void enable_interrupt(int interrupt_type);
+void disable_interrupt(int interrupt_type);
 
 // SYSCON
 

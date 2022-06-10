@@ -20,6 +20,8 @@ src/timer.c
 src/hashtable.c
 src/nameserver.c
 src/clockserver.c
+src/uartserver.c
+src/circularbuffer.c
 src/my_string.c
 src/my_memory.c
 )
@@ -27,11 +29,19 @@ target_link_libraries(kernel -static gcc)
 
 
 # Unit Testing
-add_executable(hashtable
-tests/unit/hashtable.c 
-src/hashtable.c
+# add_executable(hashtable
+# tests/unit/hashtable.c 
+# src/hashtable.c
+# )
+# target_link_libraries(hashtable -static gcc)
+# enable_testing()
+# add_test(hashtable_test hashtable)
+
+add_executable(circularbuffer
+tests/unit/circularbuffer.c 
+src/circularbuffer.c
 )
-target_link_libraries(hashtable -static gcc)
+target_link_libraries(circularbuffer -static gcc)
 enable_testing()
-add_test(hashtable_test hashtable)
+add_test(circularbuffer_test circularbuffer)
 
