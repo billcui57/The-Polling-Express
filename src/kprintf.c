@@ -926,6 +926,9 @@ int printf_(int channel, const char *format, ...) {
   char buffer[1];
   const int ret = _vsnprintf(_out_char, buffer, (size_t)-1, format, va);
   va_end(va);
+
+  ReleaseUartLock(_uart);
+
   return ret;
 }
 

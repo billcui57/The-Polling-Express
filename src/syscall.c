@@ -156,3 +156,15 @@ int Putc(int tid, int uart, char ch) {
 
   return 0;
 }
+
+int ReleaseUartLock(int tid) {
+  uartserver_request req;
+  req.data = 0;
+  req.type = RELEASE_LOCK;
+  uartserver_response res;
+
+  int status = Send(tid, (char *)&req, sizeof(uartserver_request), (char *)&res,
+                    sizeof(uartserver_response));
+
+  return 0;
+}

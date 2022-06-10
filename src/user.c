@@ -5,13 +5,17 @@ void task_k4_test();
 void task_k4_init() {
   Create(20, nameserver);
   Create(10, uart_com2_tx_server);
-  Create(5, task_k4_test);
+
+  for (int i = 0; i < 100; i++) {
+    Create(5, task_k4_test);
+  }
 }
 
 void task_k4_test() {
+  int me = MyTid();
 
   for (;;) {
-    printf(COM2, "abc");
+    printf(COM2, "my tid: %d\r\n", me);
   }
 }
 
@@ -33,8 +37,8 @@ void idle() {
       unsigned int run = start - now;
 
       int percentage = (100 * sleeping_time) / run;
-      printf(COM2, "Idle: %d%% (%d ms)\r\n", percentage,
-             ticks_to_ms(sleeping_time, FASTCLOCKRATE));
+      // printf(COM2, "Idle: %d%% (%d ms)\r\n", percentage,
+      //        ticks_to_ms(sleeping_time, FASTCLOCKRATE));
     }
   }
 }

@@ -78,5 +78,6 @@ int WhoIs(const char *name);
 
 int AwaitEvent(int eventid);
 
-
 int Putc(int tid, int uart, char ch);
+
+int ReleaseUartLock(int tid);

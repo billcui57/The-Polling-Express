@@ -6,7 +6,11 @@
 #include "my_event.h"
 #include "ts7200.h"
 
-typedef enum { NOTIFIER_TX_GOOD, SEND_CHAR } uartserver_request_type;
+typedef enum {
+  NOTIFIER_TX_GOOD,
+  SEND_CHAR,
+  RELEASE_LOCK
+} uartserver_request_type;
 
 typedef enum { GOOD } uartserver_response_type;
 
