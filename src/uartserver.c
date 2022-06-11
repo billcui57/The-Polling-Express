@@ -31,7 +31,7 @@ void uart_com2_tx_server() {
 
   char char_buffer[MAX_NUM_TASKS];
 
-  memset(char_buffer, 0, MAX_CAPACITY);
+  memset(char_buffer, 0, sizeof(char) * MAX_CAPACITY);
 
   task_tid owned_by = -1;
 
@@ -45,8 +45,9 @@ void uart_com2_tx_server() {
       // bw_uart_put_char(COM2, 'N');
       Reply(client, (char *)&res, sizeof(uartserver_response));
 
-      if ((owned_by != -1) && (char_buffer != '\00')) {
+      if ((owned_by != -1) && (char_buffer[owned_by] != 0)) {
         uart_put_char(COM2, char_buffer[owned_by]);
+        char_buffer[owned_by] = 0;
         res.data = 0;
         res.type = GOOD;
         Reply(owned_by, (char *)&res, sizeof(uartserver_response));
