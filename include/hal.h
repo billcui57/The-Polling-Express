@@ -18,3 +18,4 @@ void bw_uart_put_char(int channel, uint8_t c);
 // KERNEL ONLY
 void enable_cache();
 void enable_irq();
+int get_base_addr(int channel);

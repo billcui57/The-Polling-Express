@@ -186,6 +186,14 @@ void kmain() {
         read_timer(TIMER3, &end_time);
         set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
+      } else if (event == UART1_INTR) {
+        enable_interrupt(UART1INTR);
+        event_mapping[event] = cur;
+        interrupt_tasks++;
+      } else if (event == UART1_RX_INTR) {
+        enable_interrupt(UART1RXINTR);
+        event_mapping[event] = cur;
+        interrupt_tasks++;
       } else {
         if (event == UART2_TX_HALF_EMPTY) {
           enable_interrupt(UART2TXINTR);
@@ -217,6 +225,23 @@ void kmain() {
           KASSERT(0, "Nobody home");
         }
         // bw_uart_put_char(COM2, 'I');
+      }
+
+      int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
+      volatile int *uart1_intr = (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
+
+
+      if (vic1_irq_status & VIC_UART1RXINTR_MASK) {
+        if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
+          disable_interrupt(UART1RXINTR);
+          *uart1_ctrl = *uart1_ctrl & ~RIEN_MASK;
+        }
+      }
+
+      if ((vic2_irq_status & VIC_INT_UART1_MASK) && (*uart1_intr & ~RIS_MASK)) {
+        if (wake_up(UART1_INTR, event_mapping, &interrupt_tasks)) {
+          disable_interrupt(UART1INTR);
+        }
       }
 
       add_to_ready_queue(cur);

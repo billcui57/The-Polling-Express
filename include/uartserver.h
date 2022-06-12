@@ -8,7 +8,9 @@
 
 typedef enum {
   NOTIFIER_TX_GOOD,
+  NOTIFIER_RX_GOOD,
   SEND_CHAR,
+  GET_CHAR,
   RELEASE_LOCK
 } uartserver_request_type;
 
@@ -27,3 +29,4 @@ typedef struct {
 } uartserver_response;
 
 void uart_com2_tx_server();
+void uart_com1_server();

@@ -92,11 +92,27 @@ void enable_interrupt(int interrupt_type) {
     *vic1_select = *vic1_select & ~VIC_TIMER1_MASK; // use IRQ
     *vic1_enable = *vic1_enable | VIC_TIMER1_MASK;
     break;
+  case UART1RXINTR:
+    *vic1_select = *vic1_select & ~VIC_UART1RXINTR_MASK; // use IRQ
+    *vic1_enable = *vic1_enable | VIC_UART1RXINTR_MASK;
+    break;
+  case UART1TXINTR:
+    *vic1_select = *vic1_select & ~VIC_UART1TXINTR_MASK; // use IRQ
+    *vic1_enable = *vic1_enable | VIC_UART1TXINTR_MASK;
+    break;
+  case UART1INTR:
+    *vic2_select = *vic2_select & ~VIC_INT_UART1_MASK; // use IRQ
+    *vic2_enable = *vic2_enable | VIC_INT_UART1_MASK;
+    break;
   case UART2RXINTR:
     *vic1_select = *vic1_select & ~VIC_UART2RXINTR_MASK; // use IRQ
     *vic1_enable = *vic1_enable | VIC_UART2RXINTR_MASK;
     break;
   case UART2TXINTR:;
+    int *uart2_ctrl = (int *)(get_base_addr(COM2) + UART_CTLR_OFFSET);
+
+    *uart2_ctrl = *uart2_ctrl | TIEN_MASK;
+
     *vic1_select = *vic1_select & ~VIC_UART2TXINTR_MASK; // use IRQ
     *vic1_enable = *vic1_enable | VIC_UART2TXINTR_MASK;
     break;
@@ -111,21 +127,32 @@ void enable_interrupt(int interrupt_type) {
 
 void disable_interrupt(int interrupt_type) {
 
-  volatile int *vic1_clear = (int *)(VIC1_BASE + INT_CLEAR_OFFSET);
-  volatile int *vic2_clear = (int *)(VIC2_BASE + INT_CLEAR_OFFSET);
+  int *vic1_disable = (int *)(VIC1_BASE + INT_DISABLE_OFFSET);
+  int *vic2_disable = (int *)(VIC2_BASE + INT_DISABLE_OFFSET);
 
   switch (interrupt_type) {
   case TC1:
-    *vic1_clear = *vic1_clear | VIC_TIMER1_MASK;
+    *vic1_disable = VIC_TIMER1_MASK;
+    break;
+  case UART1RXINTR:
+    *vic1_disable = VIC_UART1RXINTR_MASK;
+    break;
+  case UART1TXINTR:
+    *vic1_disable = VIC_UART1TXINTR_MASK;
+    break;
+  case UART1INTR:
+    *vic1_disable = VIC_INT_UART1_MASK;
     break;
   case UART2RXINTR:
-    *vic1_clear = *vic1_clear | VIC_UART2RXINTR_MASK;
+    *vic1_disable = VIC_UART2RXINTR_MASK;
     break;
   case UART2TXINTR:;
-    *vic1_clear = *vic1_clear | VIC_UART2TXINTR_MASK;
+    int *uart2_ctrl = (int *)(get_base_addr(COM2) + UART_CTLR_OFFSET);
+    *uart2_ctrl = *uart2_ctrl & ~TIEN_MASK;
+    *vic1_disable = VIC_UART2TXINTR_MASK;
     break;
   case UART2INTR:
-    *vic2_clear = *vic2_clear | VIC_INT_UART2_MASK;
+    *vic1_disable = VIC_INT_UART2_MASK;
     break;
   }
 }
