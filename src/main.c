@@ -79,8 +79,16 @@ void kmain() {
 
   while (scheduler_length() > 1 || interrupt_tasks != 0) {
 
+    // printf(BW_COM2, "[Vic1 enable] %d\r\n",
+    //        *(int *)(VIC1_BASE + INT_ENABLE_OFFSET));
+
+    // printf(BW_COM2, "[UART ctrl] %d\r\n",
+    //        *((int *)(get_base_addr(COM2) + UART_CTLR_OFFSET)));
+
     TCB *cur = pop_ready_queue();
 
+    // printf(BW_COM2, "[Tid]: %d \t [Priority]: %d \r\n", cur->tid,
+    //        cur->priority);
     int why = run_user(&cur->context);
 
     int data = get_data(&cur->context);
@@ -98,6 +106,8 @@ void kmain() {
     } else if (why == SYSCALL_YIELD) {
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_EXIT) {
+      // printf(BW_COM2, "[Exit] [Tid]: %d \t [Priority]: %d \r\n", cur->tid,
+      //        cur->priority);
       cur->state = ZOMBIE;
     } else if (why == SYSCALL_SEND) {
       send_args *args = (send_args *)data;
@@ -177,8 +187,12 @@ void kmain() {
         set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
       } else {
+        if (event == UART2_TX_HALF_EMPTY) {
+          enable_interrupt(UART2TXINTR);
+        }
         event_mapping[event] = cur;
         interrupt_tasks++;
+        // bw_uart_put_char(COM2, 'Z');
       }
 
     } else if (why == SYSCALL_IRQ) {
@@ -188,20 +202,19 @@ void kmain() {
       int vic1_irq_status = *(volatile int *)(VIC1_BASE + IRQ_STAT_OFFSET);
       int vic2_irq_status = *(volatile int *)(VIC2_BASE + IRQ_STAT_OFFSET);
 
-      // printf(COM2, "%d\r\n", vic1_irq_status);
-      // printf(COM2, "%d\r\n", vic2_irq_status);
-      // printf(COM2, "%d\r\n", *(int *)(VIC1_BASE + INT_ENABLE_OFFSET));
-
       if (vic1_irq_status & VIC_TIMER1_MASK) {
         *(int *)(TIMER1_BASE + CLR_OFFSET) = 1; // clear timer interrupt
         wake_up(TIMER_TICK, event_mapping, &interrupt_tasks);
       }
 
       if (vic1_irq_status & VIC_UART2TXINTR_MASK) {
-        // cannot clear a level interrupt
 
+        // cannot clear a level interrupt
         if (wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks)) {
+          // bw_uart_put_char(COM2, 'D');
           disable_interrupt(UART2TXINTR);
+        } else {
+          KASSERT(0, "Nobody home");
         }
         // bw_uart_put_char(COM2, 'I');
       }

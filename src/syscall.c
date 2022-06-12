@@ -147,6 +147,7 @@ int AwaitEvent(int eventid) {
 
 int Putc(int tid, int uart, char ch) {
   uartserver_request req;
+  memset(&req, 0, sizeof(req));
   req.data = ch;
   req.type = SEND_CHAR;
   uartserver_response res;
@@ -159,6 +160,7 @@ int Putc(int tid, int uart, char ch) {
 
 int ReleaseUartLock(int tid) {
   uartserver_request req;
+  memset(&req, 0, sizeof(req));
   req.data = 0;
   req.type = RELEASE_LOCK;
   uartserver_response res;

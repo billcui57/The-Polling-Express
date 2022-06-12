@@ -1,4 +1,5 @@
 #include <hal.h>
+#include <my_assert.h>
 #include <ts7200.h>
 
 int get_base_addr(int channel) {
@@ -16,6 +17,7 @@ void uart_init(int channel) {
   int *low = get_base_addr(channel) + UART_LCRL_OFFSET;
   int *med = get_base_addr(channel) + UART_LCRM_OFFSET;
   int *high = get_base_addr(channel) + UART_LCRH_OFFSET;
+  int *ctrl = get_base_addr(channel) + UART_CTLR_OFFSET;
 
   switch (channel) {
   case COM1: // 2400 (track)
@@ -27,6 +29,7 @@ void uart_init(int channel) {
     *low = 0x3;
     *med = 0x0;
     *high = WLEN_MASK | FEN_MASK; // FIFO enabled
+    *ctrl = *ctrl | TIEN_MASK;    // enable tx interrupt
     break;
   }
 }
@@ -79,10 +82,10 @@ void enable_cache() {
 
 void enable_interrupt(int interrupt_type) {
 
-  int *vic1_enable = (int *)(VIC1_BASE + INT_ENABLE_OFFSET);
-  int *vic1_select = (int *)(VIC1_BASE + INT_SELECT_OFFSET);
-  int *vic2_enable = (int *)(VIC2_BASE + INT_ENABLE_OFFSET);
-  int *vic2_select = (int *)(VIC2_BASE + INT_SELECT_OFFSET);
+  volatile int *vic1_enable = (int *)(VIC1_BASE + INT_ENABLE_OFFSET);
+  volatile int *vic1_select = (int *)(VIC1_BASE + INT_SELECT_OFFSET);
+  volatile int *vic2_enable = (int *)(VIC2_BASE + INT_ENABLE_OFFSET);
+  volatile int *vic2_select = (int *)(VIC2_BASE + INT_SELECT_OFFSET);
 
   switch (interrupt_type) {
   case TC1:
@@ -94,10 +97,6 @@ void enable_interrupt(int interrupt_type) {
     *vic1_enable = *vic1_enable | VIC_UART2RXINTR_MASK;
     break;
   case UART2TXINTR:;
-    int *uart2_ctrl = (int *)(get_base_addr(COM2) + UART_CTLR_OFFSET);
-
-    *uart2_ctrl = *uart2_ctrl | TIEN_MASK;
-
     *vic1_select = *vic1_select & ~VIC_UART2TXINTR_MASK; // use IRQ
     *vic1_enable = *vic1_enable | VIC_UART2TXINTR_MASK;
     break;
@@ -105,28 +104,28 @@ void enable_interrupt(int interrupt_type) {
     *vic2_select = *vic2_select & ~VIC_INT_UART2_MASK; // use IRQ
     *vic2_enable = *vic2_enable | VIC_INT_UART2_MASK;
     break;
+  default:
+    KASSERT(0, "Unknown Interrupt");
   }
 }
 
 void disable_interrupt(int interrupt_type) {
 
-  int *vic1_enable = (int *)(VIC1_BASE + INT_ENABLE_OFFSET);
-  int *vic2_enable = (int *)(VIC2_BASE + INT_ENABLE_OFFSET);
+  volatile int *vic1_clear = (int *)(VIC1_BASE + INT_CLEAR_OFFSET);
+  volatile int *vic2_clear = (int *)(VIC2_BASE + INT_CLEAR_OFFSET);
 
   switch (interrupt_type) {
   case TC1:
-    *vic1_enable = *vic1_enable & ~VIC_TIMER1_MASK;
+    *vic1_clear = *vic1_clear | VIC_TIMER1_MASK;
     break;
   case UART2RXINTR:
-    *vic1_enable = *vic1_enable & ~VIC_UART2RXINTR_MASK;
+    *vic1_clear = *vic1_clear | VIC_UART2RXINTR_MASK;
     break;
   case UART2TXINTR:;
-    int *uart2_ctrl = (int *)(get_base_addr(COM2) + UART_CTLR_OFFSET);
-    *uart2_ctrl = *uart2_ctrl & ~TIEN_MASK;
-    *vic1_enable = *vic1_enable & ~VIC_UART2TXINTR_MASK;
+    *vic1_clear = *vic1_clear | VIC_UART2TXINTR_MASK;
     break;
   case UART2INTR:
-    *vic2_enable = *vic2_enable & ~VIC_INT_UART2_MASK;
+    *vic2_clear = *vic2_clear | VIC_INT_UART2_MASK;
     break;
   }
 }
@@ -136,5 +135,5 @@ void enable_irq() {
   *(int *)(VIC1_BASE + INT_ENABLE_OFFSET) = 0;
   *(int *)(VIC2_BASE + INT_ENABLE_OFFSET) = 0;
 
-  // enable_interrupt(TC1);
+  enable_interrupt(TC1);
 }

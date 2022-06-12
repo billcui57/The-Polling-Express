@@ -5,6 +5,7 @@
 
 #define COM1 0
 #define COM2 1
+#define BW_COM2 2
 
 void uart_init(int channel);
 bool uart_can_read(int channel);

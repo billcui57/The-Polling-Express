@@ -919,6 +919,8 @@ int printf_(int channel, const char *format, ...) {
 
   if (channel == COM2) {
     _uart = WhoIs("uart2txserver");
+  } else if (channel == BW_COM2) {
+    _uart = -2;
   }
 
   va_list va;
@@ -927,7 +929,9 @@ int printf_(int channel, const char *format, ...) {
   const int ret = _vsnprintf(_out_char, buffer, (size_t)-1, format, va);
   va_end(va);
 
-  ReleaseUartLock(_uart);
+  if (channel != BW_COM2) {
+    ReleaseUartLock(_uart);
+  }
 
   return ret;
 }
@@ -968,4 +972,11 @@ int fctprintf(void (*out)(char character, void *arg), void *arg,
   return ret;
 }
 
-void _putchar(char character) { Putc(_uart, IGNORE, character); }
+void _putchar(char character) {
+
+  if (_uart == -2) {
+    bw_uart_put_char(COM2, character);
+  } else {
+    Putc(_uart, IGNORE, character);
+  }
+}
