@@ -918,7 +918,8 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 int printf_(int channel, const char *format, ...) {
 
   if (channel == COM2) {
-    _uart = WhoIs("uart2txserver");
+    _uart = -1;
+    while(_uart < 0) _uart = WhoIs("uart2txserver");
   } else if (channel == BW_COM2) {
     _uart = -2;
   }

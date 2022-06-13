@@ -194,13 +194,10 @@ void kmain() {
         enable_interrupt(UART1RXINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
-      } else {
-        if (event == UART2_TX_HALF_EMPTY) {
-          enable_interrupt(UART2TXINTR);
-        }
+      } else if (event == UART2_TX_HALF_EMPTY) {
+        enable_interrupt(UART2TXINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
-        // bw_uart_put_char(COM2, 'Z');
       }
 
     } else if (why == SYSCALL_IRQ) {

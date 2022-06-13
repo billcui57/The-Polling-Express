@@ -118,7 +118,7 @@ void uart_com1_tx_notifier(){
   uartserver_request req;
   req.type = NOTIFIER_TX_GOOD;
   req.data = 0;
-  int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
+  volatile int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
   volatile int *uart1_intr = (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
   volatile int *uart1_mdmsts = (int *)(get_base_addr(COM1) + UART_MDMSTS_OFFSET);
   while (true) {
@@ -155,7 +155,7 @@ void uart_com1_rx_notifier(){
   uartserver_request req;
   req.type = NOTIFIER_RX_GOOD;
   req.data = 0;
-  int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
+  volatile int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
 
   while (true) {
     Send(parent, (char *)&req, sizeof(uartserver_request), (char *)&junk, 0);
