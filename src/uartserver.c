@@ -167,7 +167,7 @@ void uart_com1_rx_notifier(){
 
 void uart_com1_server(){
   RegisterAs("uart1");
-
+  uart_init(COM1);
   task_tid tx = Create(10, uart_com1_tx_notifier);
   task_tid rx = Create(10, uart_com1_rx_notifier);
 
@@ -188,6 +188,8 @@ void uart_com1_server(){
   bool can_get = false;
   bool want_get = false;
   char get_buffer = '\x00';
+
+  while(uart_can_read(COM1)) uart_get_char(COM1);
 
   while(true){
     Receive(&client, (char *)&req, sizeof(uartserver_request));
@@ -252,7 +254,7 @@ void uart_com1_server(){
           can_send = false;
           res.data = 0;
           res.type = GOOD;
-          uart_put_char(COM1, req.data);
+          uart_put_char(COM1, send_buffer[owned_by]);
           Reply(tx, (char *)&res, sizeof(uartserver_response));
           Reply(owned_by, (char *)&res, sizeof(uartserver_response));
         } else {

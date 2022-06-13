@@ -158,6 +158,19 @@ int Putc(int tid, int uart, char ch) {
   return 0;
 }
 
+int Getc(int tid, int uart) {
+  uartserver_request req;
+  memset(&req, 0, sizeof(req));
+  req.data = 0;
+  req.type = GET_CHAR;
+  uartserver_response res;
+
+  int status = Send(tid, (char *)&req, sizeof(uartserver_request), (char *)&res,
+                    sizeof(uartserver_response));
+
+  return res.data;
+}
+
 int ReleaseUartLock(int tid) {
   uartserver_request req;
   memset(&req, 0, sizeof(req));

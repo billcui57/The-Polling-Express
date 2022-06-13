@@ -5,18 +5,33 @@ void task_k4_test();
 void task_k4_init() {
   Create(20, nameserver);
   Create(10, uart_com2_tx_server);
-
-  for (int i = 0; i < 5; i++) {
-    Create(5, task_k4_test);
-  }
+  Create(10, uart_com1_server);
+  Create(5, task_k4_test);
 }
 
 void task_k4_test() {
-  int me = MyTid();
+  int u1 = -1;
+  while(u1 < 0) u1 = WhoIs("uart1");
 
-  for (;;) {
-    printf(COM2, "tid: %d\r\n", me);
+  printf(COM2, "Starting..\r\n");
+
+  Putc(u1,0,'\x60');
+  int data[10];
+  while(true){
+    Putc(u1,0,'\x85');
+    for (int i=0;i<10;i++)data[i]=Getc(u1,0);
+    for (int module = 0; module < 5; module ++) {
+        int bmodule = module << 4;
+        int res = data[2*module] << 8 | data[2*module+1];
+        for (int i=0; i<16; i++) {
+            if (res & 1<<(15-i)) {
+              printf(COM2, "%c%d ",'A'+module, i+1);
+            }
+        }
+    }
   }
+  Putc(u1,0,'\x61');
+  printf(COM2, "Done\r\n");
 }
 
 void idle() {
@@ -39,7 +54,7 @@ void idle() {
       int percentage = (100 * sleeping_time) / run;
       // printf(COM2, "Idle: %d%% (%d ms)\r\n", percentage,
       //        ticks_to_ms(sleeping_time, FASTCLOCKRATE));
-      printf(BW_COM2, "I\r\n");
+      //printf(BW_COM2, ".");
     }
   }
 }
