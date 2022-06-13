@@ -72,12 +72,17 @@
 #define RXFF_MASK 0x40 // Receive buffer full
 #define TXFE_MASK 0x80 // Transmit buffer empty
 #define UART_INTR_OFFSET 0x1c
+#define MIS_MASK 0x1  // modem status int
+#define RIS_MASK 0x2  // receive int
+#define TIS_MASK 0x4  // transmit int
+#define RTIS_MASK 0x8 // receive timeout int
 #define UART_DMAR_OFFSET 0x28
 
 // Specific to UART1
 
 #define UART_MDMCTL_OFFSET 0x100
 #define UART_MDMSTS_OFFSET 0x104
+#define MSR_DCTS 0x1
 #define UART_HDLCCTL_OFFSET 0x20c
 #define UART_HDLCAMV_OFFSET 0x210
 #define UART_HDLCAM_OFFSET 0x214
@@ -89,15 +94,26 @@
 #define VIC2_BASE 0x800C0000
 #define IRQ_STAT_OFFSET 0
 #define INT_ENABLE_OFFSET 0x10
-#define INT_CLEAR_OFFSET 0x14
 #define INT_SELECT_OFFSET 0xC
+#define INT_DISABLE_OFFSET 0x14
 #define VIC_TIMER3_MASK (1 << 19)
 #define VIC_TIMER1_MASK (1 << 4)
+#define VIC_UART1RXINTR_MASK (1 << 23) // vic1
+#define VIC_UART1TXINTR_MASK (1 << 24) // vic1
 #define VIC_UART2RXINTR_MASK (1 << 25) // vic1
 #define VIC_UART2TXINTR_MASK (1 << 26) // vic1
+#define VIC_INT_UART1_MASK (1 << 20)   // vic2
 #define VIC_INT_UART2_MASK (1 << 22)   // vic2
 
-enum InterruptType { TC1, UART2TXINTR, UART2RXINTR, UART2INTR };
+enum InterruptType {
+  TC1,
+  UART1TXINTR,
+  UART1RXINTR,
+  UART1INTR,
+  UART2TXINTR,
+  UART2RXINTR,
+  UART2INTR
+};
 void enable_interrupt(int interrupt_type);
 void disable_interrupt(int interrupt_type);
 

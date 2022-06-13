@@ -80,4 +80,6 @@ int AwaitEvent(int eventid);
 
 int Putc(int tid, int uart, char ch);
 
+int Getc(int tid, int uart);
+
 int ReleaseUartLock(int tid);

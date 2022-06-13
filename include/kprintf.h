@@ -42,7 +42,6 @@
 extern "C" {
 #endif
 
-
 #define IGNORE 0
 /**
  * Output a character to a custom device like UART, used by the printf()
