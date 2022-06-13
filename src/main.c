@@ -225,8 +225,8 @@ void kmain() {
       }
 
       int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
-      volatile int *uart1_intr = (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
-
+      volatile int *uart1_intr =
+          (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
 
       if (vic1_irq_status & VIC_UART1RXINTR_MASK) {
         if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
