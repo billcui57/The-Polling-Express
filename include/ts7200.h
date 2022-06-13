@@ -89,9 +89,17 @@
 #define VIC2_BASE 0x800C0000
 #define IRQ_STAT_OFFSET 0
 #define INT_ENABLE_OFFSET 0x10
+#define INT_CLEAR_OFFSET 0x14
 #define INT_SELECT_OFFSET 0xC
 #define VIC_TIMER3_MASK (1 << 19)
 #define VIC_TIMER1_MASK (1 << 4)
+#define VIC_UART2RXINTR_MASK (1 << 25) // vic1
+#define VIC_UART2TXINTR_MASK (1 << 26) // vic1
+#define VIC_INT_UART2_MASK (1 << 22)   // vic2
+
+enum InterruptType { TC1, UART2TXINTR, UART2RXINTR, UART2INTR };
+void enable_interrupt(int interrupt_type);
+void disable_interrupt(int interrupt_type);
 
 // SYSCON
 

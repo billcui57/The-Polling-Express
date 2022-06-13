@@ -36,7 +36,9 @@
 
 #include "kprintf.h"
 
-int _channel;
+#include <syscall.h>
+
+task_tid _uart;
 
 // define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H ...) to include the
 // printf_config.h header file
@@ -914,13 +916,23 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 ///////////////////////////////////////////////////////////////////////////////
 
 int printf_(int channel, const char *format, ...) {
-  _channel = channel;
+
+  if (channel == COM2) {
+    _uart = WhoIs("uart2txserver");
+  } else if (channel == BW_COM2) {
+    _uart = -2;
+  }
 
   va_list va;
   va_start(va, format);
   char buffer[1];
   const int ret = _vsnprintf(_out_char, buffer, (size_t)-1, format, va);
   va_end(va);
+
+  if (channel != BW_COM2) {
+    ReleaseUartLock(_uart);
+  }
+
   return ret;
 }
 
@@ -961,7 +973,10 @@ int fctprintf(void (*out)(char character, void *arg), void *arg,
 }
 
 void _putchar(char character) {
-  while (!uart_can_write(_channel))
-    ;
-  uart_put_char(_channel, character);
+
+  if (_uart == -2) {
+    bw_uart_put_char(COM2, character);
+  } else {
+    Putc(_uart, IGNORE, character);
+  }
 }

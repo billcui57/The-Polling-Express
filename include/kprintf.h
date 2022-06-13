@@ -34,6 +34,7 @@
 #define _PRINTF_H_
 
 #include "hal.h"
+#include "task.h"
 #include <stdarg.h>
 #include <stddef.h>
 
@@ -41,6 +42,8 @@
 extern "C" {
 #endif
 
+
+#define IGNORE 0
 /**
  * Output a character to a custom device like UART, used by the printf()
  * function This function is declared here only. You have to write your custom

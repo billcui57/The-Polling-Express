@@ -26,6 +26,18 @@ void handle_send(TCB *src, TCB *dst) {
   add_to_ready_queue(dst);
 }
 
+bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
+  if (event_mapping[event_id] != NULL) {
+    TCB *waiting_task = event_mapping[event_id];
+    event_mapping[event_id] = NULL;
+    (*interrupt_tasks)--;
+    set_return(&(waiting_task->context), 0);
+    add_to_ready_queue(waiting_task);
+    return true;
+  }
+  return false;
+}
+
 void kmain() {
   uart_init(COM2);
 
@@ -63,12 +75,20 @@ void kmain() {
   int interrupt_tasks = 0;
 
   scheduler_add(-99, idle, -1);
-  scheduler_add(0, task_k3init, -1);
+  scheduler_add(100, task_k4_init, -1);
 
   while (scheduler_length() > 1 || interrupt_tasks != 0) {
 
+    // printf(BW_COM2, "[Vic1 enable] %d\r\n",
+    //        *(int *)(VIC1_BASE + INT_ENABLE_OFFSET));
+
+    // printf(BW_COM2, "[UART ctrl] %d\r\n",
+    //        *((int *)(get_base_addr(COM2) + UART_CTLR_OFFSET)));
+
     TCB *cur = pop_ready_queue();
 
+    // printf(BW_COM2, "[Tid]: %d \t [Priority]: %d \r\n", cur->tid,
+    //        cur->priority);
     int why = run_user(&cur->context);
 
     int data = get_data(&cur->context);
@@ -86,6 +106,8 @@ void kmain() {
     } else if (why == SYSCALL_YIELD) {
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_EXIT) {
+      // printf(BW_COM2, "[Exit] [Tid]: %d \t [Priority]: %d \r\n", cur->tid,
+      //        cur->priority);
       cur->state = ZOMBIE;
     } else if (why == SYSCALL_SEND) {
       send_args *args = (send_args *)data;
@@ -165,8 +187,12 @@ void kmain() {
         set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
       } else {
+        if (event == UART2_TX_HALF_EMPTY) {
+          enable_interrupt(UART2TXINTR);
+        }
         event_mapping[event] = cur;
         interrupt_tasks++;
+        // bw_uart_put_char(COM2, 'Z');
       }
 
     } else if (why == SYSCALL_IRQ) {
@@ -176,18 +202,21 @@ void kmain() {
       int vic1_irq_status = *(volatile int *)(VIC1_BASE + IRQ_STAT_OFFSET);
       int vic2_irq_status = *(volatile int *)(VIC2_BASE + IRQ_STAT_OFFSET);
 
-      // printf(COM2, "%d\r\n", vic1_irq_status);
-      // printf(COM2, "%d\r\n", vic2_irq_status);
-
       if (vic1_irq_status & VIC_TIMER1_MASK) {
         *(int *)(TIMER1_BASE + CLR_OFFSET) = 1; // clear timer interrupt
-        if (event_mapping[TIMER_TICK] != NULL) {
-          TCB *waiting_task = event_mapping[TIMER_TICK];
-          event_mapping[TIMER_TICK] = NULL;
-          interrupt_tasks--;
-          set_return(&(waiting_task->context), 0);
-          add_to_ready_queue(waiting_task);
+        wake_up(TIMER_TICK, event_mapping, &interrupt_tasks);
+      }
+
+      if (vic1_irq_status & VIC_UART2TXINTR_MASK) {
+
+        // cannot clear a level interrupt
+        if (wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks)) {
+          // bw_uart_put_char(COM2, 'D');
+          disable_interrupt(UART2TXINTR);
+        } else {
+          KASSERT(0, "Nobody home");
         }
+        // bw_uart_put_char(COM2, 'I');
       }
 
       add_to_ready_queue(cur);
@@ -197,26 +226,3 @@ void kmain() {
     }
   }
 }
-
-// void idle() {
-//   // __asm__ volatile("ldr r0, =80930000\n\t" // Syscon base address
-//   //                  "mov r1, #0xaa\n\t"
-//   //                  "str r1, [r0, #0xc0]\n\r"
-//   //                  "ldr r1, [r0, #0x80]\n\r"
-//   //                  "orr r1, r1, #0x1\n\r"
-//   //                  "str r1, [r0, #0x80]\n\r");
-
-//   int *lock = (int *)(SYSCON_BASE + SW_LOCK_OFFSET);
-
-//   *lock = 0xAA; // opens lock
-
-//   int *device_cfg = (int *)(SYSCON_BASE + DEVICE_CFG_OFFSET);
-
-//   *device_cfg = (*device_cfg) | SHENA_MASK;
-
-//   int *halt = (int *)(SYSCON_BASE + HALT_OFFSET);
-
-//   while (true) {
-//     *halt; // request to halt
-//   }
-// }

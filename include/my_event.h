@@ -6,8 +6,9 @@
 enum Event {
   BREAK_IDLE,
   TIMER_TICK,
-  NUMBER_OF_EVENTS // must always be last. First element must either
-                   // be =0 or no
+  UART2_TX_HALF_EMPTY,
+  NUMBER_OF_EVENTS // must always be last. First element
+                   // must either be =0 or no
                    // =
 };
 
