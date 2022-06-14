@@ -29,7 +29,9 @@ void uart_init(int channel) {
     *low = 0x3;
     *med = 0x0;
     *high = WLEN_MASK | FEN_MASK; // FIFO enabled
-    *ctrl = *ctrl | TIEN_MASK;    // enable tx interrupt
+    *ctrl =
+        *ctrl | TIEN_MASK | RIEN_MASK |
+        RTIEN_MASK; // enable tx interrupt, rx interrupt, rx timeout interrupt
     break;
   }
 }

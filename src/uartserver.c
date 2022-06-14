@@ -269,3 +269,69 @@ void uart_com1_server() {
     }
   }
 }
+void uart_com2_rx_notifier() {
+  int parent = MyParentTid();
+  int junk = 0;
+  uartserver_request req;
+  memset(&req, 0, sizeof(req));
+  req.type = NOTIFIER_RX_GOOD;
+  req.data = 0;
+
+  for (;;) {
+    // bw_uart_put_char(COM2, 'A');
+    Send(parent, (char *)&req, sizeof(uartserver_request), (char *)&junk, 0);
+    // bw_uart_put_char(COM2, 'B');
+    AwaitEvent(UART2_RX_INCOMING);
+    // bw_uart_put_char(COM2, 'C');
+  }
+}
+
+void uart_com2_rx_server() {
+  RegisterAs("uart2rxserver");
+  task_tid notifier_tid = Create(10, uart_com2_rx_notifier);
+
+  uartserver_request req;
+  uartserver_response res;
+  task_tid client;
+  memset(&res, 0, sizeof(res));
+
+  task_tid waiting = -1;
+
+  for (;;) {
+
+    Receive(&client, (char *)&req, sizeof(uartserver_request));
+    // bw_uart_put_char(COM2, 'H');
+    // bw_uart_put_char(COM2, 'R');
+    if (req.type == NOTIFIER_RX_GOOD) {
+      // bw_uart_put_char(COM2, 'F');
+      if (waiting != -1) {
+        // bw_uart_put_char(COM2, 'G');
+        char c = uart_get_char(COM2);
+        res.data = (int)c;
+        res.type = GOOD;
+
+        task_tid reply = waiting;
+        waiting = -1;
+        Reply(reply, (char *)&res, sizeof(uartserver_response));
+      }
+
+    } else if (req.type == GET_CHAR) {
+
+      if (uart_can_read(COM2)) {
+        char c = uart_get_char(COM2);
+        res.data = (int)c;
+        res.type = GOOD;
+        Reply(client, (char *)&res, sizeof(uartserver_response));
+      } else {
+        waiting = client;
+        res.data = 0;
+        res.type = GOOD;
+        Reply(notifier_tid, (char *)&res, sizeof(uartserver_response));
+      }
+
+    } else {
+      // printf(BW_COM2, "\r\n%d\r\n", req.type);
+      KASSERT(0, "Invalid RX server request type");
+    }
+  }
+}
