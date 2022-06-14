@@ -9,6 +9,7 @@ enum Event {
   UART1_RX_INTR,
   UART1_INTR,
   UART2_TX_HALF_EMPTY,
+  UART2_RX_INCOMING,
   NUMBER_OF_EVENTS // must always be last. First element
                    // must either be =0 or no
                    // =

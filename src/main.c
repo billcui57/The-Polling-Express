@@ -198,8 +198,14 @@ void kmain() {
         enable_interrupt(UART2TXINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
-      }
+      } else if (event == UART2_RX_INCOMING) {
+        // printf(BW_COM2, "A\r\n");
+        enable_interrupt(UART2RXINTR);
+        enable_interrupt(UART2INTR);
+        event_mapping[event] = cur;
+        interrupt_tasks++;
 
+      }
     } else if (why == SYSCALL_IRQ) {
 
       // now we determine who caused this interrupt
@@ -213,7 +219,6 @@ void kmain() {
       }
 
       if (vic1_irq_status & VIC_UART2TXINTR_MASK) {
-
         // cannot clear a level interrupt
         if (wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks)) {
           // bw_uart_put_char(COM2, 'D');
@@ -221,7 +226,32 @@ void kmain() {
         } else {
           KASSERT(0, "Nobody home");
         }
-        // bw_uart_put_char(COM2, 'I');
+      }
+
+      if (vic1_irq_status & VIC_UART2RXINTR_MASK) {
+        if (wake_up(UART2_RX_INCOMING, event_mapping, &interrupt_tasks)) {
+          disable_interrupt(UART2RXINTR);
+          disable_interrupt(UART2INTR);
+        } else {
+          KASSERT(0, "Nobody home");
+        }
+      }
+
+      // for uart 2 rx: buffer half full or timeout
+      if (vic2_irq_status & VIC_INT_UART2_MASK) {
+
+        int uart2_intr_combined =
+            *(volatile int *)(UART2_BASE + UART_INTR_OFFSET);
+
+        if (uart2_intr_combined & RTIS_MASK) {
+          // printf(BW_COM2, "B\r\n");
+          if (wake_up(UART2_RX_INCOMING, event_mapping, &interrupt_tasks)) {
+            disable_interrupt(UART2RXINTR);
+            disable_interrupt(UART2INTR);
+          } else {
+            KASSERT(0, "Nobody home");
+          }
+        }
       }
 
       int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
@@ -242,7 +272,6 @@ void kmain() {
       }
 
       add_to_ready_queue(cur);
-
     } else {
       KASSERT(0, "Unknown Syscall\r\n");
     }

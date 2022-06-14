@@ -29,4 +29,7 @@ typedef struct {
 } uartserver_response;
 
 void uart_com2_tx_server();
+
 void uart_com1_server();
+
+void uart_com2_rx_server();

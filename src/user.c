@@ -1,12 +1,33 @@
 #include <user.h>
 
 void task_k4_test();
+void uart_2_test();
 
 void task_k4_init() {
   Create(20, nameserver);
   Create(10, uart_com2_tx_server);
   Create(10, uart_com1_server);
+  Create(10, uart_com2_rx_server);
+  Create(5, uart_2_test);
   Create(5, task_k4_test);
+
+  // for (int i = 0; i < 5; i++) {
+  //   Create(5, uart_2_test);
+  // }
+}
+
+void uart_2_test() {
+  int u1rx = -1;
+  while (u1rx < 0) {
+    u1rx = WhoIs("uart2rxserver");
+  }
+
+  for (;;) {
+    // bw_uart_put_char(COM2, 'D');
+    char c = Getc(u1rx, IGNORE);
+    // bw_uart_put_char(COM2, 'E');
+    printf(COM2, "%c", c);
+  }
 }
 
 void task_k4_test() {
