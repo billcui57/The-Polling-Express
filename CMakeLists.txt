@@ -21,7 +21,9 @@ src/hashtable.c
 src/nameserver.c
 src/clockserver.c
 src/uartserver.c
+src/trainserver.c
 src/circularbuffer.c
+src/heap.c
 src/my_string.c
 src/my_memory.c
 )
