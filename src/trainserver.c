@@ -38,7 +38,7 @@ void task_trainserver() {
   memset(&res, 0, sizeof(res));
   task_tid client;
 
-  Create(30, task_train_worker);
+  Create(10, task_train_worker);
 
   RegisterAs("trainctl");
   while (true) {

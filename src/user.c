@@ -178,7 +178,6 @@ void shell() {
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
-    printf(COM2, "%c", c);
     bool got_valid_command =
         handle_new_char(c, input, &input_length, parsed_command);
 
@@ -197,7 +196,7 @@ void shell() {
       case COMMAND_TR:
         printf(COM2, "\033[%d;1H\033[KSPEED %d %d", LOG_ROW, parsed_command[1],
                parsed_command[2]);
-        TrainCommand(trainserver_tid, Time(clockserver), SPEED,
+        TrainCommand(trainserver_tid, Time(timer_tid), SPEED,
                      parsed_command[1], parsed_command[2]);
         break;
       default:
