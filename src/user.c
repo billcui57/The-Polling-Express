@@ -66,14 +66,14 @@ bool handle_new_char(char c, char *input, unsigned int *input_length,
                      int *parsed_command) { // backspace
   bool is_valid = false;
 
-  if (*input_length == TERMINALMAXINPUTSIZE) {
+  if ((*input_length) == TERMINALMAXINPUTSIZE) {
     return is_valid;
   }
 
   if (c == '\b') {
-    if (*input_length > 0) {
-      *input_length -= 1;
-      printf(COM2, "\033[%d;%dH\033[K", INPUT_ROW, *input_length + 1);
+    if ((*input_length) > 0) {
+      (*input_length) -= 1;
+      printf(COM2, "\033[%d;%dH\033[K", INPUT_ROW, (*input_length) + 1);
     }
   }
 
@@ -153,8 +153,9 @@ bool handle_new_char(char c, char *input, unsigned int *input_length,
     return is_valid;
   } else {
     input[*input_length] = c;
-    printf(COM2, "\033[%d;%dH%c", INPUT_ROW, *input_length + 1, c); // 1 indexed
-    *input_length++;
+    printf(COM2, "\033[%d;%dH%c", INPUT_ROW, (*input_length) + 1,
+           c); // 1 indexed
+    (*input_length)++;
   }
   return is_valid;
 }
@@ -170,32 +171,34 @@ void shell() {
   char input[TERMINALMAXINPUTSIZE];
   memset(input, 0, sizeof(char) * TERMINALMAXINPUTSIZE);
   unsigned int input_length = 0;
-  int parsed_command;
+  int parsed_command[3];
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
     printf(COM2, "%c", c);
-    // bool got_valid_command =
-    //     handle_new_char(c, input, &input_length, &parsed_command);
+    bool got_valid_command =
+        handle_new_char(c, input, &input_length, parsed_command);
 
-    // if (got_valid_command == true) {
-    //   // switch (parsed_command) {
-    //   // case COMMAND_Q:
-    //   //   printf(COM2, "\033[%d;1H\033[KQUIT", LOG_ROW);
-    //   //   break;
-    //   // case COMMAND_RV:
-    //   //   printf(COM2, "\033[%d;1H\033[KREVERSE", LOG_ROW);
-    //   //   break;
-    //   // case COMMAND_SW:
-    //   //   printf(COM2, "\033[%d;1H\033[KSWITCH", LOG_ROW);
-    //   //   break;
-    //   // case COMMAND_TR:
-    //   //   printf(COM2, "\033[%d;1H\033[KSPEED", LOG_ROW);
-    //   //   break;
-    //   // default:
-    //   //   KASSERT(0, "INVALID COMMAND TYPE");
-    //   // }
-    // }
+    if (got_valid_command == true) {
+      switch (parsed_command[0]) {
+      case COMMAND_Q:
+        printf(COM2, "\033[%d;1H\033[KQUIT", LOG_ROW);
+        break;
+      case COMMAND_RV:
+        printf(COM2, "\033[%d;1H\033[KREVERSE %d", LOG_ROW, parsed_command[1]);
+        break;
+      case COMMAND_SW:
+        printf(COM2, "\033[%d;1H\033[KSWITCH %d %d", LOG_ROW, parsed_command[1],
+               parsed_command[2]);
+        break;
+      case COMMAND_TR:
+        printf(COM2, "\033[%d;1H\033[KSPEED %d %d", LOG_ROW, parsed_command[1],
+               parsed_command[2]);
+        break;
+      default:
+        KASSERT(0, "INVALID COMMAND TYPE");
+      }
+    }
   }
 }
 
