@@ -63,18 +63,22 @@ typedef enum {
 
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
-bool handle_new_char(char c, char *input, unsigned int *input_length,
-                     int *parsed_command) { // backspace
+void print_input(char *input) {
+  printf(COM2, "\033[%d;1H\033[K%s", INPUT_ROW, input);
+}
+
+bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
   bool is_valid = false;
 
-  if ((*input_length) == TERMINALMAXINPUTSIZE) {
+  if (strlen(input) == TERMINALMAXINPUTSIZE) {
     return is_valid;
   }
 
   if (c == '\b') {
-    if ((*input_length) > 0) {
-      (*input_length) -= 1;
-      printf(COM2, "\033[%d;%dH\033[K", INPUT_ROW, (*input_length) + 1);
+
+    if (strlen(input) > 0) {
+      parsed_command[strlen(input) - 1] = '\0';
+      print_input(input);
     }
   }
 
@@ -87,7 +91,7 @@ bool handle_new_char(char c, char *input, unsigned int *input_length,
       {
         train_num = (input[3] - '0') * 10 + (input[4] - '0');
 
-        if ((*input_length == 8) && is_num(input[7])) // tr 23 13
+        if ((strlen(input) == 8) && is_num(input[7])) // tr 23 13
         {
           train_speed = (input[6] - '0') * 10 + (input[7] - '0');
         } else {
@@ -95,7 +99,7 @@ bool handle_new_char(char c, char *input, unsigned int *input_length,
         }
       } else {
         train_num = input[3] - '0';
-        if ((*input_length == 7) && is_num(input[6])) {
+        if ((strlen(input) == 7) && is_num(input[6])) {
           train_speed = (input[5] - '0') * 10 + (input[6] - '0');
         } else {
           train_speed = input[5] - '0';
@@ -126,7 +130,7 @@ bool handle_new_char(char c, char *input, unsigned int *input_length,
       }
       parsed_command[0] = COMMAND_SW;
       parsed_command[1] = switch_num;
-      parsed_command[2] = (int)switch_dir;
+      parsed_command[2] = switch_dir == 'c' ? 1 : 0;
       is_valid = true;
     } else if (input[0] == 'r' && input[1] == 'v') {
       int train_num = 0;
@@ -146,20 +150,18 @@ bool handle_new_char(char c, char *input, unsigned int *input_length,
       parsed_command[0] = COMMAND_P;
       is_valid = true;
     }
-    for (int i = 0; i < TERMINALMAXINPUTSIZE; i++) {
-      input[i] = '\0';
-    }
-    printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
-    *input_length = 0;
+    memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
+    print_input(input);
     return is_valid;
   } else {
-    input[*input_length] = c;
-    printf(COM2, "\033[%d;%dH%c", INPUT_ROW, (*input_length) + 1,
-           c); // 1 indexed
-    (*input_length)++;
+    input[strlen(input)] = c;
+    print_input(input);
   }
   return is_valid;
 }
+
+#define MAX_NUM_TRAINS 80
+#define SENSOR_READ_GROUPS 10
 
 void shell() {
 
@@ -172,14 +174,22 @@ void shell() {
   task_tid timer_tid = WhoIsBlock("clockserver");
 
   char input[TERMINALMAXINPUTSIZE];
-  memset(input, 0, sizeof(char) * TERMINALMAXINPUTSIZE);
-  unsigned int input_length = 0;
+  memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
   int parsed_command[3];
+
+  int prev_speed[MAX_NUM_TRAINS];
+  memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
+
+  int train_num;
+  int speed;
+  int switch_num;
+  int switch_orientation;
+  char sensor_group_readings[SENSOR_READ_GROUPS];
+  memset(prev_speed, 0, sizeof(char) * SENSOR_READ_GROUPS);
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
-    bool got_valid_command =
-        handle_new_char(c, input, &input_length, parsed_command);
+    bool got_valid_command = handle_new_char(c, input, parsed_command);
 
     if (got_valid_command == true) {
       switch (parsed_command[0]) {
@@ -187,17 +197,27 @@ void shell() {
         printf(COM2, "\033[%d;1H\033[KQUIT", LOG_ROW);
         break;
       case COMMAND_RV:
-        printf(COM2, "\033[%d;1H\033[KREVERSE %d", LOG_ROW, parsed_command[1]);
+        train_num = parsed_command[1];
+        printf(COM2, "\033[%d;1H\033[KREVERSE %d, back to speed %d", LOG_ROW,
+               train_num, prev_speed[train_num]);
+        TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num,
+                     prev_speed[train_num]);
         break;
       case COMMAND_SW:
-        printf(COM2, "\033[%d;1H\033[KSWITCH %d %d", LOG_ROW, parsed_command[1],
-               parsed_command[2]);
+        switch_num = parsed_command[1];
+        switch_orientation = parsed_command[2];
+        printf(COM2, "\033[%d;1H\033[KSWITCH %d %c", LOG_ROW, switch_num,
+               switch_orientation == 1 ? 'c' : 's');
+        TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
+                     switch_orientation);
         break;
       case COMMAND_TR:
         printf(COM2, "\033[%d;1H\033[KSPEED %d %d", LOG_ROW, parsed_command[1],
                parsed_command[2]);
-        TrainCommand(trainserver_tid, Time(timer_tid), SPEED,
-                     parsed_command[1], parsed_command[2]);
+        train_num = parsed_command[1];
+        speed = parsed_command[2];
+        TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
+        prev_speed[train_num] = speed;
         break;
       default:
         KASSERT(0, "INVALID COMMAND TYPE");
