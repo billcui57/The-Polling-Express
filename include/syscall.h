@@ -76,6 +76,9 @@ tid if good
 */
 int WhoIs(const char *name);
 
+// Yield blocks until resolved
+int WhoIsBlock(const char *name);
+
 int AwaitEvent(int eventid);
 
 int Putc(int tid, int uart, char ch);

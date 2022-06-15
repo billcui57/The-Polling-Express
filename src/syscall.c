@@ -113,6 +113,13 @@ int WhoIs(const char *name) {
     return -3;
   }
 }
+
+int WhoIsBlock(const char *name) {
+  task_tid i = -1;
+  while (i < 0)
+    i = WhoIs(name);
+  return i;
+}
 int RegisterAs(const char *name) {
   nameserver_request rq;
   nameserver_request_init(&rq, REQUEST_REGISTER_AS, name, strlen(name) + 1);
