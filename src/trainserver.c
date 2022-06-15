@@ -61,7 +61,7 @@ void task_trainserver() {
       }
       Reply(client, (char *)&res, sizeof(res));
     } else if (req.type == WORKER_SENSOR) {
-      char *sensor_res = res.data.sensors;
+      char *sensor_res = req.data.sensors;
       for (int i = 0; i < 10; i++) {
         delta[i] |= sensor_res[i] & ~sensors[i];
         sensors[i] = sensor_res[i];
