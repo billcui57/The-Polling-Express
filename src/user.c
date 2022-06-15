@@ -1,12 +1,12 @@
 #include <user.h>
 
 void task_k4_test();
-void uart_2_test();
 
 void print_art();
 void clear();
 void shell();
 void timer_printer();
+void sensor_reader();
 
 int idle_percentage;
 
@@ -18,18 +18,27 @@ void task_k4_init() {
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
   Create(5, timer_printer);
+  Create(5, sensor_reader);
   Create(5, shell);
 }
 
-void print_art() {
-  printf(COM2,
-         "\033[2J\033[H===================================\r\n|       The "
-         "Polling Express       |\r\n|    By: Edwin Zhang, Bill Cui    "
-         "|\r\n===================================");
-}
+#define INPUT_ROW 10
+#define LOG_ROW 9
+#define SENSOR_ROW 7
+#define IDLE_ROW 5
+#define TIME_ROW 6
 
-void print_idle() {
-  printf(COM2, "\033[5;1H\033[KIdle: %d%%", idle_percentage);
+void print_art() {
+  save_cursor();
+
+#ifndef DEBUG_MODE
+  printf(COM2, "\033[2J\033[H");
+#endif
+
+  printf(COM2, "===================================\r\n|       The "
+               "Polling Express       |\r\n|    By: Edwin Zhang, Bill Cui    "
+               "|\r\n===================================\r\n");
+  restore_cursor();
 }
 
 void timer_printer() {
@@ -41,9 +50,94 @@ void timer_printer() {
   int i = 0;
   while (true) {
     int duc = DelayUntil(clock_tid, start + (i + 1) * 10);
-    printf(COM2, "\033[6;1H\033[KTime: %d\r\n", Time(clock_tid));
-    print_idle();
+    save_cursor();
+
+#ifndef DEBUG_MODE
+    printf(COM2, "\033[%d;1H\033[K", TIME_ROW);
+#endif
+
+    printf(COM2, "Time: %d\r\n", Time(clock_tid));
+
+#ifndef DEBUG_MODE
+    printf(COM2, "\033[%d;1H\033[K", IDLE_ROW);
+#endif
+
+    printf(COM2, "Idle: %d%%\r\n", idle_percentage);
+    restore_cursor();
     i++;
+  }
+}
+
+#define SENSOR_READ_GROUPS 10
+#define SENSOR_CB_BACK_CAPACITY 10
+
+void sensor_reader() {
+  task_tid trainserver_tid = WhoIsBlock("trainctl");
+  task_tid clock_tid = WhoIsBlock("clockserver");
+
+  char sensor_group_readings[SENSOR_READ_GROUPS];
+
+  void *backing[SENSOR_CB_BACK_CAPACITY];
+  circular_buffer cb;
+  cb_init(&cb, backing, SENSOR_CB_BACK_CAPACITY);
+
+  int start = Time(clock_tid);
+  int i = 0;
+
+  while (true) {
+    int duc = DelayUntil(clock_tid, start + (i + 1) * 10);
+    i++;
+
+    // #ifdef DEBUG_MODE
+    //     printf(COM2, "ENTERING\r\n");
+    // #endif
+
+    TrainSensor(trainserver_tid, sensor_group_readings);
+
+    // #ifdef DEBUG_MODE
+    //     printf(COM2, "LEAVING\r\n");
+    // #endif
+
+    for (int module = 0; module < 5; module++) {
+      int res = sensor_group_readings[2 * module] << 8 |
+                sensor_group_readings[2 * module + 1];
+
+      for (int i = 0; i < 16; i++) {
+        if (res & 1 << (15 - i)) {
+          cb_push_back(&cb, (void *)(('A' + module) << 8 | ((char)(i + 1))),
+                       true);
+        }
+      }
+    }
+#ifdef DEBUG_MODE
+    for (int i = 0; i < 10; i++) {
+      printf(COM2, "%d\t", sensor_group_readings[i]);
+    }
+    printf(COM2, "\r\n");
+#endif
+
+    void **ptr = cb.tail;
+    save_cursor();
+#ifndef DEBUG_MODE
+    printf(COM2, "\033[%d;1H\033[K", SENSOR_ROW);
+#endif
+
+    for (int i = 0; i < cb.count; i++) {
+
+      void *sr_void = *ptr;
+      int sr = (int)sr_void;
+
+#ifndef DEBUG_MODE
+      printf(COM2, "%c%d ", sr >> 8, sr & 0xFF);
+#endif
+
+      ptr++;
+
+      if (ptr == cb.buffer_end) {
+        ptr = cb.buffer;
+      }
+    }
+    restore_cursor();
   }
 }
 
@@ -57,14 +151,16 @@ typedef enum {
 
 #define TERMINALMAXINPUTSIZE 20
 
-#define INPUT_ROW 10
-
-#define LOG_ROW 9
-
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
 void print_input(char *input) {
-  printf(COM2, "\033[%d;1H\033[K%s", INPUT_ROW, input);
+  save_cursor();
+#ifndef DEBUG_MODE
+  printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
+#endif
+
+  printf(COM2, "%s\r\n", input);
+  restore_cursor();
 }
 
 bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
@@ -161,7 +257,6 @@ bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
 }
 
 #define MAX_NUM_TRAINS 80
-#define SENSOR_READ_GROUPS 10
 
 void shell() {
 
@@ -184,7 +279,7 @@ void shell() {
   int speed;
   int switch_num;
   int switch_orientation;
-  char sensor_group_readings[SENSOR_READ_GROUPS];
+
   memset(prev_speed, 0, sizeof(char) * SENSOR_READ_GROUPS);
 
   for (;;) {
@@ -194,26 +289,45 @@ void shell() {
     if (got_valid_command == true) {
       switch (parsed_command[0]) {
       case COMMAND_Q:
-        printf(COM2, "\033[%d;1H\033[KQUIT", LOG_ROW);
+        save_cursor();
+#ifndef DEBUG_MODE
+        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
+#endif
+        printf(COM2, "QUIT\r\n");
+        restore_cursor();
         break;
       case COMMAND_RV:
         train_num = parsed_command[1];
-        printf(COM2, "\033[%d;1H\033[KREVERSE %d, back to speed %d", LOG_ROW,
-               train_num, prev_speed[train_num]);
+        save_cursor();
+#ifndef DEBUG_MODE
+        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
+#endif
+        printf(COM2, "REVERSE %d, back to speed %d\r\n", train_num,
+               prev_speed[train_num]);
+        restore_cursor();
         TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num,
                      prev_speed[train_num]);
         break;
       case COMMAND_SW:
         switch_num = parsed_command[1];
         switch_orientation = parsed_command[2];
-        printf(COM2, "\033[%d;1H\033[KSWITCH %d %c", LOG_ROW, switch_num,
+        save_cursor();
+#ifndef DEBUG_MODE
+        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
+#endif
+        printf(COM2, "SWITCH %d %c\r\n", switch_num,
                switch_orientation == 1 ? 'c' : 's');
+        restore_cursor();
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation);
         break;
       case COMMAND_TR:
-        printf(COM2, "\033[%d;1H\033[KSPEED %d %d", LOG_ROW, parsed_command[1],
-               parsed_command[2]);
+        save_cursor();
+#ifndef DEBUG_MODE
+        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
+#endif
+        printf(COM2, "SPEED %d %d\r\n", parsed_command[1], parsed_command[2]);
+        restore_cursor();
         train_num = parsed_command[1];
         speed = parsed_command[2];
         TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
@@ -223,20 +337,6 @@ void shell() {
         KASSERT(0, "INVALID COMMAND TYPE");
       }
     }
-  }
-}
-
-void uart_2_test() {
-  int u1rx = -1;
-  while (u1rx < 0) {
-    u1rx = WhoIs("uart2rxserver");
-  }
-
-  for (;;) {
-    // bw_uart_put_char(COM2, 'D');
-    char c = Getc(u1rx, IGNORE);
-    // bw_uart_put_char(COM2, 'E');
-    printf(COM2, "%c", c);
   }
 }
 

@@ -13,9 +13,9 @@ void basic() {
   int b = 2;
   int c = 3;
 
-  cb_push_back(&cb, (void *)a);
-  cb_push_back(&cb, (void *)b);
-  cb_push_back(&cb, (void *)c);
+  cb_push_back(&cb, (void *)a, false);
+  cb_push_back(&cb, (void *)b, false);
+  cb_push_back(&cb, (void *)c, false);
 
   void *test;
   cb_pop_front(&cb, &test);
@@ -38,31 +38,31 @@ void shift() {
   int c = 3;
   void *test;
 
-  cb_push_back(&cb, (void *)a);
+  cb_push_back(&cb, (void *)a, false);
   cb_pop_front(&cb, &test);
   assert((int)test == a);
-  cb_push_back(&cb, (void *)b);
+  cb_push_back(&cb, (void *)b, false);
   cb_pop_front(&cb, &test);
   assert((int)test == b);
-  cb_push_back(&cb, (void *)c);
+  cb_push_back(&cb, (void *)c, false);
   cb_pop_front(&cb, &test);
   assert((int)test == c);
-  cb_push_back(&cb, (void *)a);
+  cb_push_back(&cb, (void *)a, false);
   cb_pop_front(&cb, &test);
   assert((int)test == a);
-  cb_push_back(&cb, (void *)b);
+  cb_push_back(&cb, (void *)b, false);
   cb_pop_front(&cb, &test);
   assert((int)test == b);
-  cb_push_back(&cb, (void *)c);
+  cb_push_back(&cb, (void *)c, false);
   cb_pop_front(&cb, &test);
   assert((int)test == c);
-  cb_push_back(&cb, (void *)a);
+  cb_push_back(&cb, (void *)a, false);
   cb_pop_front(&cb, &test);
   assert((int)test == a);
-  cb_push_back(&cb, (void *)b);
+  cb_push_back(&cb, (void *)b, false);
   cb_pop_front(&cb, &test);
   assert((int)test == b);
-  cb_push_back(&cb, (void *)c);
+  cb_push_back(&cb, (void *)c, false);
   cb_pop_front(&cb, &test);
   assert((int)test == c);
 }
