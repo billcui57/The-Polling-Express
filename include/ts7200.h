@@ -112,8 +112,11 @@ enum InterruptType {
   UART1INTR,
   UART2TXINTR,
   UART2RXINTR,
+  UART2RTIEINTR,
   UART2INTR
 };
+void enable_vic_interrupt(int interrupt_type);
+void disable_vic_interrupt(int interrupt_type);
 void enable_interrupt(int interrupt_type);
 void disable_interrupt(int interrupt_type);
 

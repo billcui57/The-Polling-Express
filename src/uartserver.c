@@ -115,6 +115,7 @@ void uart_com1_tx_notifier() {
   int parent = MyParentTid();
   int junk = 0;
   uartserver_request req;
+  memset(&req, 0, sizeof(req));
   req.type = NOTIFIER_TX_GOOD;
   req.data = 0;
   volatile int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
@@ -153,6 +154,7 @@ void uart_com1_rx_notifier() {
   int parent = MyParentTid();
   int junk = 0;
   uartserver_request req;
+  memset(&req, 0, sizeof(req));
   req.type = NOTIFIER_RX_GOOD;
   req.data = 0;
   volatile int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
@@ -173,6 +175,7 @@ void uart_com1_server() {
 
   uartserver_request req;
   uartserver_response res;
+  memset(&res, 0, sizeof(res));
   task_tid client;
 
   void *lock_backing[MAX_NUM_TASKS];
