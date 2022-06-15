@@ -112,6 +112,8 @@ void kmain() {
       // cur->tid,
       //        cur->priority);
       cur->state = ZOMBIE;
+    } else if (why == SYSCALL_SHUTDOWN) {
+      break;
     } else if (why == SYSCALL_SEND) {
       send_args *args = (send_args *)data;
 

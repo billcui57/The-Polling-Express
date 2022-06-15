@@ -295,6 +295,8 @@ void shell() {
 #endif
         printf(COM2, "QUIT\r\n");
         restore_cursor();
+        printf(COM2, "\r\n");
+        Shutdown();
         break;
       case COMMAND_RV:
         train_num = parsed_command[1];
