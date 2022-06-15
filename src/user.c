@@ -80,7 +80,11 @@ void timer_printer() {
     printf(COM2, "\033[%d;1H\033[K", TIME_ROW);
 #endif
 
-    printf(COM2, "Time: %d\r\n", Time(clock_tid));
+    int formatted_time[3];
+    memset(formatted_time, 0, sizeof(int) * 3);
+    get_formatted_curr_time(Time(clock_tid), formatted_time, 100);
+    printf(COM2, "Time: %d min %d.%d secs\r\n", formatted_time[0],
+           formatted_time[1], formatted_time[2]);
 
 #ifndef DEBUG_MODE
     printf(COM2, "\033[%d;1H\033[K", IDLE_ROW);
@@ -175,8 +179,9 @@ void print_input(char *input) {
 #ifndef DEBUG_MODE
   printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
 #endif
-
-  printf(COM2, "%s\r\n", input);
+  printf(COM2, ">");
+  printf(COM2, "%s", input);
+  printf(COM2, "_\r\n");
   restore_cursor();
 }
 
@@ -273,9 +278,17 @@ bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
   return is_valid;
 }
 
+void hide_cursor() {
+  save_cursor();
+  printf(COM2, "\033[?25l");
+  restore_cursor();
+}
+
 #define MAX_NUM_TRAINS 80
 
 void shell() {
+
+  hide_cursor();
 
   print_art();
 
@@ -299,6 +312,8 @@ void shell() {
   int speed;
   int switch_num;
   int switch_orientation;
+
+  print_input(input);
 
   print_switch_table(switch_state);
 
