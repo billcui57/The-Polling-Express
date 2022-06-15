@@ -22,11 +22,12 @@ void task_k4_init() {
   Create(5, shell);
 }
 
-#define INPUT_ROW 10
-#define LOG_ROW 9
+#define LOG_ROW 30
+#define INPUT_ROW LOG_ROW + 1
 #define SENSOR_ROW 7
 #define IDLE_ROW 5
 #define TIME_ROW 6
+#define SWITCH_TABLE_ROW_BEGIN 8
 
 void print_art() {
   save_cursor();
@@ -38,6 +39,29 @@ void print_art() {
   printf(COM2, "===================================\r\n|       The "
                "Polling Express       |\r\n|    By: Edwin Zhang, Bill Cui    "
                "|\r\n===================================\r\n");
+  restore_cursor();
+}
+
+#define NUM_SWITCHES 256
+void print_switch_table(char *switch_state) {
+  save_cursor();
+
+  int NUM_VALID_SWITCH_INDICES = 22;
+  const int valid_switch_indices[] = {1,  2,  3,   4,   5,   6,  7,  8,
+                                      9,  10, 11,  12,  13,  14, 15, 16,
+                                      17, 18, 153, 154, 155, 156};
+
+#ifndef DEBUG_MODE
+  printf(COM2, "\033[%d;1H\033[K", SWITCH_TABLE_ROW_BEGIN);
+#endif
+
+  for (int i = 0; i < NUM_VALID_SWITCH_INDICES; i++) {
+
+    int switch_index = valid_switch_indices[i];
+
+    printf(COM2, "[%d]:%c\r\n", switch_index, switch_state[switch_index]);
+  }
+
   restore_cursor();
 }
 
@@ -76,6 +100,7 @@ void sensor_reader() {
   task_tid clock_tid = WhoIsBlock("clockserver");
 
   char sensor_group_readings[SENSOR_READ_GROUPS];
+  memset(sensor_group_readings, 0, sizeof(char) * SENSOR_READ_GROUPS);
 
   void *backing[SENSOR_CB_BACK_CAPACITY];
   circular_buffer cb;
@@ -88,15 +113,7 @@ void sensor_reader() {
     int duc = DelayUntil(clock_tid, start + (i + 1) * 10);
     i++;
 
-    // #ifdef DEBUG_MODE
-    //     printf(COM2, "ENTERING\r\n");
-    // #endif
-
     TrainSensor(trainserver_tid, sensor_group_readings);
-
-    // #ifdef DEBUG_MODE
-    //     printf(COM2, "LEAVING\r\n");
-    // #endif
 
     for (int module = 0; module < 5; module++) {
       int res = sensor_group_readings[2 * module] << 8 |
@@ -275,12 +292,15 @@ void shell() {
   int prev_speed[MAX_NUM_TRAINS];
   memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
 
+  char switch_state[NUM_SWITCHES];
+  memset(switch_state, '?', sizeof(char) * NUM_SWITCHES);
+
   int train_num;
   int speed;
   int switch_num;
   int switch_orientation;
 
-  memset(prev_speed, 0, sizeof(char) * SENSOR_READ_GROUPS);
+  print_switch_table(switch_state);
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
@@ -318,6 +338,8 @@ void shell() {
         printf(COM2, "SWITCH %d %c\r\n", switch_num,
                switch_orientation == 1 ? 'c' : 's');
         restore_cursor();
+        switch_state[switch_num] = switch_orientation == 1 ? 'c' : 's';
+        print_switch_table(switch_state);
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation);
         break;
