@@ -40,6 +40,10 @@ void Exit() {
   __asm__ volatile("swi %[syscall]" ::[syscall] "i"(SYSCALL_EXIT));
 }
 
+void Shutdown() {
+  __asm__ volatile("swi %[syscall]" ::[syscall] "i"(SYSCALL_SHUTDOWN));
+}
+
 int Send(int tid, const char *msg, int msglen, char *reply, int rplen) {
   volatile send_args a;
   a.tid = tid;
