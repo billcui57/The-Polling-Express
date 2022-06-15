@@ -16,6 +16,7 @@ void task_k4_init() {
   Create(10, uart_com2_tx_server);
   Create(10, uart_com1_server);
   Create(10, uart_com2_rx_server);
+  Create(10, task_trainserver);
   Create(5, timer_printer);
   Create(5, shell);
 }
@@ -164,9 +165,11 @@ void shell() {
 
   print_art();
 
-  task_tid uart2_rx_tid = -1;
-  while (uart2_rx_tid < 0)
-    uart2_rx_tid = WhoIs("uart2rxserver");
+  task_tid uart2_rx_tid = WhoIsBlock("uart2rxserver");
+
+  task_tid trainserver_tid = WhoIsBlock("trainctl");
+
+  task_tid timer_tid = WhoIsBlock("clockserver");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, 0, sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -194,6 +197,8 @@ void shell() {
       case COMMAND_TR:
         printf(COM2, "\033[%d;1H\033[KSPEED %d %d", LOG_ROW, parsed_command[1],
                parsed_command[2]);
+        TrainCommand(trainserver_tid, Time(clockserver), SPEED,
+                     parsed_command[1], parsed_command[2]);
         break;
       default:
         KASSERT(0, "INVALID COMMAND TYPE");

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clockserver.h"
+#include "trainserver.h"
 #include "uartserver.h"
 #include <kprintf.h>
 #include <memory.h>
