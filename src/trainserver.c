@@ -30,8 +30,8 @@ void task_trainserver() {
   heap h;
   heap_init(&h, (void **)&heap_backing);
 
-  int sensors[10] = {0};
-  int delta[10] = {0};
+  char sensors[10] = {0};
+  char delta[10] = {0};
 
   train_msg req;
   train_msg res;

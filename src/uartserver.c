@@ -79,13 +79,13 @@ void uart_com2_tx_server() {
           Reply(notifier_tid, (char *)&res, sizeof(uartserver_response));
         }
       } else {
-        cb_push_back(&lock_cb, (void *)client);
+        cb_push_back(&lock_cb, (void *)client, false);
         char_buffer[client] = send_char;
       }
 
     } else if (req.type == RELEASE_LOCK) {
 
-      KASSERT(owned_by == client, "You must own the lock to uart");
+      KASSERT(owned_by == client, "Uart 2 You must own the lock to uart");
 
       void *next_void;
       // bw_uart_put_char(COM2, 'E');
@@ -229,7 +229,7 @@ void uart_com1_server() {
           send_buffer[owned_by] = req.data;
         }
       } else {
-        cb_push_back(&lock_cb, (void *)client);
+        cb_push_back(&lock_cb, (void *)client, false);
         send_buffer[client] = req.data;
       }
     } else if (req.type == GET_CHAR) {
@@ -244,7 +244,7 @@ void uart_com1_server() {
       }
     } else if (req.type == RELEASE_LOCK) {
 
-      KASSERT(owned_by == client, "You must own the lock to uart");
+      KASSERT(owned_by == client, "Uart 1 You must own the lock to uart");
 
       void *next_void;
 

@@ -912,6 +912,19 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void save_cursor() {
+#ifndef DEBUG_MODE
+  printf(COM2, "\0337");
+#endif
+}
+
+void restore_cursor() {
+#ifndef DEBUG_MODE
+  printf(COM2, "\0338");
+#endif
+  ReleaseUartLock(WhoIsBlock("uart2txserver"));
+}
+
 int printf_(int channel, const char *format, ...) {
 
   if (channel == COM2) {
@@ -927,10 +940,6 @@ int printf_(int channel, const char *format, ...) {
   char buffer[1];
   const int ret = _vsnprintf(_out_char, buffer, (size_t)-1, format, va);
   va_end(va);
-
-  if (channel != BW_COM2) {
-    ReleaseUartLock(_uart);
-  }
 
   return ret;
 }

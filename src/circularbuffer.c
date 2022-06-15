@@ -11,10 +11,15 @@ void cb_init(circular_buffer *cb, void **buffer, size_t capacity) {
   cb->tail = cb->buffer;
 }
 
-int cb_push_back(circular_buffer *cb, void *item) {
+int cb_push_back(circular_buffer *cb, void *item, bool aggressive) {
 
   if (cb->count == cb->capacity) {
-    return CB_FULL;
+    if (aggressive) {
+      void *junk;
+      cb_pop_front(cb, &junk);
+    } else {
+      return CB_FULL;
+    }
   }
 
   *(cb->head) = item;
