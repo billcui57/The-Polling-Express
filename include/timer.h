@@ -19,6 +19,9 @@ void start_timer(int timer_num);
 void stop_timer(int timer_num);
 void read_timer(int timer_num, unsigned int *val);
 
+void get_formatted_curr_time(unsigned int curr_time, int *result,
+                             int tick_speed);
+
 unsigned int ticks_to_ms(unsigned int ticks, unsigned int clock_rate);
 
 #endif // TIMER_H

@@ -87,14 +87,16 @@ void kmain() {
 
     TCB *cur = pop_ready_queue();
 
-    // printf(BW_COM2, "[Tid]: %d \t [Priority]: %d \r\n", cur->tid,
-    //        cur->priority);
     int why = run_user(&cur->context);
+    // printf(BW_COM2, "[Tid]: %d \t [Priority]: %d \r\n", cur->tid,
+    //  cur->priority);
 
     int data = get_data(&cur->context);
     if (why == SYSCALL_CREATE) {
       create_args *args = (create_args *)data;
       int ret = scheduler_add(args->priority, args->function, cur->tid);
+      // printf(BW_COM2, "[Ret]: %d \t [Func]: %d \r\n", ret,
+      // args->function);
       set_return(&cur->context, ret);
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_MYTID) {
@@ -106,9 +108,12 @@ void kmain() {
     } else if (why == SYSCALL_YIELD) {
       add_to_ready_queue(cur);
     } else if (why == SYSCALL_EXIT) {
-      // printf(BW_COM2, "[Exit] [Tid]: %d \t [Priority]: %d \r\n", cur->tid,
+      // printf(BW_COM2, "[Exit] [Tid]: %d \t [Priority]: %d \r\n",
+      // cur->tid,
       //        cur->priority);
       cur->state = ZOMBIE;
+    } else if (why == SYSCALL_SHUTDOWN) {
+      break;
     } else if (why == SYSCALL_SEND) {
       send_args *args = (send_args *)data;
 
@@ -187,11 +192,11 @@ void kmain() {
         set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
       } else if (event == UART1_INTR) {
-        enable_interrupt(UART1INTR);
+        enable_vic_interrupt(UART1INTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
       } else if (event == UART1_RX_INTR) {
-        enable_interrupt(UART1RXINTR);
+        enable_vic_interrupt(UART1RXINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
       } else if (event == UART2_TX_HALF_EMPTY) {
@@ -201,10 +206,12 @@ void kmain() {
       } else if (event == UART2_RX_INCOMING) {
         // printf(BW_COM2, "A\r\n");
         enable_interrupt(UART2RXINTR);
-        enable_interrupt(UART2INTR);
+        enable_interrupt(UART2RTIEINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
-
+      } else if (event == TIMER_TICK) {
+        event_mapping[event] = cur;
+        interrupt_tasks++;
       }
     } else if (why == SYSCALL_IRQ) {
 
@@ -218,36 +225,25 @@ void kmain() {
         wake_up(TIMER_TICK, event_mapping, &interrupt_tasks);
       }
 
-      if (vic1_irq_status & VIC_UART2TXINTR_MASK) {
-        // cannot clear a level interrupt
-        if (wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks)) {
-          // bw_uart_put_char(COM2, 'D');
-          disable_interrupt(UART2TXINTR);
-        } else {
-          KASSERT(0, "Nobody home");
-        }
-      }
-
-      if (vic1_irq_status & VIC_UART2RXINTR_MASK) {
-        if (wake_up(UART2_RX_INCOMING, event_mapping, &interrupt_tasks)) {
-          disable_interrupt(UART2RXINTR);
-          disable_interrupt(UART2INTR);
-        } else {
-          KASSERT(0, "Nobody home");
-        }
-      }
-
       // for uart 2 rx: buffer half full or timeout
       if (vic2_irq_status & VIC_INT_UART2_MASK) {
 
         int uart2_intr_combined =
             *(volatile int *)(UART2_BASE + UART_INTR_OFFSET);
 
-        if (uart2_intr_combined & RTIS_MASK) {
+        if ((uart2_intr_combined & RTIS_MASK) ||
+            (uart2_intr_combined & RIS_MASK)) {
           // printf(BW_COM2, "B\r\n");
           if (wake_up(UART2_RX_INCOMING, event_mapping, &interrupt_tasks)) {
             disable_interrupt(UART2RXINTR);
-            disable_interrupt(UART2INTR);
+            disable_interrupt(UART2RTIEINTR);
+          } else {
+            KASSERT(0, "Nobody home");
+          }
+        } else if (uart2_intr_combined & TIS_MASK) {
+          if (wake_up(UART2_TX_HALF_EMPTY, event_mapping, &interrupt_tasks)) {
+            // bw_uart_put_char(COM2, 'D');
+            disable_interrupt(UART2TXINTR);
           } else {
             KASSERT(0, "Nobody home");
           }
@@ -260,14 +256,14 @@ void kmain() {
 
       if (vic1_irq_status & VIC_UART1RXINTR_MASK) {
         if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
-          disable_interrupt(UART1RXINTR);
+          disable_vic_interrupt(UART1RXINTR);
           *uart1_ctrl = *uart1_ctrl & ~RIEN_MASK;
         }
       }
 
       if ((vic2_irq_status & VIC_INT_UART1_MASK) && (*uart1_intr & ~RIS_MASK)) {
         if (wake_up(UART1_INTR, event_mapping, &interrupt_tasks)) {
-          disable_interrupt(UART1INTR);
+          disable_vic_interrupt(UART1INTR);
         }
       }
 

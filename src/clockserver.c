@@ -9,6 +9,7 @@ void clock_notifier() {
   int parent = MyParentTid();
   int junk = 0;
   clockserver_request req;
+  memset(&req, 0, sizeof(req));
   req.type = TICK;
   req.data = 0;
   while (true) {
@@ -79,6 +80,7 @@ void clockserver() {
 int Time(int tid) {
   int ret;
   clockserver_request req;
+  memset(&req, 0, sizeof(req));
   req.type = TIME;
   Send(tid, (char *)&req, sizeof(clockserver_request), (char *)&ret,
        sizeof(int));
@@ -88,6 +90,7 @@ int Time(int tid) {
 int Delay(int tid, int ticks) {
   int ret;
   clockserver_request req;
+  memset(&req, 0, sizeof(req));
   req.type = DELAY;
   req.data = ticks;
   Send(tid, (char *)&req, sizeof(clockserver_request), (char *)&ret,
@@ -98,6 +101,7 @@ int Delay(int tid, int ticks) {
 int DelayUntil(int tid, int ticks) {
   int ret;
   clockserver_request req;
+  memset(&req, 0, sizeof(req));
   req.type = DELAYUNTIL;
   req.data = ticks;
   Send(tid, (char *)&req, sizeof(clockserver_request), (char *)&ret,

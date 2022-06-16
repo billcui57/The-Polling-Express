@@ -11,12 +11,13 @@
 #define SYSCALL_YIELD 4
 #define SYSCALL_EXIT 5
 #define SYSCALL_DESTROY 6
+#define SYSCALL_SHUTDOWN 7
 
-#define SYSCALL_SEND 7
-#define SYSCALL_RECEIVE 8
-#define SYSCALL_REPLY 9
+#define SYSCALL_SEND 8
+#define SYSCALL_RECEIVE 9
+#define SYSCALL_REPLY 10
 
-#define SYSCALL_AWAITEVENT 10
+#define SYSCALL_AWAITEVENT 11
 
 #define EINVALIDPRIORITY -1   // invalid priority
 #define ENOTASKDESCRIPTORS -2 // kernel is out of task descriptors
@@ -35,6 +36,7 @@ int MyParentTid();
 void Yield();
 void Exit();
 void Destroy();
+void Shutdown();
 
 typedef struct {
   int tid;
@@ -75,6 +77,9 @@ tid if good
 -3 other errors
 */
 int WhoIs(const char *name);
+
+// Yield blocks until resolved
+int WhoIsBlock(const char *name);
 
 int AwaitEvent(int eventid);
 

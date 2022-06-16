@@ -40,6 +40,10 @@ void Exit() {
   __asm__ volatile("swi %[syscall]" ::[syscall] "i"(SYSCALL_EXIT));
 }
 
+void Shutdown() {
+  __asm__ volatile("swi %[syscall]" ::[syscall] "i"(SYSCALL_SHUTDOWN));
+}
+
 int Send(int tid, const char *msg, int msglen, char *reply, int rplen) {
   volatile send_args a;
   a.tid = tid;
@@ -112,6 +116,13 @@ int WhoIs(const char *name) {
   } else {
     return -3;
   }
+}
+
+int WhoIsBlock(const char *name) {
+  task_tid i = -1;
+  while (i < 0)
+    i = WhoIs(name);
+  return i;
 }
 int RegisterAs(const char *name) {
   nameserver_request rq;

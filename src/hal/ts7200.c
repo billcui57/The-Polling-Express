@@ -77,12 +77,49 @@ void enable_cache() {
   }
   __asm__ volatile("MCR p15,0,%[zero],c7,c5,0" ::[zero] "r"(0));
   int reg;
-  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [ reg ] "=r"(reg));
+  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [reg] "=r"(reg));
   reg = reg | 1 << 12 | 1 << 2;
   __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
 }
 
 void enable_interrupt(int interrupt_type) {
+  int *uart2_ctrl = get_base_addr(COM2) + UART_CTLR_OFFSET;
+  switch (interrupt_type) {
+  case UART2RXINTR:
+
+    *uart2_ctrl = *uart2_ctrl | RIEN_MASK;
+    break;
+  case UART2TXINTR:
+
+    *uart2_ctrl = *uart2_ctrl | TIEN_MASK;
+    break;
+  case UART2RTIEINTR:
+
+    *uart2_ctrl = *uart2_ctrl | RTIEN_MASK;
+    break;
+  default:
+    KASSERT(0, "Unknown Interrupt");
+  }
+}
+
+void disable_interrupt(int interrupt_type) {
+  int *uart2_ctrl = get_base_addr(COM2) + UART_CTLR_OFFSET;
+  switch (interrupt_type) {
+  case UART2RXINTR:;
+    *uart2_ctrl = *uart2_ctrl & ~RIEN_MASK;
+    break;
+  case UART2TXINTR:;
+    *uart2_ctrl = *uart2_ctrl & ~TIEN_MASK;
+    break;
+  case UART2RTIEINTR:;
+    *uart2_ctrl = *uart2_ctrl & ~RTIEN_MASK;
+    break;
+  default:
+    KASSERT(0, "Unknown Interrupt");
+  }
+}
+
+void enable_vic_interrupt(int interrupt_type) {
 
   volatile int *vic1_enable = (int *)(VIC1_BASE + INT_ENABLE_OFFSET);
   volatile int *vic1_select = (int *)(VIC1_BASE + INT_SELECT_OFFSET);
@@ -119,11 +156,11 @@ void enable_interrupt(int interrupt_type) {
     *vic2_enable = *vic2_enable | VIC_INT_UART2_MASK;
     break;
   default:
-    KASSERT(0, "Unknown Interrupt");
+    KASSERT(0, "Unknown VIC Interrupt");
   }
 }
 
-void disable_interrupt(int interrupt_type) {
+void disable_vic_interrupt(int interrupt_type) {
 
   volatile int *vic1_disable = (int *)(VIC1_BASE + INT_DISABLE_OFFSET);
   volatile int *vic2_disable = (int *)(VIC2_BASE + INT_DISABLE_OFFSET);
@@ -149,8 +186,9 @@ void disable_interrupt(int interrupt_type) {
     break;
   case UART2INTR:
     *vic2_disable = VIC_INT_UART2_MASK;
-
     break;
+  default:
+    KASSERT(0, "Unknown VIC Interrupt");
   }
 }
 
@@ -159,5 +197,11 @@ void enable_irq() {
   *(int *)(VIC1_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
   *(int *)(VIC2_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
 
-  enable_interrupt(TC1);
+  enable_vic_interrupt(TC1);
+  enable_vic_interrupt(UART2INTR);
+  enable_vic_interrupt(UART1RXINTR);
+  enable_vic_interrupt(UART2TXINTR);
+  disable_interrupt(UART2RXINTR);
+  disable_interrupt(UART2TXINTR);
+  disable_interrupt(UART2RTIEINTR);
 }
