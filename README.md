@@ -7,3 +7,6 @@ Performance result is located in `docs/k2` as `performance.txt` methodology and 
 
 # CS452 K3
 Documentation is located in `docs/k3` and the executable is at `build/kernel` once built.
+
+# CS452 K4
+Documentation is located in `docs/k4` and the executable is at `build/kernel` once built.
