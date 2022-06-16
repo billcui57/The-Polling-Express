@@ -183,7 +183,7 @@ typedef enum {
 
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
-void print_input(char *input, char *input_length) {
+void print_input(char *input, int *input_length) {
   save_cursor();
 #ifndef DEBUG_MODE
   printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
