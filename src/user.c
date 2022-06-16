@@ -36,9 +36,18 @@ void print_art() {
   printf(COM2, "\033[2J\033[H");
 #endif
 
-  printf(COM2, "===================================\r\n|       The "
-               "Polling Express       |\r\n|    By: Edwin Zhang, Bill Cui    "
-               "|\r\n===================================\r\n");
+  int christmas_colours[3] = {32, 37, 31};
+
+  for (unsigned int i = 0; i < 35; i++) {
+    printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
+  }
+  printf(COM2, "\r\n");
+
+  printf(COM2, "|       The Polling Express       |\r\n");
+
+  for (unsigned int i = 0; i < 35; i++) {
+    printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
+  }
   restore_cursor();
 }
 
@@ -179,9 +188,23 @@ void print_input(char *input) {
 #ifndef DEBUG_MODE
   printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
 #endif
+  printf(COM2, "\033[35m");
   printf(COM2, ">");
   printf(COM2, "%s", input);
   printf(COM2, "_\r\n");
+  printf(COM2, "\033[0m");
+  restore_cursor();
+}
+
+void print_debug(char *input) {
+  save_cursor();
+#ifndef DEBUG_MODE
+  printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
+#endif
+  printf(COM2, "\033[32m");
+  printf(COM2, "%s", input);
+  printf(COM2, "\033[0m");
+  printf(COM2, "\r\n");
   restore_cursor();
 }
 
@@ -313,6 +336,8 @@ void shell() {
   int switch_num;
   int switch_orientation;
 
+  char debug_buffer[100];
+
   print_input(input);
 
   print_switch_table(switch_state);
@@ -325,48 +350,38 @@ void shell() {
       switch (parsed_command[0]) {
       case COMMAND_Q:
         save_cursor();
-#ifndef DEBUG_MODE
-        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
-#endif
-        printf(COM2, "QUIT\r\n");
-        restore_cursor();
-        printf(COM2, "\r\n");
+        print_debug("QUIT");
         Shutdown();
         break;
       case COMMAND_RV:
         train_num = parsed_command[1];
-        save_cursor();
-#ifndef DEBUG_MODE
-        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
-#endif
-        printf(COM2, "REVERSE %d, back to speed %d\r\n", train_num,
-               prev_speed[train_num]);
-        restore_cursor();
+
+        sprintf(debug_buffer, "REVERSE %d, back to speed %d\r\n", train_num,
+                prev_speed[train_num]);
+        print_debug(debug_buffer);
+
         TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num,
                      prev_speed[train_num]);
         break;
       case COMMAND_SW:
         switch_num = parsed_command[1];
         switch_orientation = parsed_command[2];
-        save_cursor();
-#ifndef DEBUG_MODE
-        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
-#endif
-        printf(COM2, "SWITCH %d %c\r\n", switch_num,
-               switch_orientation == 1 ? 'c' : 's');
-        restore_cursor();
+
+        sprintf(debug_buffer, "SWITCH %d %c\r\n", switch_num,
+                switch_orientation == 1 ? 'c' : 's');
+        print_debug(debug_buffer);
+
         switch_state[switch_num] = switch_orientation == 1 ? 'c' : 's';
         print_switch_table(switch_state);
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation);
         break;
       case COMMAND_TR:
-        save_cursor();
-#ifndef DEBUG_MODE
-        printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
-#endif
-        printf(COM2, "SPEED %d %d\r\n", parsed_command[1], parsed_command[2]);
-        restore_cursor();
+
+        sprintf(debug_buffer, "SPEED %d %d\r\n", parsed_command[1],
+                parsed_command[2]);
+        print_debug(debug_buffer);
+
         train_num = parsed_command[1];
         speed = parsed_command[2];
         TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
@@ -377,33 +392,6 @@ void shell() {
       }
     }
   }
-}
-
-void task_k4_test() {
-  int u1 = -1;
-  while (u1 < 0)
-    u1 = WhoIs("uart1");
-
-  printf(COM2, "Starting..\r\n");
-
-  Putc(u1, 0, '\x60');
-  int data[10];
-  while (true) {
-    Putc(u1, 0, '\x85');
-    for (int i = 0; i < 10; i++)
-      data[i] = Getc(u1, 0);
-    for (int module = 0; module < 5; module++) {
-      int bmodule = module << 4;
-      int res = data[2 * module] << 8 | data[2 * module + 1];
-      for (int i = 0; i < 16; i++) {
-        if (res & 1 << (15 - i)) {
-          printf(COM2, "%c%d ", 'A' + module, i + 1);
-        }
-      }
-    }
-  }
-  Putc(u1, 0, '\x61');
-  printf(COM2, "Done\r\n");
 }
 
 void idle() {
