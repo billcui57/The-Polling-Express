@@ -183,14 +183,17 @@ typedef enum {
 
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
-void print_input(char *input) {
+void print_input(char *input, char *input_length) {
   save_cursor();
 #ifndef DEBUG_MODE
   printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
 #endif
   printf(COM2, "\033[35m");
   printf(COM2, ">");
-  printf(COM2, "%s", input);
+  for (unsigned int i = 0; i < (*input_length); i++) {
+    printf(COM2, "%c", input[i]);
+  }
+
   printf(COM2, "_\r\n");
   printf(COM2, "\033[0m");
   restore_cursor();
@@ -208,18 +211,19 @@ void print_debug(char *input) {
   restore_cursor();
 }
 
-bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
+bool handle_new_char(char c, char *input, int *input_length,
+                     int *parsed_command) { // backspace
   bool is_valid = false;
 
-  if (strlen(input) == TERMINALMAXINPUTSIZE) {
+  if ((*input_length) == TERMINALMAXINPUTSIZE) {
     return is_valid;
   }
 
   if (c == '\b') {
-
-    if (strlen(input) > 0) {
-      parsed_command[strlen(input) - 1] = '\0';
-      print_input(input);
+    if ((*input_length) > 0) {
+      input[(*input_length) - 1] = '\0';
+      (*input_length) -= 1;
+      print_input(input, input_length);
     }
   }
 
@@ -232,7 +236,7 @@ bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
       {
         train_num = (input[3] - '0') * 10 + (input[4] - '0');
 
-        if ((strlen(input) == 8) && is_num(input[7])) // tr 23 13
+        if (((*input_length) == 8) && is_num(input[7])) // tr 23 13
         {
           train_speed = (input[6] - '0') * 10 + (input[7] - '0');
         } else {
@@ -240,7 +244,7 @@ bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
         }
       } else {
         train_num = input[3] - '0';
-        if ((strlen(input) == 7) && is_num(input[6])) {
+        if (((*input_length) == 7) && is_num(input[6])) {
           train_speed = (input[5] - '0') * 10 + (input[6] - '0');
         } else {
           train_speed = input[5] - '0';
@@ -292,12 +296,19 @@ bool handle_new_char(char c, char *input, int *parsed_command) { // backspace
       is_valid = true;
     }
     memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
-    print_input(input);
+    (*input_length) = 0;
+    print_input(input, input_length);
     return is_valid;
   } else {
-    input[strlen(input)] = c;
-    print_input(input);
+    input[(*input_length)] = c;
+    (*input_length)++;
+    print_input(input, input_length);
   }
+
+  // for (unsigned int i = 0; i < TERMINALMAXINPUTSIZE; i++) {
+  //   printf(COM2, "%c", parsed_command[i] == '\0' ? 'x' : parsed_command[i]);
+  // }
+
   return is_valid;
 }
 
@@ -336,15 +347,18 @@ void shell() {
   int switch_num;
   int switch_orientation;
 
+  int input_length = 0;
+
   char debug_buffer[100];
 
-  print_input(input);
+  print_input(input, &input_length);
 
   print_switch_table(switch_state);
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
-    bool got_valid_command = handle_new_char(c, input, parsed_command);
+    bool got_valid_command =
+        handle_new_char(c, input, &input_length, parsed_command);
 
     if (got_valid_command == true) {
       switch (parsed_command[0]) {
