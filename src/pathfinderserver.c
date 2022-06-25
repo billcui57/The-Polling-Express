@@ -103,15 +103,15 @@ void pathfinder_server() {
 
     dijkstra(&track, src, dest, prev);
 
-    track_node *node = prev[req.dest_num] == NULL
-                           ? &(track[req.dest_num].reverse)
-                           : &(track[req.dest_num]);
+    track_node *node = prev[req.dest_num] == NULL ? track[req.dest_num].reverse
+                                                  : &(track[req.dest_num]);
 
     while (prev[node - track] != src) {
       node = prev[node - track];
     }
 
-    res.next_step_num = node->num;
+    strncpy(res.next_step, node->name, 5);
+
     res.type = PATHFINDERSERVER_GOOD;
 
     Reply(client, (char *)&res, sizeof(pathfinderserver_response));

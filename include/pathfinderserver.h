@@ -15,7 +15,7 @@ typedef struct pathfinderserver_request {
 
 typedef struct pathfinderserver_response {
   pathfinderserver_response_type type;
-  int next_step_num;
+  char next_step[5];
 } pathfinderserver_response;
 
 void dijkstra(track_node *track, track_node *src, track_node *dest,

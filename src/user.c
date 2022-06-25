@@ -443,7 +443,7 @@ void shell() {
             Send(pathfinder_tid, (char *)&req, sizeof(pathfinderserver_request),
                  (char *)&res, sizeof(pathfinderserver_response));
 
-        sprintf(debug_buffer, "NEXT STOP %d\r\n", res.next_step_num);
+        sprintf(debug_buffer, "NEXT STOP %s\r\n", res.next_step);
         print_debug(debug_buffer);
 
         break;
