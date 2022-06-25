@@ -2,6 +2,15 @@
 
 #include "track_data.h"
 
+int track_name_to_num(track_node *track, char *name) {
+  for (unsigned int i = 0; i < TRACK_MAX; i++) {
+    if (strncmp(name, track[i].name, strlen(name)) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 void init_tracka(track_node *track) {
   memset(track, 0, TRACK_MAX * sizeof(track_node));
   track[0].name = "A1";

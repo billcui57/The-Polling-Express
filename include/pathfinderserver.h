@@ -9,13 +9,13 @@
 typedef enum { PATHFINDERSERVER_GOOD } pathfinderserver_response_type;
 
 typedef struct pathfinderserver_request {
-  int src_num;
-  int dest_num;
+  char src_name[5];
+  char dest_name[5];
 } pathfinderserver_request;
 
 typedef struct pathfinderserver_response {
   pathfinderserver_response_type type;
-  char next_step[5];
+  int next_step_num;
 } pathfinderserver_response;
 
 void dijkstra(track_node *track, track_node *src, track_node *dest,

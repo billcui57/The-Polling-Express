@@ -435,15 +435,19 @@ void shell() {
 
         pathfinderserver_request req;
         memset(&req, 0, sizeof(req));
-        req.dest_num = 91;
-        req.src_num = 4;
+
+        char *src_name = "C15";
+        char *dest_name = "MR6";
+
+        memcpy(req.src_name, src_name, strlen(src_name));
+        memcpy(req.dest_name, dest_name, strlen(dest_name));
         pathfinderserver_response res;
 
         int status =
             Send(pathfinder_tid, (char *)&req, sizeof(pathfinderserver_request),
                  (char *)&res, sizeof(pathfinderserver_response));
 
-        sprintf(debug_buffer, "NEXT STOP %s\r\n", res.next_step);
+        sprintf(debug_buffer, "NEXT STOP %d\r\n", res.next_step_num);
         print_debug(debug_buffer);
 
         break;

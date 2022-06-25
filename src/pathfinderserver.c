@@ -96,21 +96,24 @@ void pathfinder_server() {
   for (;;) {
     Receive(&client, (char *)&req, sizeof(pathfinderserver_request));
 
+    int src_num = track_name_to_num(track, req.src_name);
+    int dest_num = track_name_to_num(track, req.dest_name);
+
     track_node *prev[TRACK_MAX];
 
-    track_node *src = &(track[req.src_num]);
-    track_node *dest = &(track[req.dest_num]);
+    track_node *src = &(track[src_num]);
+    track_node *dest = &(track[dest_num]);
 
     dijkstra(&track, src, dest, prev);
 
-    track_node *node = prev[req.dest_num] == NULL ? track[req.dest_num].reverse
-                                                  : &(track[req.dest_num]);
+    track_node *node =
+        prev[dest_num] == NULL ? track[dest_num].reverse : &(track[dest_num]);
 
     while (prev[node - track] != src) {
       node = prev[node - track];
     }
 
-    strncpy(res.next_step, node->name, 5);
+    res.next_step_num = node - track;
 
     res.type = PATHFINDERSERVER_GOOD;
 
