@@ -17,6 +17,7 @@ void task_k4_init() {
   Create(10, uart_com1_server);
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
+  Create(10, pathfinder_server);
   Create(5, timer_printer);
   Create(5, sensor_reader);
   Create(5, shell);
@@ -176,7 +177,7 @@ typedef enum {
   COMMAND_SW,
   COMMAND_RV,
   COMMAND_Q,
-  COMMAND_P
+  COMMAND_PF,
 } command_type;
 
 #define TERMINALMAXINPUTSIZE 20
@@ -291,8 +292,8 @@ bool handle_new_char(char c, char *input, int *input_length,
     } else if (input[0] == 'q') {
       parsed_command[0] = COMMAND_Q;
       is_valid = true;
-    } else if (input[0] == 'p') {
-      parsed_command[0] = COMMAND_P;
+    } else if (input[0] == 'p' && input[1] == 'f') {
+      parsed_command[0] = COMMAND_PF;
       is_valid = true;
     }
     memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -332,6 +333,8 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
+  task_tid pathfinder_tid = WhoIsBlock("pathfinderserver");
+
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
   int parsed_command[3];
@@ -346,6 +349,7 @@ void shell() {
   int speed;
   int switch_num;
   int switch_orientation;
+  int dest_node_num;
 
   int input_length = 0;
 
@@ -425,6 +429,23 @@ void shell() {
 
         TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
         prev_speed[train_num] = speed;
+        break;
+
+      case COMMAND_PF:;
+
+        pathfinderserver_request req;
+        memset(&req, 0, sizeof(req));
+        req.dest_num = 91;
+        req.src_num = 4;
+        pathfinderserver_response res;
+
+        int status =
+            Send(pathfinder_tid, (char *)&req, sizeof(pathfinderserver_request),
+                 (char *)&res, sizeof(pathfinderserver_response));
+
+        sprintf(debug_buffer, "NEXT STOP %d\r\n", res.next_step_num);
+        print_debug(debug_buffer);
+
         break;
       default:
         KASSERT(0, "INVALID COMMAND TYPE");

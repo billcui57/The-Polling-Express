@@ -26,7 +26,7 @@ add_executable(kernel
   src/heap.c
   src/my_string.c
   src/my_memory.c
-  src/pathfinder.c
+  src/pathfinderserver.c
   src/track_data.c
 )
 target_link_libraries(kernel -static gcc)
@@ -48,8 +48,8 @@ target_link_libraries(kernel -static gcc)
 # enable_testing()
 # add_test(circularbuffer_test circularbuffer)
 add_executable(pathfinder
-  tests/unit/pathfinder.c
-  src/pathfinder.c
+  tests/unit/pathfinderserver.c
+  src/pathfinderserver.c
   src/track_data.c
 )
 target_link_libraries(pathfinder)

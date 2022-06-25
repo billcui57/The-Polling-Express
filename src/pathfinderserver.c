@@ -1,7 +1,6 @@
-#include "pathfinder.h"
+#include "pathfinderserver.h"
 
 #define INF 100000
-#define UNDEFINED -1
 
 void update_dist(track_node *track, track_node *u, track_node *v,
                  bool *in_shortest_path, track_node **prev, track_edge *uv,
@@ -37,7 +36,7 @@ void dijkstra(track_node *track, track_node *src, track_node *dest,
 
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
     dist[i] = INF;
-    prev[i] = UNDEFINED;
+    prev[i] = NULL;
     in_shortest_path[i] = false;
   }
 
@@ -82,6 +81,39 @@ void dijkstra(track_node *track, track_node *src, track_node *dest,
 }
 
 void pathfinder_server() {
+
+  RegisterAs("pathfinderserver");
+
   track_node track[TRACK_MAX];
   init_tracka(&track);
+
+  pathfinderserver_request req;
+  pathfinderserver_response res;
+  task_tid client;
+
+  memset(&res, 0, sizeof(res));
+
+  for (;;) {
+    Receive(&client, (char *)&req, sizeof(pathfinderserver_request));
+
+    track_node *prev[TRACK_MAX];
+
+    track_node *src = &(track[req.src_num]);
+    track_node *dest = &(track[req.dest_num]);
+
+    dijkstra(&track, src, dest, prev);
+
+    track_node *node = prev[req.dest_num] == NULL
+                           ? &(track[req.dest_num].reverse)
+                           : &(track[req.dest_num]);
+
+    while (prev[node - track] != src) {
+      node = prev[node - track];
+    }
+
+    res.next_step_num = node->num;
+    res.type = PATHFINDERSERVER_GOOD;
+
+    Reply(client, (char *)&res, sizeof(pathfinderserver_response));
+  }
 }

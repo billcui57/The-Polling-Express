@@ -1,4 +1,4 @@
-#include "pathfinder.h"
+#include "pathfinderserver.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -9,14 +9,12 @@ void basic() {
 
   track_node *prev[TRACK_MAX];
 
-  memset(prev, NULL, sizeof(track_node *) * TRACK_MAX);
-
   track_node *src = &(track[4]);
   track_node *dest = &(track[91]);
 
   dijkstra(&track, src, dest, prev);
 
-  track_node *node = &(track[90]);
+  track_node *node = prev[91] == NULL ? &(track[90]) : &(track[91]);
 
   while (1) {
 
