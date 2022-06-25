@@ -275,7 +275,7 @@ bool handle_new_char(char c, char *input, int *input_length,
       }
       parsed_command[0] = COMMAND_SW;
       parsed_command[1] = switch_num;
-      parsed_command[2] = switch_dir == 'c' ? 1 : 0;
+      parsed_command[2] = switch_dir;
       is_valid = true;
     } else if (input[0] == 'r' && input[1] == 'v') {
       int train_num = 0;
@@ -370,6 +370,11 @@ void shell() {
       case COMMAND_RV:
         train_num = parsed_command[1];
 
+        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
         sprintf(debug_buffer, "REVERSE %d, back to speed %d\r\n", train_num,
                 prev_speed[train_num]);
         print_debug(debug_buffer);
@@ -381,23 +386,43 @@ void shell() {
         switch_num = parsed_command[1];
         switch_orientation = parsed_command[2];
 
+        if ((switch_num < 1) || (switch_num > NUM_SWITCHES)) {
+          print_debug("Please enter a valid switch num");
+          continue;
+        }
+
+        if ((switch_orientation != 'c') && (switch_orientation != 's')) {
+          print_debug("Please enter a valid switch orientation");
+          continue;
+        }
+
         sprintf(debug_buffer, "SWITCH %d %c\r\n", switch_num,
-                switch_orientation == 1 ? 'c' : 's');
+                switch_orientation);
         print_debug(debug_buffer);
 
-        switch_state[switch_num] = switch_orientation == 1 ? 'c' : 's';
+        switch_state[switch_num] = switch_orientation;
         print_switch_table(switch_state);
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
-                     switch_orientation);
+                     switch_orientation == 'c' ? 1 : 0);
         break;
       case COMMAND_TR:
 
-        sprintf(debug_buffer, "SPEED %d %d\r\n", parsed_command[1],
-                parsed_command[2]);
-        print_debug(debug_buffer);
-
         train_num = parsed_command[1];
         speed = parsed_command[2];
+
+        if ((speed < 0) || (speed > 14)) {
+          print_debug("Please enter a valid speed");
+          continue;
+        }
+
+        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
+        sprintf(debug_buffer, "SPEED %d %d\r\n", train_num, speed);
+        print_debug(debug_buffer);
+
         TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
         prev_speed[train_num] = speed;
         break;
