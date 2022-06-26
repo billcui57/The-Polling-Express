@@ -2,6 +2,8 @@
 
 #include "track_data.h"
 
+track_node track[TRACK_MAX];
+
 int track_name_to_num(track_node *track, char *name) {
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
     if (strncmp(name, track[i].name, strlen(name)) == 0) {

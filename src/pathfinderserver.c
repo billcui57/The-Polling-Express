@@ -28,6 +28,8 @@ track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path) {
   return &(track[min_index]);
 }
 
+// TODO: need to add a way to see reverse node and node as same for reverse
+// pathfinding to work
 void dijkstra(track_node *track, track_node *src, track_node *dest,
               track_node **prev) {
 
@@ -84,9 +86,6 @@ void dijkstra(track_node *track, track_node *src, track_node *dest,
 void pathfinder_server() {
 
   RegisterAs("pathfinderserver");
-
-  track_node track[TRACK_MAX];
-  init_tracka(track);
 
   pathfinderserver_request req;
   pathfinderserver_response res;

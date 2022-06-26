@@ -62,13 +62,11 @@ void task_skynet() {
   train.next = -1;
   train.distance = 0;
 
-  track_node tracka[TRACK_MAX];
-  init_tracka(tracka);
-
   while (true) {
     bool step = false;
     TrainEvent(trainctl, &event);
     save_cursor();
+    cursor_to_row(EVENT_ANNOUNCE_ROW);
     printf(COM2, "Event at %d [Next: %d]: ", event.time, train.next);
     for (int i = 0; i < 80; i++) {
       int a = i >> 3;
@@ -81,14 +79,13 @@ void task_skynet() {
           step = true;
       }
     }
-    printf(COM2, "\r\n");
     restore_cursor();
     if (!step)
       continue;
     int next_distance, next_destination, next_time;
     next_distance = 0;
     next_time = 0;
-    next_sensor(&tracka[train.next], event.branches, &next_distance,
+    next_sensor(&track[train.next], event.branches, &next_distance,
                 &next_destination);
     next_distance *= 1000;
     if (train.distance) {
@@ -97,15 +94,20 @@ void task_skynet() {
       int vel = train.distance / time_delta;
       // printf(COM2, "Last: %d, Pred: %d, Dist: %d\r\n",train.time,
       // train.next_time, train.distance);
+      save_cursor();
+      cursor_to_row(TIME_DIFF_ROW);
       printf(COM2, "Time Diff: %d, Dist Diff: %d, Vel: %d\r\n", pred_delta,
              vel * pred_delta, vel);
+      restore_cursor();
       if (next_distance) {
         next_time =
             event.time + ((next_distance * time_delta) / train.distance);
-        printf(COM2, "Next Sensor: %s at %d\r\n", tracka[next_destination].name,
+        save_cursor();
+        cursor_to_row(SENSOR_PRED_ROW);
+        printf(COM2, "Next Sensor: %s at %d\r\n", track[next_destination].name,
                next_time);
+        restore_cursor();
       }
-      restore_cursor();
     }
     train.distance = next_distance;
     train.next = next_destination;

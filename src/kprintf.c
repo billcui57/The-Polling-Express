@@ -912,6 +912,14 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void clear_screen() { printf(COM2, "\033[2J"); };
+
+void cursor_to_row(int row) {
+#ifndef DEBUG_MODE
+  printf(COM2, "\033[%d;1H\033[K", row);
+#endif
+}
+
 void save_cursor() {
 #ifndef DEBUG_MODE
   printf(COM2, "\0337");

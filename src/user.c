@@ -11,6 +11,8 @@ void sensor_reader();
 int idle_percentage;
 
 void task_k4_init() {
+  init_tracka(&track);
+
   Create(20, nameserver);
   Create(10, clockserver);
   Create(10, uart_com2_tx_server);
@@ -19,24 +21,15 @@ void task_k4_init() {
   Create(10, task_trainserver);
   Create(10, pathfinder_server);
   Create(10, task_skynet);
-  //Create(5, timer_printer);
-  //Create(5, sensor_reader);
+  Create(5, timer_printer);
+  // Create(5, sensor_reader);
   Create(5, shell);
 }
-
-#define LOG_ROW 30
-#define INPUT_ROW LOG_ROW + 1
-#define SENSOR_ROW 7
-#define IDLE_ROW 5
-#define TIME_ROW 6
-#define SWITCH_TABLE_ROW_BEGIN 8
 
 void print_art() {
   save_cursor();
 
-#ifndef DEBUG_MODE
-  printf(COM2, "\033[2J\033[H");
-#endif
+  cursor_to_row(1);
 
   int christmas_colours[3] = {32, 37, 31};
 
@@ -62,9 +55,7 @@ void print_switch_table(char *switch_state) {
                                       9,  10, 11,  12,  13,  14, 15, 16,
                                       17, 18, 153, 154, 155, 156};
 
-#ifndef DEBUG_MODE
-  printf(COM2, "\033[%d;1H\033[K", SWITCH_TABLE_ROW_BEGIN);
-#endif
+  cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
 
   for (int i = 0; i < NUM_VALID_SWITCH_INDICES; i++) {
 
@@ -87,9 +78,7 @@ void timer_printer() {
     int duc = DelayUntil(clock_tid, start + (i + 1) * 10);
     save_cursor();
 
-#ifndef DEBUG_MODE
-    printf(COM2, "\033[%d;1H\033[K", TIME_ROW);
-#endif
+    cursor_to_row(TIME_ROW);
 
     int formatted_time[3];
     memset(formatted_time, 0, sizeof(int) * 3);
@@ -97,9 +86,7 @@ void timer_printer() {
     printf(COM2, "Time: %d min %d.%d secs\r\n", formatted_time[0],
            formatted_time[1], formatted_time[2]);
 
-#ifndef DEBUG_MODE
-    printf(COM2, "\033[%d;1H\033[K", IDLE_ROW);
-#endif
+    cursor_to_row(IDLE_ROW);
 
     printf(COM2, "Idle: %d%%\r\n", idle_percentage);
     restore_cursor();
@@ -188,9 +175,8 @@ bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
 void print_input(char *input, int *input_length) {
   save_cursor();
-#ifndef DEBUG_MODE
-  printf(COM2, "\033[%d;1H\033[K", INPUT_ROW);
-#endif
+
+  cursor_to_row(INPUT_ROW);
   printf(COM2, "\033[35m");
   printf(COM2, ">");
   for (unsigned int i = 0; i < (*input_length); i++) {
@@ -204,9 +190,7 @@ void print_input(char *input, int *input_length) {
 
 void print_debug(char *input) {
   save_cursor();
-#ifndef DEBUG_MODE
-  printf(COM2, "\033[%d;1H\033[K", LOG_ROW);
-#endif
+  cursor_to_row(LOG_ROW);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
   printf(COM2, "\033[0m");
@@ -324,6 +308,7 @@ void hide_cursor() {
 #define MAX_NUM_TRAINS 80
 
 void shell() {
+  clear_screen();
 
   hide_cursor();
 
