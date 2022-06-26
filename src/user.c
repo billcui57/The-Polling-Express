@@ -409,7 +409,7 @@ void shell() {
         switch_state[switch_num] = switch_orientation;
         print_switch_table(switch_state);
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
-                     switch_orientation);
+                     switch_orientation == 'c' ? 1 : 0);
         break;
       case COMMAND_TR:
 
