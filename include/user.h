@@ -2,6 +2,7 @@
 
 #include "clockserver.h"
 #include "pathfinderserver.h"
+#include "skynet.h"
 #include "trainserver.h"
 #include "uartserver.h"
 #include <kprintf.h>

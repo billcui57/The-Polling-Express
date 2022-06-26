@@ -22,11 +22,12 @@ add_executable(kernel
   src/clockserver.c
   src/uartserver.c
   src/trainserver.c
+  src/skynet.c
+  src/pathfinderserver.c
   src/circularbuffer.c
   src/heap.c
   src/my_string.c
   src/my_memory.c
-  src/pathfinderserver.c
   src/track_data.c
 )
 target_link_libraries(kernel -static gcc)
