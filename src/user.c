@@ -18,8 +18,9 @@ void task_k4_init() {
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
   Create(10, pathfinder_server);
-  Create(5, timer_printer);
-  Create(5, sensor_reader);
+  Create(10, task_skynet);
+  //Create(5, timer_printer);
+  //Create(5, sensor_reader);
   Create(5, shell);
 }
 
@@ -108,7 +109,7 @@ void timer_printer() {
 
 #define SENSOR_READ_GROUPS 10
 #define SENSOR_CB_BACK_CAPACITY 10
-
+/*
 void sensor_reader() {
   task_tid trainserver_tid = WhoIsBlock("trainctl");
   task_tid clock_tid = WhoIsBlock("clockserver");
@@ -171,6 +172,7 @@ void sensor_reader() {
     restore_cursor();
   }
 }
+*/
 
 typedef enum {
   COMMAND_TR,

@@ -188,10 +188,6 @@ void uart_com1_server() {
   bool want_send = false;
   char send_buffer[MAX_NUM_TASKS];
 
-  bool can_get = false;
-  bool want_get = false;
-  char get_buffer = '\x00';
-
   while (uart_can_read(COM1))
     uart_get_char(COM1);
 

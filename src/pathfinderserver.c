@@ -1,4 +1,5 @@
 #include "pathfinderserver.h"
+#include <syscall.h>
 
 #define INF 100000
 
@@ -68,7 +69,7 @@ void dijkstra(track_node *track, track_node *src, track_node *dest,
         update_dist(track, u, v, in_shortest_path, prev, uv, dist);
       }
 
-      if ((u->type == NODE_BRANCH)) {
+      if (u->type == NODE_BRANCH) {
         uv = &((u->edge)[DIR_STRAIGHT]);
         v = uv->dest;
         update_dist(track, u, v, in_shortest_path, prev, uv, dist);
@@ -85,7 +86,7 @@ void pathfinder_server() {
   RegisterAs("pathfinderserver");
 
   track_node track[TRACK_MAX];
-  init_tracka(&track);
+  init_tracka(track);
 
   pathfinderserver_request req;
   pathfinderserver_response res;
@@ -104,7 +105,7 @@ void pathfinder_server() {
     track_node *src = &(track[src_num]);
     track_node *dest = &(track[dest_num]);
 
-    dijkstra(&track, src, dest, prev);
+    dijkstra(track, src, dest, prev);
 
     track_node *node =
         prev[dest_num] == NULL ? track[dest_num].reverse : &(track[dest_num]);
