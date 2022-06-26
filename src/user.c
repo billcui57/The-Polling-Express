@@ -20,7 +20,7 @@ void task_k4_init() {
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
   Create(10, pathfinder_server);
-  Create(10, task_skynet);
+  // Create(10, task_skynet);
   Create(5, timer_printer);
   // Create(5, sensor_reader);
   Create(5, shell);
@@ -198,12 +198,40 @@ void print_debug(char *input) {
   restore_cursor();
 }
 
+int atoi(char *str) {
+  int res = 0;
+
+  for (int i = 0; str[i] != '\0'; ++i)
+    res = res * 10 + str[i] - '0';
+
+  return res;
+}
+
+void tokenizer(char *input, char **tokens, unsigned int num_tokens) {
+
+  unsigned int i = 0;
+
+  tokens[i] = input;
+  while (((*input) != '\00') && (i < num_tokens)) {
+
+    if ((*input) == ' ') {
+      *input = '\00';
+      i++;
+      input++;
+      tokens[i] = input;
+    } else {
+      input++;
+    }
+  }
+}
+
+#define MAX_COMMAND_TOKENS 5
 bool handle_new_char(char c, char *input, int *input_length,
-                     int *parsed_command) { // backspace
-  bool is_valid = false;
+                     char **command_tokens) { // backspace
+  bool entered = false;
 
   if ((*input_length) == TERMINALMAXINPUTSIZE) {
-    return is_valid;
+    return entered;
   }
 
   if (c == '\b') {
@@ -216,76 +244,14 @@ bool handle_new_char(char c, char *input, int *input_length,
 
   // enter key
   else if (c == '\r') {
-    if (input[0] == 't' && input[1] == 'r') {
-      int train_num = 0;
-      int train_speed = 0;
-      if (is_num(input[4])) // tr 23
-      {
-        train_num = (input[3] - '0') * 10 + (input[4] - '0');
 
-        if (((*input_length) == 8) && is_num(input[7])) // tr 23 13
-        {
-          train_speed = (input[6] - '0') * 10 + (input[7] - '0');
-        } else {
-          train_speed = input[6] - '0';
-        }
-      } else {
-        train_num = input[3] - '0';
-        if (((*input_length) == 7) && is_num(input[6])) {
-          train_speed = (input[5] - '0') * 10 + (input[6] - '0');
-        } else {
-          train_speed = input[5] - '0';
-        }
-      }
-      parsed_command[0] = COMMAND_TR;
-      parsed_command[1] = train_num;
-      parsed_command[2] = train_speed;
-      is_valid = true;
-    } else if (input[0] == 's' && input[1] == 'w') {
-      int switch_num = 0;
-      char switch_dir = 0;
-      if (is_num(input[5])) // sw 156
-      {
-        switch_num =
-            (input[3] - '0') * 100 + (input[4] - '0') * 10 + input[5] - '0';
+    tokenizer(input, command_tokens, MAX_COMMAND_TOKENS);
 
-        switch_dir = input[7];
-      } else if (is_num(input[4])) // sw 23
-      {
-        switch_num = (input[3] - '0') * 10 + (input[4] - '0');
+    entered = true;
 
-        switch_dir = input[6];
-      } else {
-        switch_num = input[3] - '0';
-
-        switch_dir = input[5];
-      }
-      parsed_command[0] = COMMAND_SW;
-      parsed_command[1] = switch_num;
-      parsed_command[2] = switch_dir;
-      is_valid = true;
-    } else if (input[0] == 'r' && input[1] == 'v') {
-      int train_num = 0;
-      if (is_num(input[4])) // tr 23
-      {
-        train_num = (input[3] - '0') * 10 + (input[4] - '0');
-      } else {
-        train_num = input[3] - '0';
-      }
-      parsed_command[0] = COMMAND_RV;
-      parsed_command[1] = train_num;
-      is_valid = true;
-    } else if (input[0] == 'q') {
-      parsed_command[0] = COMMAND_Q;
-      is_valid = true;
-    } else if (input[0] == 'p' && input[1] == 'f') {
-      parsed_command[0] = COMMAND_PF;
-      is_valid = true;
-    }
-    memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
     (*input_length) = 0;
     print_input(input, input_length);
-    return is_valid;
+    return entered;
   } else {
     input[(*input_length)] = c;
     (*input_length)++;
@@ -293,10 +259,10 @@ bool handle_new_char(char c, char *input, int *input_length,
   }
 
   // for (unsigned int i = 0; i < TERMINALMAXINPUTSIZE; i++) {
-  //   printf(COM2, "%c", parsed_command[i] == '\0' ? 'x' : parsed_command[i]);
+  //   printf(COM2, "%c", command_tokens[i] == '\0' ? 'x' : command_tokens[i]);
   // }
 
-  return is_valid;
+  return entered;
 }
 
 void hide_cursor() {
@@ -324,7 +290,8 @@ void shell() {
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
-  int parsed_command[3];
+
+  char *command_tokens[MAX_COMMAND_TOKENS];
 
   int prev_speed[MAX_NUM_TRAINS];
   memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
@@ -348,34 +315,32 @@ void shell() {
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
-    bool got_valid_command =
-        handle_new_char(c, input, &input_length, parsed_command);
+    bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
-    if (got_valid_command == true) {
-      switch (parsed_command[0]) {
-      case COMMAND_Q:
-        save_cursor();
-        print_debug("QUIT");
-        Shutdown();
-        break;
-      case COMMAND_RV:
-        train_num = parsed_command[1];
+    if (entered == true) {
+
+      if (strncmp(command_tokens[0], "tr", strlen("tr")) == 0) {
+        train_num = atoi(command_tokens[1]);
+        speed = atoi(command_tokens[2]);
+
+        if ((speed < 0) || (speed > 14)) {
+          print_debug("Please enter a valid speed");
+          continue;
+        }
 
         if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
           print_debug("Please enter a valid train num");
           continue;
         }
 
-        sprintf(debug_buffer, "REVERSE %d, back to speed %d\r\n", train_num,
-                prev_speed[train_num]);
+        sprintf(debug_buffer, "SPEED %d %d\r\n", train_num, speed);
         print_debug(debug_buffer);
 
-        TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num,
-                     prev_speed[train_num]);
-        break;
-      case COMMAND_SW:
-        switch_num = parsed_command[1];
-        switch_orientation = parsed_command[2];
+        TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
+        prev_speed[train_num] = speed;
+      } else if (strncmp(command_tokens[0], "sw", strlen("sw")) == 0) {
+        switch_num = atoi(command_tokens[1]);
+        switch_orientation = command_tokens[2][0];
 
         if ((switch_num < 1) || (switch_num > NUM_SWITCHES)) {
           print_debug("Please enter a valid switch num");
@@ -395,31 +360,26 @@ void shell() {
         print_switch_table(switch_state);
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation == 'c' ? 1 : 0);
-        break;
-      case COMMAND_TR:
-
-        train_num = parsed_command[1];
-        speed = parsed_command[2];
-
-        if ((speed < 0) || (speed > 14)) {
-          print_debug("Please enter a valid speed");
-          continue;
-        }
+      } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
+        train_num = atoi(command_tokens[1]);
 
         if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
           print_debug("Please enter a valid train num");
           continue;
         }
 
-        sprintf(debug_buffer, "SPEED %d %d\r\n", train_num, speed);
+        sprintf(debug_buffer, "REVERSE %d, back to speed %d\r\n", train_num,
+                prev_speed[train_num]);
         print_debug(debug_buffer);
 
-        TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
-        prev_speed[train_num] = speed;
-        break;
+        TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num,
+                     prev_speed[train_num]);
+      } else if (strncmp(command_tokens[0], "q", strlen("q")) == 0) {
 
-      case COMMAND_PF:;
+        print_debug("QUIT");
+        Shutdown();
 
+      } else if (strncmp(command_tokens[0], "pf", strlen("pf")) == 0) {
         pathfinderserver_request req;
         memset(&req, 0, sizeof(req));
 
@@ -436,11 +396,10 @@ void shell() {
 
         sprintf(debug_buffer, "NEXT STOP %d\r\n", res.next_step_num);
         print_debug(debug_buffer);
-
-        break;
-      default:
-        KASSERT(0, "INVALID COMMAND TYPE");
+      } else {
+        print_debug("Invalid Command Type");
       }
+      memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
     }
   }
 }
