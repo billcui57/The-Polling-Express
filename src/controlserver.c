@@ -27,10 +27,15 @@ void control_server() {
       track_node *src = &(track[src_num]);
       track_node *dest = &(track[dest_num]);
 
-      dijkstra(track, src, dest, prev);
+      int status = dijkstra(track, src, dest, prev);
 
-      track_node *node =
-          prev[dest_num] == NULL ? track[dest_num].reverse : &(track[dest_num]);
+      if (status == -1) {
+        res.type = CONTROLSERVER_NO_PATH;
+        Reply(client, (char *)&res, sizeof(controlserver_response));
+        continue;
+      }
+
+      track_node *node = dest;
 
       track_node *path[TRACK_MAX];
 

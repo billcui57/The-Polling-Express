@@ -21,18 +21,23 @@ void update_dist(track_node *track, track_node *u, track_node *v,
 }
 
 track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path) {
-  int min_index = 0;
+  int min_index = -1;
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
-    if ((dist[i] < dist[min_index]) && (!in_shortest_path[i])) {
-      min_index = i;
+
+    if (min_index == -1) {
+      if (!in_shortest_path[i]) {
+        min_index = i;
+      }
+    } else {
+      if ((dist[i] < dist[min_index]) && (!in_shortest_path[i])) {
+        min_index = i;
+      }
     }
   }
 
   return &(track[min_index]);
 }
 
-// TODO: need to add a way to see reverse node and node as same for reverse
-// pathfinding to work
 int dijkstra(track_node *track, track_node *src, track_node *dest,
              track_node **prev) {
 
@@ -52,6 +57,10 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
 
     track_node *u = min_distance(track, dist, in_shortest_path);
 
+    if (dist[u - track] == INF) {
+      return -1;
+    }
+
     if (u == dest) {
       return 0;
     }
@@ -66,6 +75,7 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
 
       uv = &((u->edge)[DIR_AHEAD]);
       v = uv->dest;
+
       update_dist(track, u, v, in_shortest_path, prev, uv, dist);
     }
 
@@ -75,6 +85,7 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
       update_dist(track, u, v, in_shortest_path, prev, uv, dist);
       uv = &((u->edge)[DIR_CURVED]);
       v = uv->dest;
+
       update_dist(track, u, v, in_shortest_path, prev, uv, dist);
     }
   }

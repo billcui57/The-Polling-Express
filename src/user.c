@@ -346,9 +346,15 @@ void shell() {
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
 
-        sprintf(debug_buffer, "Path Finding %s to %s \r\n", src_name,
-                dest_name);
-        print_debug(debug_buffer);
+        if (res.type == CONTROLSERVER_GOOD) {
+          sprintf(debug_buffer, "Path Finding %s to %s \r\n", src_name,
+                  dest_name);
+          print_debug(debug_buffer);
+        } else if (res.type == CONTROLSERVER_NO_PATH) {
+          sprintf(debug_buffer, "No path from %s to %s \r\n", src_name,
+                  dest_name);
+          print_debug(debug_buffer);
+        }
 
       } else {
         print_debug("Invalid Command Type");

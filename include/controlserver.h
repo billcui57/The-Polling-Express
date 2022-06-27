@@ -7,7 +7,10 @@
 #include "track_node.h"
 #include "trainserver.h"
 
-typedef enum { CONTROLSERVER_GOOD } controlserver_response_type;
+typedef enum {
+  CONTROLSERVER_GOOD,
+  CONTROLSERVER_NO_PATH
+} controlserver_response_type;
 
 typedef enum { PATHFIND } controlserver_request_type;
 typedef struct controlserver_request {

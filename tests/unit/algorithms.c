@@ -2,15 +2,14 @@
 #include <assert.h>
 #include <stdio.h>
 
-void basic() {
+void basic(int src_num, int dest_num) {
+
+  printf("Pathfind from [%d] to [%d]\r\n", src_num, dest_num);
 
   track_node track[TRACK_MAX];
   init_tracka(&track);
 
   track_node *prev[TRACK_MAX];
-
-  int src_num = 4;
-  int dest_num = 91;
 
   track_node *src = &(track[src_num]);
   track_node *dest = &(track[dest_num]);
@@ -26,24 +25,20 @@ void basic() {
 
   while (1) {
 
+    if (node == NULL) {
+      break;
+    }
+
     printf("[%s]\r\n", node->name);
 
     node = prev[node - track];
-
-    if (node == src) {
-      break;
-    }
   }
-
-  // while (prev[node - track] != src) {
-  //   node = prev[node - track];
-  // }
-
-  // printf("[%d]", node->num);
 }
 
 int main() {
-  basic();
+  basic(0, 91);
+  basic(1, 91);
+  basic(0, 90);
 
   return 0;
 }
