@@ -78,6 +78,7 @@ void kmain() {
   scheduler_add(100, task_k4_init, -1);
 
   while (scheduler_length() > 1 || interrupt_tasks != 0) {
+    KASSERT(!((*(volatile int*)(get_base_addr(COM1)+UART_RSR_OFFSET))&OE_MASK), "Dropped sensor byte");
 
     // printf(BW_COM2, "[Vic1 enable] %d\r\n",
     //        *(int *)(VIC1_BASE + INT_ENABLE_OFFSET));

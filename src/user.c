@@ -10,8 +10,10 @@ void sensor_reader();
 
 int idle_percentage;
 
+char status[] = "-----";
+
 void task_k4_init() {
-  init_tracka(&track);
+  init_tracka(track);
 
   Create(20, nameserver);
   Create(10, clockserver);
@@ -22,7 +24,6 @@ void task_k4_init() {
   Create(10, control_server);
   // Create(10, task_skynet);
   Create(5, timer_printer);
-  // Create(5, sensor_reader);
   Create(5, shell);
 }
 
@@ -88,7 +89,7 @@ void timer_printer() {
 
     cursor_to_row(IDLE_ROW);
 
-    printf(COM2, "Idle: %d%%\r\n", idle_percentage);
+    printf(COM2, "Idle: %d%% [%s]\r\n", idle_percentage, status);
     restore_cursor();
     i++;
   }

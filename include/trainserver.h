@@ -32,7 +32,8 @@ typedef struct {
 typedef struct {
   int time;
   char sensors[10];
-  char branches[256];
+  char branch_a[20];
+  char branch_b[4];
 } train_event;
 
 typedef struct train_task {
