@@ -303,7 +303,8 @@ void shell() {
   int speed;
   int switch_num;
   int switch_orientation;
-  int dest_node_num;
+  char *dest_name;
+  int offset;
 
   int input_length = 0;
 
@@ -383,8 +384,11 @@ void shell() {
         pathfinderserver_request req;
         memset(&req, 0, sizeof(req));
 
+        train_num = atoi(command_tokens[1]);
+        dest_name = command_tokens[2];
+        offset = atoi(command_tokens[3]);
+
         char *src_name = "C15";
-        char *dest_name = "MR6";
 
         memcpy(req.src_name, src_name, strlen(src_name));
         memcpy(req.dest_name, dest_name, strlen(dest_name));
@@ -394,8 +398,12 @@ void shell() {
             Send(pathfinder_tid, (char *)&req, sizeof(pathfinderserver_request),
                  (char *)&res, sizeof(pathfinderserver_response));
 
-        sprintf(debug_buffer, "NEXT STOP %d\r\n", res.next_step_num);
+        sprintf(
+            debug_buffer,
+            "Path Finding Train %d to %s, offset %d [Result next node: %d]\r\n",
+            train_num, dest_name, offset, res.next_step_num);
         print_debug(debug_buffer);
+
       } else {
         print_debug("Invalid Command Type");
       }

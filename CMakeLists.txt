@@ -23,7 +23,7 @@ add_executable(kernel
   src/uartserver.c
   src/trainserver.c
   src/skynet.c
-  src/pathfinderserver.c
+  src/controlserver.c
   src/circularbuffer.c
   src/heap.c
   src/my_string.c
@@ -50,7 +50,7 @@ target_link_libraries(kernel -static gcc)
 # add_test(circularbuffer_test circularbuffer)
 add_executable(pathfinder
   tests/unit/pathfinderserver.c
-  src/pathfinderserver.c
+  src/controlserver.c
   src/track_data.c
 )
 target_link_libraries(pathfinder)

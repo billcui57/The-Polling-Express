@@ -79,6 +79,7 @@ void task_skynet() {
           step = true;
       }
     }
+    printf(COM2, "\r\n");
     restore_cursor();
     if (!step)
       continue;
