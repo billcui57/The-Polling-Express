@@ -1,6 +1,6 @@
 #pragma once
 
-#include "heap.h"
+#include "algorithms.h"
 #include "stdbool.h"
 #include "task.h"
 #include "track_data.h"
@@ -22,8 +22,5 @@ typedef struct controlserver_request {
 typedef struct controlserver_response {
   controlserver_response_type type;
 } controlserver_response;
-
-void dijkstra(track_node *track, track_node *src, track_node *dest,
-              track_node **prev);
 
 void control_server();
