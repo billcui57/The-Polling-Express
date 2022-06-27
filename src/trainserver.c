@@ -8,6 +8,8 @@
 
 #define MAX_TRAIN_CMDS 100
 
+extern char status[];
+
 train_task *build_task(train_task **free, int time, char a, char b, char len) {
   KASSERT(*free, "No Free Train Task");
   train_task *cur = *free;
@@ -36,8 +38,10 @@ void task_trainserver() {
   task_tid waiting = -1;
   train_event event;
   memset(&event, 0, sizeof(event));
-  for (int i = 0; i < 256; i++)
-    event.branches[i] = 2;
+  for (int i = 0; i < 20; i++)
+    event.branch_a[i] = 2;
+  for (int i = 0; i < 4; i++)
+    event.branch_b[i] = 2;
 
   train_msg req;
   train_msg res;
@@ -58,8 +62,13 @@ void task_trainserver() {
         res.data.cmd.b = top->b;
         res.data.cmd.len = top->len;
         if (top->branch != -1) {
-          event.branches[top->branch] = top->branch_state;
-          // dirty = true;
+          if(top->branch < 20) {
+            event.branch_a[top->branch] = top->branch_state;
+          } else if (top->branch  >= 153 && top->branch <=156 ){
+            event.branch_b[top->branch - 153] = top->branch_state;
+          } else {
+            KASSERT(0, "Bad Branch");
+          }
         }
         heap_pop(&h);
         top->next = free;
@@ -124,6 +133,7 @@ void task_train_worker() {
   train_msg req;
   memset(&req, 0, sizeof(req));
   train_msg res;
+  int i = 0;
   while (true) {
     req.type = WORKER;
     req.data.task.time = Time(clock);
@@ -133,11 +143,15 @@ void task_train_worker() {
       if (res.data.cmd.len == 2)
         Putc(uart1, 0, res.data.cmd.b);
     } else if (res.type == WORKER_SENSOR) {
+      status[0] = 'A'+(i%26);
+      i++;
       req.type = WORKER_SENSOR;
       Putc(uart1, 0, '\x85');
       for (int i = 0; i < 10; i++)
         req.data.sensor.sensors[i] = Getc(uart1, 0);
+      status[0] = '+';
       req.data.sensor.time = Time(clock);
+      status[0] = '-';
       Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
     } else if (res.type == WORKER) {
       Delay(clock, 1);
