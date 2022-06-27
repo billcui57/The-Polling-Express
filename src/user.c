@@ -19,7 +19,7 @@ void task_k4_init() {
   Create(10, uart_com1_server);
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
-  Create(10, pathfinder_server);
+  Create(10, control_server);
   // Create(10, task_skynet);
   Create(5, timer_printer);
   // Create(5, sensor_reader);
@@ -96,70 +96,6 @@ void timer_printer() {
 
 #define SENSOR_READ_GROUPS 10
 #define SENSOR_CB_BACK_CAPACITY 10
-/*
-void sensor_reader() {
-  task_tid trainserver_tid = WhoIsBlock("trainctl");
-  task_tid clock_tid = WhoIsBlock("clockserver");
-
-  char sensor_group_readings[SENSOR_READ_GROUPS];
-  memset(sensor_group_readings, 0, sizeof(char) * SENSOR_READ_GROUPS);
-
-  void *backing[SENSOR_CB_BACK_CAPACITY];
-  circular_buffer cb;
-  cb_init(&cb, backing, SENSOR_CB_BACK_CAPACITY);
-
-  int start = Time(clock_tid);
-  int i = 0;
-
-  while (true) {
-    int duc = DelayUntil(clock_tid, start + (i + 1) * 10);
-    i++;
-
-    TrainSensor(trainserver_tid, sensor_group_readings);
-
-    for (int module = 0; module < 5; module++) {
-      int res = sensor_group_readings[2 * module] << 8 |
-                sensor_group_readings[2 * module + 1];
-
-      for (int i = 0; i < 16; i++) {
-        if (res & 1 << (15 - i)) {
-          cb_push_back(&cb, (void *)(('A' + module) << 8 | ((char)(i + 1))),
-                       true);
-        }
-      }
-    }
-#ifdef DEBUG_MODE
-    for (int i = 0; i < 10; i++) {
-      printf(COM2, "%d\t", sensor_group_readings[i]);
-    }
-    printf(COM2, "\r\n");
-#endif
-
-    void **ptr = cb.tail;
-    save_cursor();
-#ifndef DEBUG_MODE
-    printf(COM2, "\033[%d;1H\033[K", SENSOR_ROW);
-#endif
-
-    for (int i = 0; i < cb.count; i++) {
-
-      void *sr_void = *ptr;
-      int sr = (int)sr_void;
-
-#ifndef DEBUG_MODE
-      printf(COM2, "%c%d ", sr >> 8, sr & 0xFF);
-#endif
-
-      ptr++;
-
-      if (ptr == cb.buffer_end) {
-        ptr = cb.buffer;
-      }
-    }
-    restore_cursor();
-  }
-}
-*/
 
 typedef enum {
   COMMAND_TR,
@@ -258,10 +194,6 @@ bool handle_new_char(char c, char *input, int *input_length,
     print_input(input, input_length);
   }
 
-  // for (unsigned int i = 0; i < TERMINALMAXINPUTSIZE; i++) {
-  //   printf(COM2, "%c", command_tokens[i] == '\0' ? 'x' : command_tokens[i]);
-  // }
-
   return entered;
 }
 
@@ -286,7 +218,7 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
-  task_tid pathfinder_tid = WhoIsBlock("pathfinderserver");
+  task_tid controlserver_tid = WhoIsBlock("controlserver");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -381,27 +313,31 @@ void shell() {
         Shutdown();
 
       } else if (strncmp(command_tokens[0], "pf", strlen("pf")) == 0) {
-        pathfinderserver_request req;
+        controlserver_request req;
         memset(&req, 0, sizeof(req));
 
-        train_num = atoi(command_tokens[1]);
-        dest_name = command_tokens[2];
-        offset = atoi(command_tokens[3]);
+        // train_num = atoi(command_tokens[1]);
+        // dest_name = command_tokens[2];
+        // offset = atoi(command_tokens[3]);
 
-        char *src_name = "C15";
+        char *src_name = command_tokens[1];
+        char *dest_name = command_tokens[2];
 
         memcpy(req.src_name, src_name, strlen(src_name));
         memcpy(req.dest_name, dest_name, strlen(dest_name));
-        pathfinderserver_response res;
+
+        req.type = PATHFIND;
+        controlserver_response res;
 
         int status =
-            Send(pathfinder_tid, (char *)&req, sizeof(pathfinderserver_request),
-                 (char *)&res, sizeof(pathfinderserver_response));
+            Send(controlserver_tid, (char *)&req, sizeof(controlserver_request),
+                 (char *)&res, sizeof(controlserver_response));
 
-        sprintf(
-            debug_buffer,
-            "Path Finding Train %d to %s, offset %d [Result next node: %d]\r\n",
-            train_num, dest_name, offset, res.next_step_num);
+        // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
+        //         train_num, dest_name, offset);
+
+        sprintf(debug_buffer, "Path Finding %s to %s \r\n", src_name,
+                dest_name);
         print_debug(debug_buffer);
 
       } else {

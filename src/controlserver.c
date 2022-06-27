@@ -87,27 +87,26 @@ bool is_switch_node(track_node *node) {
   return (node->type == NODE_BRANCH) || ((node->type == NODE_MERGE));
 }
 
-void pathfind_worker() {
+void control_server() {
 
-  task_tid clock = WhoIsBlock("clockserver");
+  RegisterAs("controlserver");
+
   task_tid trainserver = WhoIsBlock("trainctl");
-  task_tid parent = MyParentTid();
+  task_tid clock = WhoIsBlock("clockserver");
 
   controlserver_request req;
-  memset(&req, 0, sizeof(controlserver_request));
   controlserver_response res;
+  task_tid client;
 
-  while (true) {
-    req.type = CONTROLSERVER_WORKER;
-    req.data.worker.time = Time(clock);
-    Send(parent, (char *)&req, sizeof(controlserver_request), (char *)&res,
-         sizeof(controlserver_response));
+  memset(&res, 0, sizeof(res));
 
-    if (res.type == WORKER_PATHFIND) {
-      // do dijkstras
+  for (;;) {
+    Receive(&client, (char *)&req, sizeof(controlserver_request));
 
-      int src_num = res.data.worker_pathfind.src_num;
-      int dest_num = res.data.worker_pathfind.dest_num;
+    if (req.type == PATHFIND) {
+
+      int src_num = track_name_to_num(&track, req.src_name);
+      int dest_num = track_name_to_num(&track, req.dest_name);
 
       track_node *prev[TRACK_MAX];
 
@@ -127,7 +126,7 @@ void pathfind_worker() {
       }
 
       node = src;
-      while (true) {
+      while ((node != NULL) && (node != dest)) {
         track_node *next = path[node - track];
 
         if (node->type == NODE_BRANCH) {
@@ -142,29 +141,10 @@ void pathfind_worker() {
 
         node = next;
       }
+
+      res.type = CONTROLSERVER_GOOD;
+
+      Reply(client, (char *)&res, sizeof(controlserver_response));
     }
-  }
-
-  // pathfinder server contains occupied nodes
-
-  // CONTROLSERVER_WORKER only gets the next nodes until next sensor from
-  // dijkstras before sending to server server receives with occupied node and
-  // adds to occupied nodes
-
-  // server gets next task from heap
-}
-
-void control_server() {
-
-  RegisterAs("controlserver");
-
-  controlserver_request req;
-  controlserver_response res;
-  task_tid client;
-
-  memset(&res, 0, sizeof(res));
-
-  for (;;) {
-    Receive(&client, (char *)&req, sizeof(controlserver_request));
   }
 }

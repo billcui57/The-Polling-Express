@@ -49,7 +49,7 @@ target_link_libraries(kernel -static gcc)
 # enable_testing()
 # add_test(circularbuffer_test circularbuffer)
 add_executable(pathfinder
-  tests/unit/pathfinderserver.c
+  tests/unit/controlserver.c
   src/controlserver.c
   src/track_data.c
 )

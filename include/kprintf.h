@@ -42,6 +42,8 @@
 #define TIME_ROW 6
 #define SWITCH_TABLE_ROW_BEGIN 8
 
+// #define DEBUG_MODE
+
 #ifndef _PRINTF_H_
 #define _PRINTF_H_
 
