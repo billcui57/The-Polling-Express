@@ -19,6 +19,7 @@
     "cstdio": "c",
     "event.h": "c",
     "hal.h": "c",
-    "user.h": "c"
+    "user.h": "c",
+    "pathfinder.h": "c"
   }
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "clockserver.h"
+#include "controlserver.h"
+#include "skynet.h"
 #include "trainserver.h"
 #include "uartserver.h"
 #include <kprintf.h>

@@ -7,7 +7,7 @@ cmake . -B build -DCMAKE_TOOLCHAIN_FILE=linux.cmake
 
 cd ./build
 
-cmake --build . --target circularbuffer
+cmake --build . --target pathfinder
 ctest --verbose
 
 
