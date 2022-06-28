@@ -40,13 +40,14 @@ void control_worker() {
       unsigned int path_len = 1;
       unsigned int path_dist = result;
 
-      while (node != NULL) {
+      while (node != src) {
         path[prev[node - track] - track] = node;
         node = prev[node - track];
         path_len += 1;
       }
 
       node = src;
+
       for (unsigned int i = 0; i < path_len; i++) {
         req.worker.path[i] = node - track;
         node = path[node - track];
@@ -120,7 +121,7 @@ void control_server() {
 
       if (req.worker.type == WORKER_PATHFIND_GOOD) {
         res.type = CONTROLSERVER_GOOD;
-        memcpy(res.client.path, req.worker.path, TRACK_MAX);
+        memcpy(res.client.path, req.worker.path, sizeof(int) * TRACK_MAX);
         res.client.path_dist = req.worker.path_dist;
         res.client.path_len = req.worker.path_len;
       } else if (req.worker.type == WORKER_PATHFIND_NO_PATH) {

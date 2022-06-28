@@ -72,7 +72,7 @@ typedef struct controlserver_response {
     struct {
       int path_len;
       int path_dist;
-      int *path;
+      int path[TRACK_MAX];
     } client;
   };
 } controlserver_response;
