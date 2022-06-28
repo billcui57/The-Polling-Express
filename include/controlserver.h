@@ -44,8 +44,8 @@ typedef struct controlserver_request {
 
   union {
     struct {
-      char src_name[8];
-      char dest_name[8];
+      char src;
+      char dest;
     } client;
 
     struct {

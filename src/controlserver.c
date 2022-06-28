@@ -29,7 +29,7 @@ void control_worker() {
         req.type = CONTORL_WORKER_DONE;
         req.worker.type = WORKER_PATHFIND_NO_PATH;
         // printf(BW_COM2, "worker no path\r\n");
-        Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
+        Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
         continue;
       }
 
@@ -60,7 +60,7 @@ void control_worker() {
       req.worker.path_len = path_len;
 
       // printf(BW_COM2, "worker good\r\n");
-      Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
+      Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
     }
   }
 }
@@ -78,7 +78,7 @@ void control_server() {
 
   memset(&res, 0, sizeof(res));
 
-  bool worker_parked = true;
+  bool worker_parked = false;
 
   controlserver_client_task task_backing;
   controlserver_client_task *task = NULL;
@@ -87,21 +87,21 @@ void control_server() {
     Receive(&client, (char *)&req, sizeof(controlserver_request));
 
     if (req.type == PATHFIND) {
-      int src_num = track_name_to_num(&track, req.client.src_name);
-      int dest_num = track_name_to_num(&track, req.client.dest_name);
+      int src_num = req.client.src;
+      int dest_num = req.client.dest;
 
       if (worker_parked) {
-
         res.type = WORKER_PATHFIND;
         res.worker.src_num = src_num;
         res.worker.dest_num = dest_num;
         res.worker.whomfor = client;
+        worker_parked = false;
         Reply(worker, (char *)&res, sizeof(controlserver_response));
       } else {
         task = &task_backing;
         task->type = TASK_PATHFIND;
-        task->pathfind.dest_num = src_num;
-        task->pathfind.src_num = dest_num;
+        task->pathfind.src_num = src_num;
+        task->pathfind.dest_num = dest_num;
         task->pathfind.client = client;
       }
     } else if (req.type == CONTROL_WORKER) {
@@ -109,7 +109,6 @@ void control_server() {
       if (task == NULL) {
         worker_parked = true;
       } else {
-        worker_parked = false;
         res.type = WORKER_PATHFIND;
         res.worker.whomfor = task->pathfind.client;
         res.worker.src_num = task->pathfind.src_num;
@@ -129,6 +128,7 @@ void control_server() {
       }
 
       Reply(req.worker.whomfor, (char *)&res, sizeof(controlserver_response));
+      Reply(worker, (char*)&res, 0);
     } else {
       KASSERT(0, "Shouldnt be here in control server");
     }
