@@ -334,8 +334,8 @@ void shell() {
         char *src_name = command_tokens[1];
         char *dest_name = command_tokens[2];
 
-        memcpy(req.src_name, src_name, strlen(src_name));
-        memcpy(req.dest_name, dest_name, strlen(dest_name));
+        memcpy(req.client.src_name, src_name, strlen(src_name));
+        memcpy(req.client.dest_name, dest_name, strlen(dest_name));
 
         req.type = PATHFIND;
         controlserver_response res;
@@ -347,9 +347,17 @@ void shell() {
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
 
-        sprintf(debug_buffer, "Path Finding %s to %s \r\n", src_name,
-                dest_name);
-        print_debug(debug_buffer);
+        if (res.type == CONTROLSERVER_GOOD) {
+          sprintf(debug_buffer,
+                  "Path Finding %s to %s, path length %d, path dist %d \r\n",
+                  src_name, dest_name, res.client.path_len,
+                  res.client.path_dist);
+          print_debug(debug_buffer);
+        } else if (res.type == CONTROLSERVER_NO_PATH) {
+          sprintf(debug_buffer, "No path from %s to %s \r\n", src_name,
+                  dest_name);
+          print_debug(debug_buffer);
+        }
 
       } else {
         print_debug("Invalid Command Type");

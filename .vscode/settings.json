@@ -20,6 +20,8 @@
     "event.h": "c",
     "hal.h": "c",
     "user.h": "c",
-    "pathfinder.h": "c"
+    "pathfinder.h": "c",
+    "algorithms.h": "c",
+    "controlserver.h": "c"
   }
 }

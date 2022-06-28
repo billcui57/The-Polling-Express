@@ -1,150 +1,136 @@
 #include "controlserver.h"
 #include <syscall.h>
 
-#define INF 100000
+void control_worker() {
+  task_tid trainserver = WhoIsBlock("trainctl");
+  task_tid clock = WhoIsBlock("clockserver");
+  task_tid parent = MyParentTid();
 
-void update_dist(track_node *track, track_node *u, track_node *v,
-                 bool *in_shortest_path, track_node **prev, track_edge *uv,
-                 int *dist) {
-  if (!in_shortest_path[v - track]) {
+  controlserver_request req;
+  controlserver_response res;
+  memset(&req, 0, sizeof(controlserver_request));
 
-    int alt = dist[u - track] + uv->dist;
+  while (true) {
+    req.type = CONTROL_WORKER;
+    Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
 
-    if ((alt < dist[v - track]) && (dist[u - track] != INF)) {
-      dist[v - track] = alt;
-      prev[v - track] = u;
-    }
-  }
-}
+    if (res.type == WORKER_PATHFIND) {
 
-track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path) {
-  int min_index = 0;
-  for (unsigned int i = 0; i < TRACK_MAX; i++) {
-    if ((dist[i] < dist[min_index]) && (!in_shortest_path[i])) {
-      min_index = i;
-    }
-  }
+      // printf(BW_COM2, "got here\r\n");
 
-  return &(track[min_index]);
-}
+      track_node *prev[TRACK_MAX];
 
-// TODO: need to add a way to see reverse node and node as same for reverse
-// pathfinding to work
-void dijkstra(track_node *track, track_node *src, track_node *dest,
-              track_node **prev) {
+      track_node *src = &(track[res.worker.src_num]);
+      track_node *dest = &(track[res.worker.dest_num]);
 
-  int dist[TRACK_MAX];
+      int result = dijkstra(track, src, dest, prev);
 
-  bool in_shortest_path[TRACK_MAX];
-
-  for (unsigned int i = 0; i < TRACK_MAX; i++) {
-    dist[i] = INF;
-    prev[i] = NULL;
-    in_shortest_path[i] = false;
-  }
-
-  dist[src - track] = 0;
-
-  for (unsigned int i = 0; i < TRACK_MAX - 1; i++) {
-
-    track_node *u = min_distance(track, dist, in_shortest_path);
-
-    if ((u == dest) || (u == dest->reverse)) {
-      return;
-    }
-
-    for (unsigned int is_reverse = 0; is_reverse < 2; is_reverse++) {
-      if (is_reverse == 1) {
-        u = u->reverse;
+      if (result == -1) {
+        req.type = CONTORL_WORKER_DONE;
+        req.worker.type = WORKER_PATHFIND_NO_PATH;
+        // printf(BW_COM2, "worker no path\r\n");
+        Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
+        continue;
       }
 
-      in_shortest_path[u - track] = true;
+      track_node *node = dest;
 
-      track_edge *uv;
-      track_node *v;
+      track_node *path[TRACK_MAX];
 
-      if ((u->type == NODE_MERGE) || (u->type == NODE_SENSOR) ||
-          (u->type == NODE_ENTER)) {
+      unsigned int path_len = 1;
+      unsigned int path_dist = result;
 
-        uv = &((u->edge)[DIR_AHEAD]);
-        v = uv->dest;
-        update_dist(track, u, v, in_shortest_path, prev, uv, dist);
+      while (node != src) {
+        path[prev[node - track] - track] = node;
+        node = prev[node - track];
+        path_len += 1;
       }
 
-      if (u->type == NODE_BRANCH) {
-        uv = &((u->edge)[DIR_STRAIGHT]);
-        v = uv->dest;
-        update_dist(track, u, v, in_shortest_path, prev, uv, dist);
-        uv = &((u->edge)[DIR_CURVED]);
-        v = uv->dest;
-        update_dist(track, u, v, in_shortest_path, prev, uv, dist);
+      node = src;
+
+      for (unsigned int i = 0; i < path_len; i++) {
+        req.worker.path[i] = node - track;
+        node = path[node - track];
       }
+
+      req.type = CONTORL_WORKER_DONE;
+      req.worker.type = WORKER_PATHFIND_GOOD;
+      req.worker.whomfor = res.worker.whomfor;
+      req.worker.path_dist = path_dist;
+      req.worker.path_len = path_len;
+
+      // printf(BW_COM2, "worker good\r\n");
+      Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
     }
   }
-}
-
-bool is_switch_node(track_node *node) {
-  return (node->type == NODE_BRANCH) || ((node->type == NODE_MERGE));
 }
 
 void control_server() {
 
   RegisterAs("controlserver");
 
-  task_tid trainserver = WhoIsBlock("trainctl");
-  task_tid clock = WhoIsBlock("clockserver");
+  task_tid worker = Create(10, control_worker);
 
   controlserver_request req;
   controlserver_response res;
+  memset(&res, 0, sizeof(controlserver_response));
   task_tid client;
 
   memset(&res, 0, sizeof(res));
+
+  bool worker_parked = true;
+
+  controlserver_client_task task_backing;
+  controlserver_client_task *task = NULL;
 
   for (;;) {
     Receive(&client, (char *)&req, sizeof(controlserver_request));
 
     if (req.type == PATHFIND) {
+      int src_num = track_name_to_num(&track, req.client.src_name);
+      int dest_num = track_name_to_num(&track, req.client.dest_name);
 
-      int src_num = track_name_to_num(&track, req.src_name);
-      int dest_num = track_name_to_num(&track, req.dest_name);
+      if (worker_parked) {
 
-      track_node *prev[TRACK_MAX];
+        res.type = WORKER_PATHFIND;
+        res.worker.src_num = src_num;
+        res.worker.dest_num = dest_num;
+        res.worker.whomfor = client;
+        Reply(worker, (char *)&res, sizeof(controlserver_response));
+      } else {
+        task = &task_backing;
+        task->type = TASK_PATHFIND;
+        task->pathfind.dest_num = src_num;
+        task->pathfind.src_num = dest_num;
+        task->pathfind.client = client;
+      }
+    } else if (req.type == CONTROL_WORKER) {
 
-      track_node *src = &(track[src_num]);
-      track_node *dest = &(track[dest_num]);
+      if (task == NULL) {
+        worker_parked = true;
+      } else {
+        worker_parked = false;
+        res.type = WORKER_PATHFIND;
+        res.worker.whomfor = task->pathfind.client;
+        res.worker.src_num = task->pathfind.src_num;
+        res.worker.dest_num = task->pathfind.dest_num;
+        task = NULL;
+        Reply(worker, (char *)&res, sizeof(controlserver_response));
+      }
+    } else if (req.type == CONTORL_WORKER_DONE) {
 
-      dijkstra(track, src, dest, prev);
-
-      track_node *node =
-          prev[dest_num] == NULL ? track[dest_num].reverse : &(track[dest_num]);
-
-      track_node *path[TRACK_MAX];
-
-      while (node != src) {
-        path[prev[node - track] - track] = node;
-        node = prev[node - track];
+      if (req.worker.type == WORKER_PATHFIND_GOOD) {
+        res.type = CONTROLSERVER_GOOD;
+        memcpy(res.client.path, req.worker.path, sizeof(int) * TRACK_MAX);
+        res.client.path_dist = req.worker.path_dist;
+        res.client.path_len = req.worker.path_len;
+      } else if (req.worker.type == WORKER_PATHFIND_NO_PATH) {
+        res.type = CONTROLSERVER_NO_PATH;
       }
 
-      node = src;
-      while ((node != NULL) && (node != dest)) {
-        track_node *next = path[node - track];
-
-        if (node->type == NODE_BRANCH) {
-          if (next != NULL) {
-
-            int switch_num = node->num;
-
-            TrainCommand(trainserver, Time(clock), SWITCH, switch_num,
-                         next == node->edge[DIR_STRAIGHT].dest ? 0 : 1);
-          }
-        }
-
-        node = next;
-      }
-
-      res.type = CONTROLSERVER_GOOD;
-
-      Reply(client, (char *)&res, sizeof(controlserver_response));
+      Reply(req.worker.whomfor, (char *)&res, sizeof(controlserver_response));
+    } else {
+      KASSERT(0, "Shouldnt be here in control server");
     }
   }
 }

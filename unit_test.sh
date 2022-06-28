@@ -7,7 +7,7 @@ cmake . -B build -DCMAKE_TOOLCHAIN_FILE=linux.cmake
 
 cd ./build
 
-cmake --build . --target pathfinder
+cmake --build . --target algorithms
 ctest --verbose
 
 
