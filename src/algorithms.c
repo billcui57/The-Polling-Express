@@ -105,6 +105,8 @@ int augment_path(track_node *track, track_node **prev, track_node *dest,
 
     *new_offset = offset + dest->reverse->edge[DIR_STRAIGHT].dist;
 
+    *orientation = -1;
+
     if (prev_node->type == NODE_BRANCH) {
       if (prev_node->edge[DIR_AHEAD].dest == dest) {
         *orientation = DIR_AHEAD;
