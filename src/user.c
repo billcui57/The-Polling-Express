@@ -6,6 +6,7 @@ void print_art();
 void clear();
 void shell();
 void timer_printer();
+void switch_printer();
 void sensor_reader();
 
 int idle_percentage;
@@ -24,6 +25,7 @@ void task_k4_init() {
   Create(10, control_server);
   // Create(10, task_skynet);
   Create(5, timer_printer);
+  Create(5, switch_printer);
   Create(5, shell);
 }
 
@@ -66,6 +68,28 @@ void print_switch_table(char *switch_state) {
   }
 
   restore_cursor();
+}
+
+void switch_printer() {
+  train_msg req;
+  train_event event;
+  memset(&req, 0, sizeof(req));
+  req.type = BRANCH_EVENT;
+  task_tid trainctl = WhoIsBlock("trainctl");
+  while (true) {
+    Send(trainctl, (char *)&req, sizeof(req), (char *)&event, sizeof(train_event));
+    save_cursor();
+    cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
+    for (int i = 1; i < 19; i++) {
+      char s = event.branch_a[i];
+      printf(COM2, "[%d]:%c\r\n", i, "sc?"[s]);
+    }
+    for (int i = 0; i < 4; i++) {
+      char s = event.branch_b[i];
+      printf(COM2, "[%d]:%c\r\n", 153+i, "sc?"[s]);
+    }
+    restore_cursor();
+  }
 }
 
 void timer_printer() {
@@ -301,7 +325,6 @@ void shell() {
         print_debug(debug_buffer);
 
         switch_state[switch_num] = switch_orientation;
-        print_switch_table(switch_state);
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation == 'c' ? 1 : 0);
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {

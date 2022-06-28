@@ -9,6 +9,7 @@ typedef enum {
   REVERSE,
   SWITCH,
   TRAIN_EVENT,
+  BRANCH_EVENT,
 } train_req_def;
 
 typedef struct {
