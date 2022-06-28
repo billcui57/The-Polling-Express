@@ -23,8 +23,10 @@ void task_k4_init() {
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
   Create(10, control_server);
-  // Create(10, task_skynet);
+  Create(10, task_skynet);
+#ifndef DEBUG_MODE
   Create(5, timer_printer);
+#endif
   Create(5, switch_printer);
   Create(5, shell);
 }
@@ -243,7 +245,7 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
-  task_tid controlserver_tid = WhoIsBlock("controlserver");
+  task_tid skynet_tid = WhoIsBlock("skynet");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -347,41 +349,35 @@ void shell() {
         Shutdown();
 
       } else if (strncmp(command_tokens[0], "pf", strlen("pf")) == 0) {
-        controlserver_request req;
+        skynet_msg req;
         memset(&req, 0, sizeof(req));
-
+        req.type = SKYNET_TARGET;
+        req.msg.target.source=track_name_to_num(track, command_tokens[1]);
+        req.msg.target.destination=track_name_to_num(track, command_tokens[2]);
         // train_num = atoi(command_tokens[1]);
         // dest_name = command_tokens[2];
         // offset = atoi(command_tokens[3]);
 
-        char *src_name = command_tokens[1];
-        char *dest_name = command_tokens[2];
-
-        memcpy(req.client.src_name, src_name, strlen(src_name));
-        memcpy(req.client.dest_name, dest_name, strlen(dest_name));
-
-        req.type = PATHFIND;
         controlserver_response res;
 
         int status =
-            Send(controlserver_tid, (char *)&req, sizeof(controlserver_request),
-                 (char *)&res, sizeof(controlserver_response));
+            Send(skynet_tid, (char *)&req, sizeof(skynet_msg),
+                 (char *)&res, 0);
 
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
-
+        sprintf(debug_buffer,
+                  "Path Finding %s to %s\r\n",
+                  command_tokens[1], command_tokens[2]);
+        print_debug(debug_buffer);
+/*
         if (res.type == CONTROLSERVER_GOOD) {
-          sprintf(debug_buffer,
-                  "Path Finding %s to %s, path length %d, path dist %d \r\n",
-                  src_name, dest_name, res.client.path_len,
-                  res.client.path_dist);
-          print_debug(debug_buffer);
         } else if (res.type == CONTROLSERVER_NO_PATH) {
           sprintf(debug_buffer, "No path from %s to %s \r\n", src_name,
                   dest_name);
           print_debug(debug_buffer);
         }
-
+*/
       } else {
         print_debug("Invalid Command Type");
       }
