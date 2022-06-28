@@ -23,9 +23,9 @@ void control_worker() {
       track_node *src = &(track[res.worker.src_num]);
       track_node *dest = &(track[res.worker.dest_num]);
 
-      int status = dijkstra(track, src, dest, prev);
+      int result = dijkstra(track, src, dest, prev);
 
-      if (status == -1) {
+      if (result == -1) {
         req.type = CONTORL_WORKER_DONE;
         req.worker.type = WORKER_PATHFIND_NO_PATH;
         // printf(BW_COM2, "worker no path\r\n");
@@ -37,31 +37,26 @@ void control_worker() {
 
       track_node *path[TRACK_MAX];
 
-      while (node != src) {
+      unsigned int path_len = 1;
+      unsigned int path_dist = result;
+
+      while (node != NULL) {
         path[prev[node - track] - track] = node;
         node = prev[node - track];
+        path_len += 1;
       }
 
       node = src;
-      while ((node != NULL) && (node != dest)) {
-        track_node *next = path[node - track];
-
-        if (node->type == NODE_BRANCH) {
-          if (next != NULL) {
-
-            int switch_num = node->num;
-
-            TrainCommand(trainserver, Time(clock), SWITCH, switch_num,
-                         next == node->edge[DIR_STRAIGHT].dest ? 0 : 1);
-          }
-        }
-
-        node = next;
+      for (unsigned int i = 0; i < path_len; i++) {
+        req.worker.path[i] = node - track;
+        node = path[node - track];
       }
 
       req.type = CONTORL_WORKER_DONE;
       req.worker.type = WORKER_PATHFIND_GOOD;
       req.worker.whomfor = res.worker.whomfor;
+      req.worker.path_dist = path_dist;
+      req.worker.path_len = path_len;
 
       // printf(BW_COM2, "worker good\r\n");
       Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
@@ -125,13 +120,12 @@ void control_server() {
 
       if (req.worker.type == WORKER_PATHFIND_GOOD) {
         res.type = CONTROLSERVER_GOOD;
+        memcpy(res.client.path, req.worker.path, TRACK_MAX);
+        res.client.path_dist = req.worker.path_dist;
+        res.client.path_len = req.worker.path_len;
       } else if (req.worker.type == WORKER_PATHFIND_NO_PATH) {
         res.type = CONTROLSERVER_NO_PATH;
       }
-
-      // printf(BW_COM2, "worker did good job\r\n");
-
-      // printf(BW_COM2, "%d\r\n", req.worker.whomfor);
 
       Reply(req.worker.whomfor, (char *)&res, sizeof(controlserver_response));
     } else {

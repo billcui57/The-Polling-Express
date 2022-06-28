@@ -51,6 +51,9 @@ typedef struct controlserver_request {
     struct {
       controlserver_worker_response_type type;
       task_tid whomfor;
+      int path_len;
+      int path_dist;
+      int path[TRACK_MAX];
     } worker;
   };
 
@@ -65,6 +68,12 @@ typedef struct controlserver_response {
       int dest_num;
       task_tid whomfor;
     } worker;
+
+    struct {
+      int path_len;
+      int path_dist;
+      int *path;
+    } client;
   };
 } controlserver_response;
 

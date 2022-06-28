@@ -62,7 +62,7 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
     }
 
     if (u == dest) {
-      return 0;
+      return dist[u - track];
     }
 
     in_shortest_path[u - track] = true;
