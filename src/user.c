@@ -333,8 +333,8 @@ void shell() {
         char *src_name = command_tokens[1];
         char *dest_name = command_tokens[2];
 
-        memcpy(req.src_name, src_name, strlen(src_name));
-        memcpy(req.dest_name, dest_name, strlen(dest_name));
+        memcpy(req.client.src_name, src_name, strlen(src_name));
+        memcpy(req.client.dest_name, dest_name, strlen(dest_name));
 
         req.type = PATHFIND;
         controlserver_response res;

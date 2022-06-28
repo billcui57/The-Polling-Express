@@ -9,21 +9,63 @@
 
 typedef enum {
   CONTROLSERVER_GOOD,
-  CONTROLSERVER_NO_PATH
+  CONTROLSERVER_NO_PATH,
+  WORKER_PATHFIND
 } controlserver_response_type;
 
-typedef enum { PATHFIND } controlserver_request_type;
+typedef enum {
+  PATHFIND,
+  CONTROL_WORKER,
+  CONTORL_WORKER_DONE,
+} controlserver_request_type;
+
+typedef enum { TASK_PATHFIND } controlserver_client_task_type;
+
+typedef enum {
+  WORKER_PATHFIND_GOOD,
+  WORKER_PATHFIND_NO_PATH
+} controlserver_worker_response_type;
+
+typedef struct controlserver_client_task {
+  controlserver_client_task_type type;
+
+  union {
+    struct {
+      task_tid client;
+      int src_num;
+      int dest_num;
+    } pathfind;
+  };
+} controlserver_client_task;
+
 typedef struct controlserver_request {
 
   controlserver_request_type type;
 
-  char src_name[8];
-  char dest_name[8];
+  union {
+    struct {
+      char src_name[8];
+      char dest_name[8];
+    } client;
+
+    struct {
+      controlserver_worker_response_type type;
+      task_tid whomfor;
+    } worker;
+  };
 
 } controlserver_request;
 
 typedef struct controlserver_response {
   controlserver_response_type type;
+
+  union {
+    struct {
+      int src_num;
+      int dest_num;
+      task_tid whomfor;
+    } worker;
+  };
 } controlserver_response;
 
 void control_server();
