@@ -188,7 +188,7 @@ void tokenizer(char *input, char **tokens, unsigned int num_tokens) {
   }
 }
 
-#define MAX_COMMAND_TOKENS 5
+#define MAX_COMMAND_TOKENS 6
 bool handle_new_char(char c, char *input, int *input_length,
                      char **command_tokens) { // backspace
   bool entered = false;
@@ -352,8 +352,11 @@ void shell() {
         skynet_msg req;
         memset(&req, 0, sizeof(req));
         req.type = SKYNET_TARGET;
-        req.msg.target.source=track_name_to_num(track, command_tokens[1]);
-        req.msg.target.destination=track_name_to_num(track, command_tokens[2]);
+        req.msg.target.train=atoi(command_tokens[1]);
+        req.msg.target.speed=atoi(command_tokens[2]);
+        req.msg.target.source=track_name_to_num(track, command_tokens[3]);
+        req.msg.target.destination=track_name_to_num(track, command_tokens[4]);
+        req.msg.target.offset=atoi(command_tokens[5]);
         // train_num = atoi(command_tokens[1]);
         // dest_name = command_tokens[2];
         // offset = atoi(command_tokens[3]);
@@ -367,8 +370,8 @@ void shell() {
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
         sprintf(debug_buffer,
-                  "Path Finding %s to %s\r\n",
-                  command_tokens[1], command_tokens[2]);
+                  "Path Finding %s to %s + %d\r\n",
+                  command_tokens[3], command_tokens[4], req.msg.target.offset);
         print_debug(debug_buffer);
 /*
         if (res.type == CONTROLSERVER_GOOD) {

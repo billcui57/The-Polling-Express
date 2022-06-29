@@ -21,6 +21,7 @@ Trainctl
 #include <syscall.h>
 #include <trainserver.h>
 #include <controlserver.h>
+#include <clockserver.h>
 
 #include <track_data.h>
 
@@ -112,6 +113,10 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl){
     } else if (cur->type == NODE_BRANCH && i+1<path_len) {
       if (cur->edge[DIR_CURVED].dest == &track[path[i+1]]) dir =1;
       TrainCommand(trainctl,0, SWITCH, cur->num, dir);
+    } else if (cur->type == NODE_MERGE && i>0){
+      int rdir = 0;
+      if (cur->reverse->edge[DIR_CURVED].dest == track[path[i-1]].reverse)rdir = 1;
+      TrainCommand(trainctl,0, SWITCH, cur->num, rdir);
     }
     dist += cur->edge[dir].dist;
   }
@@ -123,8 +128,10 @@ int loop[] = {72, 95, 96, 52, 69, 98, 51, 21, 105, 43, 107, 3, 31, 108, 41, 110,
 void task_skynet() {
   task_tid worker = Create(10, task_skynet_worker);
 
+  task_tid clock = WhoIsBlock("clockserver");
   task_tid controlserver = WhoIsBlock("controlserver");
   task_tid trainctl = WhoIsBlock("trainctl");
+
 
   skynet_msg req;
   skynet_msg res;
@@ -137,6 +144,8 @@ void task_skynet() {
   while (true) {
     Receive(&client, (char*)&req, sizeof(skynet_msg));
     if (req.type == SKYNET_TARGET) {
+      train.train = req.msg.target.train;
+      train.speed = req.msg.target.speed;
       controlserver_request c_req;
       memset(&c_req,0,sizeof(c_req));
       c_req.type = PATHFIND;
@@ -151,17 +160,22 @@ void task_skynet() {
       c_req.client.src = 72;
       c_req.client.dest = req.msg.target.destination;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
-      train.dist = c_res.client.path_dist;
+      train.dist = (c_res.client.path_dist+req.msg.target.offset)*1000;
       train.out_len = c_res.client.path_len;
       memcpy(train.next_out,c_res.client.path,TRACK_MAX*sizeof(int));
       train.state = 1;
       res.msg.worker.node=train.next[train.i];
       Reply(worker,(char*)&res,sizeof(res));
       Reply(client,(char*)&res,0);
+      TrainCommand(trainctl,Time(clock)+5, SPEED, train.train, train.speed);
     } else if (req.type == SKYNET_EVENT) {
       if (req.msg.worker.node == -1) continue;
       train.time[train.i] = req.msg.worker.time;
-      if (train.i+1<train.len){
+      if (train.i == train.stop_marker && train.state == 8){
+          int time = train.time[train.i]+train.stop_offset/train.vel;
+          TrainCommand(trainctl,time, SPEED, train.train, 0);
+          train.state = 0;
+      } else if (train.i+1<train.len){
         res.msg.worker.node = train.next[train.i+1];
         Reply(worker,(char*)&res,sizeof(res));
       }
@@ -193,18 +207,28 @@ void task_skynet() {
           train.i = 0;
           res.msg.worker.node=train.next[train.i];
           Reply(worker,(char*)&res,sizeof(res));
-        } else {
-          int stopping = 34*train.vel*train.vel+8147*train.vel+121381879;
+        } else if (train.state == 7){
+          int stopping = 34*train.vel*train.vel+12641*train.vel+115544120;
           stopping/=1000;
-          int left = train.dist*1000 - stopping;
+          int left = train.dist - stopping + 30000;
           process_path(&train,train.next_out,train.out_len,trainctl);
-          int time = train.time[train.i-1]+left/train.vel;
-          TrainCommand(trainctl,time, SPEED, 1, 0);
+          for(int i=0;i<train.len;i++){
+            if(train.distance[i] < left){
+              left -= train.distance[i];
+              train.stop_marker = i;
+            } else {
+              break;
+            }
+          }
+          train.stop_offset = left;
           save_cursor();
-          cursor_to_row(TIME_DIFF_ROW);
-          printf(COM2, "Vel: %d, Stop: %d, In: %d, Time: %d",train.vel, stopping, left, time);
+          cursor_to_row(SENSOR_PRED_ROW+1);
+          printf(COM2, "Vel: %d, Stop: %d, At: %d + %d",train.vel, stopping, train.next[train.stop_marker], left);
           restore_cursor();
+          train.state++;
           train.i = 0;
+          res.msg.worker.node=train.next[train.i];
+          Reply(worker,(char*)&res,sizeof(res));
         }
       }
     }

@@ -3,6 +3,8 @@
 #include <track_data.h>
 
 typedef struct {
+  char train;
+  char speed;
   int time[80];
   int distance[80];
   int next[80];
@@ -14,6 +16,8 @@ typedef struct {
   int dist;
   int vel;
   int state;
+  int stop_offset;
+  int stop_marker;
 } train_record;
 
 
@@ -26,6 +30,7 @@ typedef struct {
   skynet_msg_type type;
   union {
     struct {
+      char train, speed;
       char source, destination;
       int offset;
     } target;
