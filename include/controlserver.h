@@ -70,6 +70,7 @@ typedef struct controlserver_response {
       int dest_num;
       task_tid whomfor;
       int offset;
+      bool reserved[TRACK_MAX];
     } worker;
 
     struct {
