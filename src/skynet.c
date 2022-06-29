@@ -113,7 +113,7 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl){
     } else if (cur->type == NODE_BRANCH && i+1<path_len) {
       if (cur->edge[DIR_CURVED].dest == &track[path[i+1]]) dir =1;
       TrainCommand(trainctl,0, SWITCH, cur->num, dir);
-    } else if (cur->type == NODE_MERGE && i>0){
+    } else if (cur->type == NODE_MERGE && i>0 && false){
       int rdir = 0;
       if (cur->reverse->edge[DIR_CURVED].dest == track[path[i-1]].reverse)rdir = 1;
       TrainCommand(trainctl,0, SWITCH, cur->num, rdir);
