@@ -90,3 +90,66 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
     }
   }
 }
+
+int augment_path(track_node *track, track_node **prev, track_node *dest,
+                 int offset, int *new_offset, int *orientation,
+                 track_node **new_dest, int dist, int *new_dist) {
+
+  *new_offset = 0;
+
+  *new_dist = dist + offset;
+
+  if (offset < 0) {
+
+    track_node *prev_node = prev[dest - track];
+
+    *new_offset = offset + dest->reverse->edge[DIR_STRAIGHT].dist;
+
+    *orientation = -1;
+
+    if (prev_node->type == NODE_BRANCH) {
+      if (prev_node->edge[DIR_AHEAD].dest == dest) {
+        *orientation = DIR_AHEAD;
+      } else {
+        *orientation = DIR_CURVED;
+      }
+    }
+
+    prev[dest - track] = NULL;
+
+    *new_dest = prev_node;
+
+    if (*new_offset < 0) {
+      return -1;
+    }
+    return 0;
+  } else if (offset > 0) {
+
+    bool is_offset_valid = true;
+
+    if (dest->type == NODE_BRANCH) {
+
+      if (dest->edge[DIR_STRAIGHT].dist < offset) {
+        is_offset_valid = false;
+      }
+
+      if (dest->edge[DIR_CURVED].dist < offset) {
+        is_offset_valid = false;
+      }
+    }
+
+    if (dest->edge[DIR_STRAIGHT].dist < offset) {
+      is_offset_valid = false;
+    }
+
+    if (!is_offset_valid) {
+      return -1;
+    }
+
+    *new_offset = offset;
+    *orientation = -1;
+    *new_dest = dest;
+
+    return 0;
+  }
+}

@@ -79,7 +79,8 @@ void switch_printer() {
   req.type = BRANCH_EVENT;
   task_tid trainctl = WhoIsBlock("trainctl");
   while (true) {
-    Send(trainctl, (char *)&req, sizeof(req), (char *)&event, sizeof(train_event));
+    Send(trainctl, (char *)&req, sizeof(req), (char *)&event,
+         sizeof(train_event));
     save_cursor();
     cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
     for (int i = 1; i < 19; i++) {
@@ -88,7 +89,7 @@ void switch_printer() {
     }
     for (int i = 0; i < 4; i++) {
       char s = event.branch_b[i];
-      printf(COM2, "[%d]:%c\r\n", 153+i, "sc?"[s]);
+      printf(COM2, "[%d]:%c\r\n", 153 + i, "sc?"[s]);
     }
     restore_cursor();
   }
@@ -348,7 +349,7 @@ void shell() {
         print_debug("QUIT");
         Shutdown();
 
-      } else if (strncmp(command_tokens[0], "pf", strlen("pf")) == 0) {
+      } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
         skynet_msg req;
         memset(&req, 0, sizeof(req));
         req.type = SKYNET_TARGET;
@@ -364,8 +365,7 @@ void shell() {
         controlserver_response res;
 
         int status =
-            Send(skynet_tid, (char *)&req, sizeof(skynet_msg),
-                 (char *)&res, 0);
+            Send(skynet_tid, (char *)&req, sizeof(skynet_msg), (char *)&res, 0);
 
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
@@ -373,14 +373,14 @@ void shell() {
                   "Path Finding %s to %s + %d\r\n",
                   command_tokens[3], command_tokens[4], req.msg.target.offset);
         print_debug(debug_buffer);
-/*
-        if (res.type == CONTROLSERVER_GOOD) {
-        } else if (res.type == CONTROLSERVER_NO_PATH) {
-          sprintf(debug_buffer, "No path from %s to %s \r\n", src_name,
-                  dest_name);
-          print_debug(debug_buffer);
-        }
-*/
+        /*
+                if (res.type == CONTROLSERVER_GOOD) {
+                } else if (res.type == CONTROLSERVER_NO_PATH) {
+                  sprintf(debug_buffer, "No path from %s to %s \r\n", src_name,
+                          dest_name);
+                  print_debug(debug_buffer);
+                }
+        */
       } else {
         print_debug("Invalid Command Type");
       }
