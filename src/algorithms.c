@@ -20,16 +20,19 @@ void update_dist(track_node *track, track_node *u, track_node *v,
   }
 }
 
-track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path) {
+track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path,
+                         bool *avoid, track_node *src, track_node *dest) {
   int min_index = -1;
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
 
     if (min_index == -1) {
-      if (!in_shortest_path[i]) {
+      if (!in_shortest_path[i] &&
+          (!avoid[i] || i == (dest - track) || i == (src - track))) {
         min_index = i;
       }
     } else {
-      if ((dist[i] < dist[min_index]) && (!in_shortest_path[i])) {
+      if ((dist[i] < dist[min_index]) && (!in_shortest_path[i]) &&
+          (!avoid[i] || (i == (dest - track)) || (i == (src - track)))) {
         min_index = i;
       }
     }
@@ -39,7 +42,7 @@ track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path) {
 }
 
 int dijkstra(track_node *track, track_node *src, track_node *dest,
-             track_node **prev) {
+             track_node **prev, bool *avoid) {
 
   int dist[TRACK_MAX];
 
@@ -55,7 +58,8 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
 
   for (;;) {
 
-    track_node *u = min_distance(track, dist, in_shortest_path);
+    track_node *u =
+        min_distance(track, dist, in_shortest_path, avoid, src, dest);
 
     if (dist[u - track] == INF) {
       return -1;

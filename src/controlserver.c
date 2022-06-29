@@ -84,6 +84,8 @@ void control_server() {
   controlserver_client_task task_backing;
   controlserver_client_task *task = NULL;
 
+  bool node_reserved[TRACK_MAX];
+
   for (;;) {
     Receive(&client, (char *)&req, sizeof(controlserver_request));
 
