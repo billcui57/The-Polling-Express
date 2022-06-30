@@ -9,7 +9,6 @@
 
 typedef enum {
   CONTROLSERVER_GOOD,
-  CONTROLSERVER_NO_PATH,
   WORKER_PATHFIND
 } controlserver_response_type;
 
@@ -23,7 +22,6 @@ typedef enum { TASK_PATHFIND } controlserver_client_task_type;
 
 typedef enum {
   WORKER_PATHFIND_GOOD,
-  WORKER_PATHFIND_NO_PATH
 } controlserver_worker_response_type;
 
 typedef struct controlserver_client_task {

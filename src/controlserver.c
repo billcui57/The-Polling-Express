@@ -27,13 +27,7 @@ void control_worker() {
 
       int result = dijkstra(track, src, dest, prev, reserved);
 
-      if (result == -1) {
-        req.type = CONTROL_WORKER_DONE;
-        req.worker.type = WORKER_PATHFIND_NO_PATH;
-        // printf(BW_COM2, "worker no path\r\n");
-        Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
-        continue;
-      }
+      KASSERT(result == 0, "A path should exist");
 
       track_node *node = dest;
 
@@ -132,10 +126,7 @@ void control_server() {
         memcpy(res.client.path, req.worker.path, sizeof(int) * TRACK_MAX);
         res.client.path_dist = req.worker.path_dist;
         res.client.path_len = req.worker.path_len;
-      } else if (req.worker.type == WORKER_PATHFIND_NO_PATH) {
-        res.type = CONTROLSERVER_NO_PATH;
       }
-
       Reply(req.worker.whomfor, (char *)&res, sizeof(controlserver_response));
       Reply(worker, (char *)&res, 0);
     } else {

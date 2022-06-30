@@ -22,6 +22,7 @@
     "user.h": "c",
     "pathfinder.h": "c",
     "algorithms.h": "c",
-    "controlserver.h": "c"
+    "controlserver.h": "c",
+    "track_data.h": "c"
   }
 }
