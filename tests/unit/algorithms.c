@@ -31,7 +31,7 @@ void dijkstra_test(track_node *track, char *src_name, char *dest_name,
   memset(path1, NULL, sizeof(track_node *) * TRACK_MAX);
   memset(path2, NULL, sizeof(track_node *) * TRACK_MAX);
 
-  unsigned int path_len = 2;
+  unsigned int path_len = 1;
   unsigned int path_dist = result;
 
   track_node *final_path[TRACK_MAX * 2];
@@ -45,26 +45,29 @@ void dijkstra_test(track_node *track, char *src_name, char *dest_name,
     path_len += 1;
   }
 
-  node = prev1[intermediate - track];
-
-  while (node != src) {
-    path1[prev1[node - track] - track] = node;
-    node = prev1[node - track];
-    path_len += 1;
-  }
-
-  node = src;
-
   unsigned int partial_len = 0;
 
-  for (unsigned int i = 0; i < path_len; i++) {
-    final_path[i] = node;
-    printf("[%s]", node->name);
-    node = path1[node - track];
-    partial_len++;
+  if (intermediate != src) {
+    path_len += 1;
+    node = prev1[intermediate - track];
 
-    if (node == NULL) {
-      break;
+    while ((node != src) && (node != NULL)) {
+      path1[prev1[node - track] - track] = node;
+      node = prev1[node - track];
+      path_len += 1;
+    }
+
+    node = src;
+
+    for (unsigned int i = 0; i < path_len; i++) {
+      final_path[i] = node;
+      printf("[%s]", node->name);
+      node = path1[node - track];
+      partial_len++;
+
+      if (node == NULL) {
+        break;
+      }
     }
   }
 
@@ -97,7 +100,7 @@ int main() {
   //                    DIR_CURVED);
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR155")]),
   //                    DIR_STRAIGHT);
-  dijkstra_test(track, "C2", "D2", avoid, 20000);
+  dijkstra_test(track, "E14", "E9", avoid, 500);
 
   // printf("%d\r\n",
   //        track[track_name_to_num(track, "C15")].edge[DIR_STRAIGHT].dist);

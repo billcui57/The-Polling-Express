@@ -30,8 +30,9 @@ void control_worker() {
 
       track_node *intermediate;
 
-      int result = dijkstras_min_length(track, src, dest, prev1, prev2,
-                                        &intermediate, reserved, res.worker.min_len);
+      int result =
+          dijkstras_min_length(track, src, dest, prev1, prev2, &intermediate,
+                               reserved, res.worker.min_len);
 
       char debug_buffer[100];
       sprintf(debug_buffer, "A path should exist between [%s] and [%s]\r\n",
@@ -44,7 +45,7 @@ void control_worker() {
       memset(path1, 0, sizeof(track_node *) * TRACK_MAX);
       memset(path2, 0, sizeof(track_node *) * TRACK_MAX);
 
-      unsigned int path_len = 2;
+      unsigned int path_len = 1;
       unsigned int path_dist = result;
 
       track_node *node = dest;
@@ -55,25 +56,28 @@ void control_worker() {
         path_len += 1;
       }
 
-      node = prev1[intermediate - track];
-
-      while (node != src) {
-        path1[prev1[node - track] - track] = node;
-        node = prev1[node - track];
-        path_len += 1;
-      }
-
-      node = src;
-
       unsigned int partial_len = 0;
 
-      for (unsigned int i = 0; i < path_len; i++) {
-        req.worker.path[i] = node - track;
-        node = path1[node - track];
-        partial_len++;
+      if (intermediate != src) {
+        path_len += 1;
+        node = prev1[intermediate - track];
 
-        if (node == NULL) {
-          break;
+        while ((node != src) && (node != NULL)) {
+          path1[prev1[node - track] - track] = node;
+          node = prev1[node - track];
+          path_len += 1;
+        }
+
+        node = src;
+
+        for (unsigned int i = 0; i < path_len; i++) {
+          req.worker.path[i] = node - track;
+          node = path1[node - track];
+          partial_len++;
+
+          if (node == NULL) {
+            break;
+          }
         }
       }
 
