@@ -23,11 +23,15 @@ void control_worker() {
       track_node *prev[TRACK_MAX];
       track_node *src = &(track[res.worker.src_num]);
       track_node *dest = &(track[res.worker.dest_num]);
+
       bool *reserved = res.worker.reserved;
 
       int result = dijkstra(track, src, dest, prev, reserved);
 
-      KASSERT(result == 0, "A path should exist");
+      char debug_buffer[100];
+      sprintf(debug_buffer, "A path should exist between [%s] and [%s]\r\n",
+              src->name, dest->name);
+      KASSERT(result != -1, debug_buffer);
 
       track_node *node = dest;
 
@@ -80,6 +84,7 @@ void control_server() {
   controlserver_client_task *task = NULL;
 
   bool node_reserved[TRACK_MAX];
+  memset(node_reserved, 0, sizeof(bool) * TRACK_MAX);
 
   for (;;) {
     Receive(&client, (char *)&req, sizeof(controlserver_request));
@@ -95,6 +100,7 @@ void control_server() {
         res.worker.dest_num = dest_num;
         res.worker.whomfor = client;
         res.worker.offset = offset;
+        memcpy(res.worker.reserved, node_reserved, sizeof(bool) * TRACK_MAX);
         worker_parked = false;
         Reply(worker, (char *)&res, sizeof(controlserver_response));
       } else {

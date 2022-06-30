@@ -25,12 +25,12 @@ track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path,
 
     if (min_index == -1) {
       if (!in_shortest_path[i] &&
-          (!avoid[i] || i == (dest - track) || i == (src - track))) {
+          (!(avoid[i]) || (i == (dest - track)) || (i == (src - track)))) {
         min_index = i;
       }
     } else {
       if ((dist[i] < dist[min_index]) && (!in_shortest_path[i]) &&
-          (!avoid[i] || (i == (dest - track)) || (i == (src - track)))) {
+          (!(avoid[i]) || (i == (dest - track)) || (i == (src - track)))) {
         min_index = i;
       }
     }
