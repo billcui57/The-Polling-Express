@@ -96,16 +96,16 @@ void task_trainserver() {
     } else if (req.type == BRANCH_EVENT) {
       branch_waiting = client;
     } else if (req.type == SPEED) {
-      heap_add(&h, build_task(&free, req.data.task.time, req.data.task.data,
+      heap_add(&h, build_task(&free, req.data.task.time, req.data.task.data | 16,
                               req.data.task.target, 2));
       Reply(client, (char *)&res, 0);
     } else if (req.type == REVERSE) {
-      heap_add(&h, build_task(&free, req.data.task.time, 0,
+      heap_add(&h, build_task(&free, req.data.task.time, 16,
                               req.data.task.target, 2));
       heap_add(&h, build_task(&free, req.data.task.time + 500, 15,
                               req.data.task.target, 2));
       heap_add(&h, build_task(&free, req.data.task.time + 510,
-                              req.data.task.data, req.data.task.target, 2));
+                              req.data.task.data | 16, req.data.task.target, 2));
       Reply(client, (char *)&res, 0);
     } else if (req.type == SWITCH) {
       train_task *task =
