@@ -118,6 +118,7 @@ void task_skynet() {
       c_req.type = PATHFIND;
       c_req.client.src = req.msg.target.source;
       c_req.client.dest = 77;
+      c_req.client.offset = 0;
       controlserver_response c_res;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
       memset(train.time,0,sizeof(int)*80);
@@ -126,10 +127,11 @@ void task_skynet() {
       train.i=0;
       c_req.client.src = 72;
       c_req.client.dest = req.msg.target.destination;
+      c_req.client.offset = req.msg.target.offset;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
       memcpy(train.next_out,c_res.client.path,TRACK_MAX*sizeof(int));
       train.out_len = c_res.client.path_len;
-      train.dist = (c_res.client.path_dist+req.msg.target.offset)*1000;
+      train.dist = c_res.client.path_dist*1000;
       train.stop_marker = -1;
       train.stop_offset = 0;
       res.msg.worker.node=train.next[train.i];
@@ -176,7 +178,7 @@ void task_skynet() {
           res.msg.worker.node=train.next[train.i];
           Reply(worker,(char*)&res,sizeof(res));
         } else if (train.state == TRAIN_SPEEDING){
-          int left = train.dist - get_stopping(0,train.train, train.speed);
+          int left = train.dist - get_stopping(train.train, train.speed);
           if (left > 0){
             process_path(&train,train.next_out,train.out_len,trainctl);
             for(int i=0;i<train.len;i++){
