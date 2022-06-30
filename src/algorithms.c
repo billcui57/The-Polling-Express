@@ -1,7 +1,5 @@
 #include "algorithms.h"
 
-#define INF 100000
-
 bool is_switch_node(track_node *node) {
   return (node->type == NODE_BRANCH) || ((node->type == NODE_MERGE));
 }

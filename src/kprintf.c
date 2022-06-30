@@ -912,7 +912,7 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void clear_screen() { printf(COM2, "\033[2J"); };
+void clear_screen(int com) { printf(com, "\033[2J"); };
 
 void cursor_to_row(int row) {
 #ifndef DEBUG_MODE

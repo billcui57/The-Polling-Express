@@ -58,7 +58,7 @@ extern "C" {
 
 #define IGNORE 0
 
-void clear_screen();
+void clear_screen(int com);
 void save_cursor();
 void restore_cursor();
 void cursor_to_row(int row);
