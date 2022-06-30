@@ -406,14 +406,9 @@ void shell() {
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
                 command_tokens[3], command_tokens[4], req.msg.target.offset);
         print_debug(debug_buffer);
-        /*
-                if (res.type == CONTROLSERVER_GOOD) {
-                } else if (res.type == CONTROLSERVER_NO_PATH) {
-                  sprintf(debug_buffer, "No path from %s to %s \r\n", src_name,
-                          dest_name);
-                  print_debug(debug_buffer);
-                }
-        */
+
+      } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {
+        KASSERT(0, "DIE!");
       } else {
         print_debug("Invalid Command Type");
       }

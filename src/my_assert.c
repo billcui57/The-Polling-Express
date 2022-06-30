@@ -6,6 +6,16 @@ bool assert_thrown;
 void my_assert(char *str) {
   assert_thrown = true;
 
+  *(int *)(VIC1_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
+  *(int *)(VIC2_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
+
+  for (unsigned int i = 0; i < 10000; i++) {
+  }
+
+  bw_uart_put_char(COM1, 97);
+  bw_uart_put_char(COM1, 97);
+  bw_uart_put_char(COM1, 97);
+
   printf(BW_COM2, "                  "
                   "_-====-__-======-__-========-_____-============-__\r\n");
   printf(BW_COM2,
@@ -52,4 +62,7 @@ void my_assert(char *str) {
   printf(BW_COM2,
          "###############################################################"
          "######\r\n");
+
+  for (;;)
+    ;
 }
