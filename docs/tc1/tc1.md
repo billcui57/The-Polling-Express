@@ -46,15 +46,33 @@ To run the program, issue the following:
 
 ## Program Description
 
+
+### (NEW TC1) Demo Notes
+
+Track a
+
+Train 1,24 at speed 10 on tracks a and b
+
+Train 1 at speed 12 on tracks a
+
+General goal: train 1 at speed 10 on track a
+
+Notes: make sure switch 16 is straight
+
+Cool stuff: Just in time branch switching, pathfinding that accounts of min distance from E14 (E14 -> D5), dynamic speed calibrations, broken switch avoidance
+
+
 ### (NEW TC1) Pathfinding
 
 Pathfinding uses a modified version of dijkstras. The aim is to find a path between two nodes that has the minimum distance. However since there are edge cases for when source and destination nodes are too close together for the train to achieve constant velocity, the dijkstras algorithm is modified to return a path that has a minimum distance of at least $min$. The final pathfinding algorithm calls dijkstras twice with an intermediate node that controls the total distance of the path.
 
 Pathfinding is done in controlserver.c, where the control server offloads the task to a worker. The result, which is an array of node indices that must be traversed, is then sent back to the control server which is returned to the client.
 
-### (NEW TC1) Skynet
+### (NEW TC1) Sensor Prediction / Stopping
 
+Sensor Prediction is done with an exponential weighted average of velocity. The time that it takes for the train to travel between any two consecutive sensors on the path is recorded and used to calculate a velocity. A worker is used to filter track sensor hits for the next expected sensor. Timestamps are taken by the track worker right after a sensor request and is passed through the various workers until it reaches the sensor predictor. This velocity and the distance until the next sensor are used to calculate the predicted time of the next sensor report. As only integer math is used, we represent 1 millimeter with 1000.
 
+One server is used to keep track of all train routing. It first determines the path from the source to the loop, and from the loop to the destination. One requirement for the loop to destination path is that it has a minimum length of the stopping distance for the train. The server is also responsible for keeping of tracking of where the train is with regards to the path and sending branch switch commands as required and telling the worker which sensor to look for next. Finally, we have that the server schedules the stop command after the last sensor report before the expected stop point. It uses the computed velocity to predict the exact time to send the command.
 
 
 ### Calibration Information and Processing
