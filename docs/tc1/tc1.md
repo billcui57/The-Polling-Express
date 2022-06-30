@@ -1,4 +1,4 @@
-# Assignment K4
+# Assignment TC1
 Edwin Zhang and Bill Cui
 
 ## Path to executable
@@ -10,7 +10,7 @@ Edwin Zhang and Bill Cui
 
 `cd cs452-a1`
 
-`git checkout k4`
+`git checkout tc1`
 
 `chmod a+x compile_target.sh`
 
@@ -57,7 +57,7 @@ Train 1 at speed 12 on tracks a
 
 General goal: train 1 at speed 10 on track a
 
-Notes: make sure switch 16 is straight
+Notes: make sure switch 16 is curved
 
 Cool stuff: Just in time branch switching, pathfinding that accounts of min distance from E14 (E14 -> D5), dynamic speed calibrations, broken switch avoidance
 

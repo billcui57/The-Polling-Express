@@ -10,3 +10,6 @@ Documentation is located in `docs/k3` and the executable is at `build/kernel` on
 
 # CS452 K4
 Documentation is located in `docs/k4` and the executable is at `build/kernel` once built.
+
+# CS452 TC1
+Documentation is located in `docs/tc1` and the executable is at `build/kernel` once built.
