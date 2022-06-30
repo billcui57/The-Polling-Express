@@ -130,7 +130,7 @@ void task_skynet() {
       memset(&c_req,0,sizeof(c_req));
       c_req.type = PATHFIND;
       c_req.client.src = req.msg.target.source;
-      c_req.client.dest = 77;
+      c_req.client.dest = 74;
       c_req.client.offset = 0;
       c_req.client.min_len = 0;
       controlserver_response c_res;
@@ -140,7 +140,7 @@ void task_skynet() {
       process_path(&train,c_res.client.path,c_res.client.path_len,trainctl,0);
       train.i=0;
       train.j=0;
-      c_req.client.src = 72;
+      c_req.client.src = 57;
       c_req.client.dest = req.msg.target.destination;
       c_req.client.offset = req.msg.target.offset;
       c_req.client.min_len = get_stopping(train.train, train.speed)/1000 + 1;

@@ -34,7 +34,7 @@ void task_k4_init() {
     init_tracka(track);
     mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_CURVED);
     mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_STRAIGHT);
-    mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_STRAIGHT);
+    mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_CURVED);
     mark_switch_broken(track, track_name_to_num(track, "BR3"), DIR_CURVED);
     mark_sensor_broken(track, track_name_to_num(track, "D1"));
   } else if (c == 'b') {

@@ -3,9 +3,8 @@
 #include <my_assert.h>
 #include <track_data.h>
 
-int LOOP[] = {72, 95, 96, 52, 69, 98, 51, 21, 105, 43, 107, 3, 31, 108, 41, 110, 16, 61, 113, 77};
+int LOOP[] = {57, 95, 96, 52, 69, 98, 51, 21, 105, 43, 107, 3, 31, 108, 36, 90, 46, 59, 93, 74};
 int LOOP_LEN = 20;
-int LOOP_DIST = 4663000;
 
 
 int get_stopping(char train, char speed){
