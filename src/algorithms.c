@@ -101,13 +101,6 @@ int dijkstras_min_length(track_node *track, track_node *src, track_node *dest,
 
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
 
-    if (&(track[i]) == src) {
-      continue;
-    }
-    if (&(track[i]) == dest) {
-      continue;
-    }
-
     track_node *cur_intermediate = &(track[i]);
     track_node *cur_prev1[TRACK_MAX];
     track_node *cur_prev2[TRACK_MAX];
