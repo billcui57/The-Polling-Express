@@ -34,8 +34,10 @@ void task_trainserver() {
   heap_init(&h, (void **)&heap_backing);
 
   char sensors[10] = {0};
-  bool dirty = false;
-  task_tid waiting = -1;
+  bool sensor_dirty = false;
+  task_tid sensor_waiting = -1;
+  bool branch_dirty = false;
+  task_tid branch_waiting = -1;
   train_event event;
   memset(&event, 0, sizeof(event));
   for (int i = 0; i < 20; i++)
@@ -69,6 +71,7 @@ void task_trainserver() {
           } else {
             KASSERT(0, "Bad Branch");
           }
+          branch_dirty = true;
         }
         heap_pop(&h);
         top->next = free;
@@ -83,13 +86,15 @@ void task_trainserver() {
       char *sensor_res = req.data.sensor.sensors;
       for (int i = 0; i < 10; i++) {
         event.sensors[i] |= sensor_res[i] & ~sensors[i];
-        dirty |= event.sensors[i];
+        sensor_dirty |= event.sensors[i];
         sensors[i] = sensor_res[i];
       }
       event.time = req.data.sensor.time;
       Reply(client, (char *)&res, 0);
     } else if (req.type == TRAIN_EVENT) {
-      waiting = client;
+      sensor_waiting = client;
+    } else if (req.type == BRANCH_EVENT) {
+      branch_waiting = client;
     } else if (req.type == SPEED) {
       heap_add(&h, build_task(&free, req.data.task.time, req.data.task.data,
                               req.data.task.target, 2));
@@ -115,12 +120,18 @@ void task_trainserver() {
       KASSERT(0, "Unknown train command");
     }
 
-    if (dirty && waiting != -1) {
-      Reply(waiting, (char *)&event, sizeof(train_event));
-      waiting = -1;
-      dirty = false;
+    if (sensor_dirty && sensor_waiting != -1) {
+      Reply(sensor_waiting, (char *)&event, sizeof(train_event));
+      sensor_waiting = -1;
+      sensor_dirty = false;
       for (int i = 0; i < 10; i++)
         event.sensors[i] = 0;
+    }
+
+    if (branch_dirty && branch_waiting != -1) {
+      Reply(branch_waiting, (char *)&event, sizeof(train_event));
+      branch_waiting = -1;
+      branch_dirty = false;
     }
   }
 }

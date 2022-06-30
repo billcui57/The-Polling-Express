@@ -16,7 +16,7 @@ typedef enum {
 typedef enum {
   PATHFIND,
   CONTROL_WORKER,
-  CONTORL_WORKER_DONE,
+  CONTROL_WORKER_DONE,
 } controlserver_request_type;
 
 typedef enum { TASK_PATHFIND } controlserver_client_task_type;
@@ -34,6 +34,7 @@ typedef struct controlserver_client_task {
       task_tid client;
       int src_num;
       int dest_num;
+      int offset;
     } pathfind;
   };
 } controlserver_client_task;
@@ -44,8 +45,9 @@ typedef struct controlserver_request {
 
   union {
     struct {
-      char src_name[8];
-      char dest_name[8];
+      char src;
+      char dest;
+      int offset;
     } client;
 
     struct {
@@ -67,6 +69,7 @@ typedef struct controlserver_response {
       int src_num;
       int dest_num;
       task_tid whomfor;
+      int offset;
     } worker;
 
     struct {

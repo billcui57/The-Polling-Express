@@ -29,6 +29,7 @@ add_executable(kernel
   src/my_string.c
   src/my_memory.c
   src/track_data.c
+  src/magic_numbers.c
   src/algorithms.c
 )
 target_link_libraries(kernel -static gcc)
