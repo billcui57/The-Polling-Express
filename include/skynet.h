@@ -18,16 +18,16 @@ typedef struct {
   enum train_state state;
   int state_counter;
   // current path state
-  int time[80];
-  int distance[80];
-  int next[80];
-  int next_time[80];
+  int time[160];
+  int distance[160];
+  int next[160];
+  int next_time[160];
   int i;
   int len;
-  int branches[TRACK_MAX];
+  int branches[2*TRACK_MAX];
   int j;
   // destination info
-  int next_out[TRACK_MAX];
+  int next_out[2*TRACK_MAX];
   int out_len;
   int dist;
   // stopping plan

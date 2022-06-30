@@ -135,8 +135,8 @@ void task_skynet() {
       c_req.client.min_len = 0;
       controlserver_response c_res;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
-      memset(train.time,0,sizeof(int)*80);
-      memset(train.next_time,0,sizeof(int)*80);
+      memset(train.time,0,sizeof(int)*160);
+      memset(train.next_time,0,sizeof(int)*160);
       process_path(&train,c_res.client.path,c_res.client.path_len,trainctl,0);
       train.i=0;
       train.j=0;
@@ -145,7 +145,7 @@ void task_skynet() {
       c_req.client.offset = req.msg.target.offset;
       c_req.client.min_len = get_stopping(train.train, train.speed)/1000 + 1;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
-      memcpy(train.next_out,c_res.client.path,TRACK_MAX*sizeof(int));
+      memcpy(train.next_out,c_res.client.path,2*TRACK_MAX*sizeof(int));
       train.out_len = c_res.client.path_len;
       train.dist = c_res.client.path_dist*1000;
       train.stop_marker = -1;
