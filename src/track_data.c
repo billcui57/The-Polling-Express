@@ -16,14 +16,11 @@ int track_name_to_num(track_node *track, char *name) {
   KASSERT(0, "Invalid track node name");
 }
 
-
-void mark_switch_broken(track_node *track, int node,
-                       int stuck_direction) {
+void mark_switch_broken(track_node *track, int node, int stuck_direction) {
 
   track_node *broken = &track[node];
   KASSERT(broken->type == NODE_BRANCH,
           "Can only be marking a branch node as broken");
-
 
   int unreachable_direction =
       stuck_direction == DIR_STRAIGHT ? DIR_CURVED : DIR_STRAIGHT;
@@ -36,7 +33,6 @@ void mark_sensor_broken(track_node *track, int node) {
   track_node *broken = &track[node];
   KASSERT(broken->type == NODE_SENSOR,
           "Can only be marking a sensor node as broken");
-
 
   int merged_dist = broken->edge[DIR_STRAIGHT].dist +
                     broken->reverse->edge[DIR_STRAIGHT].dist;

@@ -93,6 +93,47 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
   }
 }
 
+int dijkstras_min_length(track_node *track, track_node *src, track_node *dest,
+                         track_node **prev1, track_node **prev2,
+                         track_node **intermediate, bool *avoid, int min_dist) {
+
+  int best_dist = INF;
+
+  for (unsigned int i = 0; i < TRACK_MAX; i++) {
+
+    if (&(track[i]) == src) {
+      continue;
+    }
+    if (&(track[i]) == dest) {
+      continue;
+    }
+
+    track_node *cur_intermediate = &(track[i]);
+    track_node *cur_prev1[TRACK_MAX];
+    track_node *cur_prev2[TRACK_MAX];
+
+    int path_len1 = dijkstra(track, src, cur_intermediate, cur_prev1, avoid);
+    int path_len2 = dijkstra(track, cur_intermediate, dest, cur_prev2, avoid);
+
+    if ((path_len1 != -1) && (path_len2 != -1)) {
+
+      if (path_len1 + path_len2 >= min_dist) {
+        if (path_len1 + path_len2 < best_dist) {
+          best_dist = path_len1 + path_len2;
+          memcpy(prev1, cur_prev1, sizeof(track_node *) * TRACK_MAX);
+          memcpy(prev2, cur_prev2, sizeof(track_node *) * TRACK_MAX);
+          *intermediate = cur_intermediate;
+        }
+      }
+    }
+  }
+
+  if (best_dist == INF) {
+    return -1;
+  }
+  return best_dist;
+}
+
 // int augment_path(track_node *track, track_node **prev, track_node *dest,
 //                  int offset, int *new_offset, int *orientation,
 //                  track_node **new_dest, int dist, int *new_dist) {
