@@ -23,8 +23,9 @@ void control_worker() {
       track_node *prev[TRACK_MAX];
       track_node *src = &(track[res.worker.src_num]);
       track_node *dest = &(track[res.worker.dest_num]);
+      bool *reserved = res.worker.reserved;
 
-      int result = dijkstra(track, src, dest, prev);
+      int result = dijkstra(track, src, dest, prev, reserved);
 
       if (result == -1) {
         req.type = CONTROL_WORKER_DONE;
@@ -84,6 +85,8 @@ void control_server() {
   controlserver_client_task task_backing;
   controlserver_client_task *task = NULL;
 
+  bool node_reserved[TRACK_MAX];
+
   for (;;) {
     Receive(&client, (char *)&req, sizeof(controlserver_request));
 
@@ -118,6 +121,7 @@ void control_server() {
         res.worker.src_num = task->pathfind.src_num;
         res.worker.dest_num = task->pathfind.dest_num;
         res.worker.offset = task->pathfind.offset;
+        memcpy(res.worker.reserved, node_reserved, sizeof(bool) * TRACK_MAX);
         task = NULL;
         Reply(worker, (char *)&res, sizeof(controlserver_response));
       }
