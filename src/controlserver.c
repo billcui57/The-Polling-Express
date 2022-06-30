@@ -31,7 +31,7 @@ void control_worker() {
       track_node *intermediate;
 
       int result = dijkstras_min_length(track, src, dest, prev1, prev2,
-                                        &intermediate, reserved, MIN_DIST);
+                                        &intermediate, reserved, res.worker.min_len);
 
       char debug_buffer[100];
       sprintf(debug_buffer, "A path should exist between [%s] and [%s]\r\n",
@@ -41,8 +41,8 @@ void control_worker() {
       track_node *path1[TRACK_MAX];
       track_node *path2[TRACK_MAX];
 
-      memset(path1, NULL, sizeof(track_node *) * TRACK_MAX);
-      memset(path2, NULL, sizeof(track_node *) * TRACK_MAX);
+      memset(path1, 0, sizeof(track_node *) * TRACK_MAX);
+      memset(path2, 0, sizeof(track_node *) * TRACK_MAX);
 
       unsigned int path_len = 2;
       unsigned int path_dist = result;
@@ -68,7 +68,7 @@ void control_worker() {
       unsigned int partial_len = 0;
 
       for (unsigned int i = 0; i < path_len; i++) {
-        req.worker.path[i] = node;
+        req.worker.path[i] = node - track;
         node = path1[node - track];
         partial_len++;
 
@@ -80,7 +80,7 @@ void control_worker() {
       node = intermediate;
 
       for (unsigned int i = 0; i < path_len; i++) {
-        req.worker.path[i + partial_len] = node;
+        req.worker.path[i + partial_len] = node - track;
         node = path2[node - track];
 
         if (node == NULL) {
@@ -104,7 +104,7 @@ void control_server() {
 
   RegisterAs("controlserver");
 
-  task_tid worker = Create(10, control_worker);
+  task_tid worker = Create(7, control_worker);
 
   controlserver_request req;
   controlserver_response res;
@@ -128,6 +128,7 @@ void control_server() {
       int src_num = req.client.src;
       int dest_num = req.client.dest;
       int offset = req.client.offset;
+      int min_len = req.client.min_len;
 
       if (worker_parked) {
         res.type = WORKER_PATHFIND;
@@ -135,6 +136,7 @@ void control_server() {
         res.worker.dest_num = dest_num;
         res.worker.whomfor = client;
         res.worker.offset = offset;
+        res.worker.min_len = min_len;
         memcpy(res.worker.reserved, node_reserved, sizeof(bool) * TRACK_MAX);
         worker_parked = false;
         Reply(worker, (char *)&res, sizeof(controlserver_response));
@@ -145,6 +147,7 @@ void control_server() {
         task->pathfind.dest_num = dest_num;
         task->pathfind.client = client;
         task->pathfind.offset = offset;
+        task->pathfind.min_len = min_len;
       }
     } else if (req.type == CONTROL_WORKER) {
 
@@ -156,6 +159,7 @@ void control_server() {
         res.worker.src_num = task->pathfind.src_num;
         res.worker.dest_num = task->pathfind.dest_num;
         res.worker.offset = task->pathfind.offset;
+        res.worker.min_len = task->pathfind.min_len;
         memcpy(res.worker.reserved, node_reserved, sizeof(bool) * TRACK_MAX);
         task = NULL;
         Reply(worker, (char *)&res, sizeof(controlserver_response));

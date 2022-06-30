@@ -7,7 +7,6 @@
 #include "track_node.h"
 #include "trainserver.h"
 
-#define MIN_DIST 5000
 typedef enum {
   CONTROLSERVER_GOOD,
   WORKER_PATHFIND
@@ -34,6 +33,7 @@ typedef struct controlserver_client_task {
       int src_num;
       int dest_num;
       int offset;
+      int min_len;
     } pathfind;
   };
 } controlserver_client_task;
@@ -47,6 +47,7 @@ typedef struct controlserver_request {
       char src;
       char dest;
       int offset;
+      int min_len;
     } client;
 
     struct {
@@ -69,6 +70,7 @@ typedef struct controlserver_response {
       int dest_num;
       task_tid whomfor;
       int offset;
+      int min_len;
       bool reserved[TRACK_MAX];
     } worker;
 

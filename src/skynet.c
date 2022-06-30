@@ -132,6 +132,7 @@ void task_skynet() {
       c_req.client.src = req.msg.target.source;
       c_req.client.dest = 77;
       c_req.client.offset = 0;
+      c_req.client.min_len = 0;
       controlserver_response c_res;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
       memset(train.time,0,sizeof(int)*80);
@@ -142,6 +143,7 @@ void task_skynet() {
       c_req.client.src = 72;
       c_req.client.dest = req.msg.target.destination;
       c_req.client.offset = req.msg.target.offset;
+      c_req.client.min_len = get_stopping(train.train, train.speed)/1000 + 1;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
       memcpy(train.next_out,c_res.client.path,TRACK_MAX*sizeof(int));
       train.out_len = c_res.client.path_len;
