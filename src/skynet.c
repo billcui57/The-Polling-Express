@@ -99,7 +99,7 @@ void send_branches(train_record *t, task_tid trainctl){
   if(t->branches[t->j] == -1) return;
   t->j++;
   for(;t->branches[t->j] > 0; t->j++){
-    TrainCommand(trainctl,0, SWITCH, t->branches[t->j] & 0xff, t->branches[t->j] >> 8);
+    TrainCommand(trainctl,1, SWITCH, t->branches[t->j] & 0xff, t->branches[t->j] >> 8);
   }
 }
 
