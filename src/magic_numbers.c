@@ -18,7 +18,7 @@ int get_stopping(char train, char speed){
             }
         } else if (train == 24) {
             if (speed == 10) {
-                return 220000;
+                return 448000;
             }
         }
     } else if (which_track == 'b') {
@@ -28,7 +28,7 @@ int get_stopping(char train, char speed){
             }
         } else if (train == 24) {
             if (speed == 10) {
-                return 220000;
+                return 448000;
             }
         }
     }
