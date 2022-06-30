@@ -24,6 +24,8 @@ typedef struct {
   int next_time[80];
   int i;
   int len;
+  int branches[TRACK_MAX];
+  int j;
   // destination info
   int next_out[TRACK_MAX];
   int out_len;
