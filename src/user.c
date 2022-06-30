@@ -13,8 +13,41 @@ int idle_percentage;
 
 char status[] = "-----";
 
+// track a
+// 156,16,3,
+
+// sensor D1,
+
+// track b
+// 155,156,5
+
+// sensor C13
+
 void task_k4_init() {
-  init_tracka(track);
+
+  clear_screen(BW_COM2);
+  printf(BW_COM2, "Which track am I on (a,b)?\r\n");
+  char c = bw_uart_get_char(COM2);
+  which_track = c;
+
+  if (c == 'a') {
+    init_tracka(track);
+    mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_CURVED);
+    mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_STRAIGHT);
+    mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_STRAIGHT);
+    mark_switch_broken(track, track_name_to_num(track, "BR3"), DIR_CURVED);
+    mark_sensor_broken(track, track_name_to_num(track, "D1"));
+  } else if (c == 'b') {
+    init_trackb(track);
+    mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_STRAIGHT);
+    mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
+    mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
+    mark_sensor_broken(track, track_name_to_num(track, "C13"));
+  } else {
+    KASSERT(c == 'a' || c == 'b', "Track must be a or b");
+    for (;;)
+      ;
+  }
 
   Create(20, nameserver);
   Create(10, clockserver);
@@ -43,7 +76,7 @@ void print_art() {
   }
   printf(COM2, "\r\n");
 
-  printf(COM2, "|       The Polling Express       |\r\n");
+  printf(COM2, "|  The Polling Express (Track %c)  |\r\n", which_track);
 
   for (unsigned int i = 0; i < 35; i++) {
     printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
@@ -234,7 +267,7 @@ void hide_cursor() {
 #define MAX_NUM_TRAINS 80
 
 void shell() {
-  clear_screen();
+  clear_screen(COM2);
 
   hide_cursor();
 
@@ -353,11 +386,12 @@ void shell() {
         skynet_msg req;
         memset(&req, 0, sizeof(req));
         req.type = SKYNET_TARGET;
-        req.msg.target.train=atoi(command_tokens[1]);
-        req.msg.target.speed=atoi(command_tokens[2]);
-        req.msg.target.source=track_name_to_num(track, command_tokens[3]);
-        req.msg.target.destination=track_name_to_num(track, command_tokens[4]);
-        req.msg.target.offset=atoi(command_tokens[5]);
+        req.msg.target.train = atoi(command_tokens[1]);
+        req.msg.target.speed = atoi(command_tokens[2]);
+        req.msg.target.source = track_name_to_num(track, command_tokens[3]);
+        req.msg.target.destination =
+            track_name_to_num(track, command_tokens[4]);
+        req.msg.target.offset = atoi(command_tokens[5]);
         // train_num = atoi(command_tokens[1]);
         // dest_name = command_tokens[2];
         // offset = atoi(command_tokens[3]);
@@ -369,9 +403,8 @@ void shell() {
 
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
-        sprintf(debug_buffer,
-                  "Path Finding %s to %s + %d\r\n",
-                  command_tokens[3], command_tokens[4], req.msg.target.offset);
+        sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
+                command_tokens[3], command_tokens[4], req.msg.target.offset);
         print_debug(debug_buffer);
         /*
                 if (res.type == CONTROLSERVER_GOOD) {

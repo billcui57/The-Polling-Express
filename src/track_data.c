@@ -1,8 +1,11 @@
 /* THIS FILE IS GENERATED CODE -- DO NOT EDIT */
 
+#include "stdio.h"
+
 #include "track_data.h"
 
 track_node track[TRACK_MAX];
+char which_track;
 
 int track_name_to_num(track_node *track, char *name) {
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
@@ -11,6 +14,41 @@ int track_name_to_num(track_node *track, char *name) {
     }
   }
   return -1;
+}
+
+int mark_switch_broken(track_node *track, track_node *broken,
+                       int stuck_direction) {
+
+  if (broken->type != NODE_BRANCH) {
+    return -1;
+  }
+
+  int unreachable_direction =
+      stuck_direction == DIR_STRAIGHT ? DIR_CURVED : DIR_STRAIGHT;
+
+  broken->edge[unreachable_direction].dist = INF;
+
+  return 0;
+}
+
+int mark_sensor_broken(track_node *track, track_node *broken) {
+
+  if (broken->type != NODE_SENSOR) {
+    return -1;
+  }
+
+  int merged_dist = broken->edge[DIR_STRAIGHT].dist +
+                    broken->reverse->edge[DIR_STRAIGHT].dist;
+
+  broken->reverse->edge[DIR_STRAIGHT].reverse->dist = merged_dist;
+
+  broken->reverse->edge[DIR_STRAIGHT].reverse->dest =
+      broken->edge[DIR_STRAIGHT].dest;
+
+  broken->edge[DIR_STRAIGHT].reverse->dist = merged_dist;
+
+  broken->edge[DIR_STRAIGHT].reverse->dest =
+      broken->reverse->edge[DIR_STRAIGHT].dest;
 }
 
 void init_tracka(track_node *track) {
