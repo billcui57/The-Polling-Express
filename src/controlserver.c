@@ -20,37 +20,72 @@ void control_worker() {
 
       // printf(BW_COM2, "got here\r\n");
 
-      track_node *prev[TRACK_MAX];
+      track_node *prev1[TRACK_MAX];
+      track_node *prev2[TRACK_MAX];
+
       track_node *src = &(track[res.worker.src_num]);
       track_node *dest = &(track[res.worker.dest_num]);
 
       bool *reserved = res.worker.reserved;
 
-      int result = dijkstra(track, src, dest, prev, reserved);
+      track_node *intermediate;
+
+      int result = dijkstras_min_length(track, src, dest, prev1, prev2,
+                                        &intermediate, reserved, MIN_DIST);
 
       char debug_buffer[100];
       sprintf(debug_buffer, "A path should exist between [%s] and [%s]\r\n",
               src->name, dest->name);
       KASSERT(result != -1, debug_buffer);
 
-      track_node *node = dest;
+      track_node *path1[TRACK_MAX];
+      track_node *path2[TRACK_MAX];
 
-      track_node *path[TRACK_MAX];
+      memset(path1, NULL, sizeof(track_node *) * TRACK_MAX);
+      memset(path2, NULL, sizeof(track_node *) * TRACK_MAX);
 
-      unsigned int path_len = 1;
+      unsigned int path_len = 2;
       unsigned int path_dist = result;
 
+      track_node *node = dest;
+
+      while (node != intermediate) {
+        path2[prev2[node - track] - track] = node;
+        node = prev2[node - track];
+        path_len += 1;
+      }
+
+      node = prev1[intermediate - track];
+
       while (node != src) {
-        path[prev[node - track] - track] = node;
-        node = prev[node - track];
+        path1[prev1[node - track] - track] = node;
+        node = prev1[node - track];
         path_len += 1;
       }
 
       node = src;
 
+      unsigned int partial_len = 0;
+
       for (unsigned int i = 0; i < path_len; i++) {
-        req.worker.path[i] = node - track;
-        node = path[node - track];
+        req.worker.path[i] = node;
+        node = path1[node - track];
+        partial_len++;
+
+        if (node == NULL) {
+          break;
+        }
+      }
+
+      node = intermediate;
+
+      for (unsigned int i = 0; i < path_len; i++) {
+        req.worker.path[i + partial_len] = node;
+        node = path2[node - track];
+
+        if (node == NULL) {
+          break;
+        }
       }
 
       req.type = CONTROL_WORKER_DONE;
@@ -129,7 +164,7 @@ void control_server() {
 
       if (req.worker.type == WORKER_PATHFIND_GOOD) {
         res.type = CONTROLSERVER_GOOD;
-        memcpy(res.client.path, req.worker.path, sizeof(int) * TRACK_MAX);
+        memcpy(res.client.path, req.worker.path, sizeof(int) * TRACK_MAX * 2);
         res.client.path_dist = req.worker.path_dist;
         res.client.path_len = req.worker.path_len;
       }

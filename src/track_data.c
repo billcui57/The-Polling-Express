@@ -1,7 +1,5 @@
 /* THIS FILE IS GENERATED CODE -- DO NOT EDIT */
 
-#include "stdio.h"
-
 #include "track_data.h"
 
 track_node track[TRACK_MAX];
