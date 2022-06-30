@@ -10,7 +10,7 @@
 
 extern char status[];
 
-train_task *build_task(train_task **free, int time, char a, char b, char len) {
+train_task *build_task(train_task **free, int time, unsigned char a, unsigned char b, char len) {
   KASSERT(*free, "No Free Train Task");
   train_task *cur = *free;
   *free = cur->next;
@@ -108,13 +108,39 @@ void task_trainserver() {
                               req.data.task.data | 16, req.data.task.target, 2));
       Reply(client, (char *)&res, 0);
     } else if (req.type == SWITCH) {
-      train_task *task =
-          build_task(&free, req.data.task.time, 33 + req.data.task.data,
-                     req.data.task.target, 2);
-      task->branch = req.data.task.target;
+      int t = req.data.task.time;
+      int sw = req.data.task.target;
+      train_task *task = build_task(&free, t, 33 + req.data.task.data, sw, 2);
+      task->branch = sw;
       task->branch_state = req.data.task.data;
       heap_add(&h, task);
-      heap_add(&h, build_task(&free, req.data.task.time + 20, 32, 0, 1));
+      if (req.data.task.target == 153) {
+        t+= 20;
+        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 154, 2);
+        task->branch = 154;
+        task->branch_state = !req.data.task.data;
+        heap_add(&h, task);
+      } else if (req.data.task.target == 154) {
+        t+= 20;
+        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 153, 2);
+        task->branch = 153;
+        task->branch_state = !req.data.task.data;
+        heap_add(&h, task);
+      } else if (req.data.task.target == 155) {
+        t+= 20;
+        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 156, 2);
+        task->branch = 156;
+        task->branch_state = !req.data.task.data;
+        heap_add(&h, task);
+      } else if (req.data.task.target == 156) {
+        t+= 20;
+        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 155, 2);
+        task->branch = 155;
+        task->branch_state = !req.data.task.data;
+        heap_add(&h, task);
+      }
+      t+=20;
+      heap_add(&h, build_task(&free, t, 32, 0, 1));
       Reply(client, (char *)&res, 0);
     } else {
       KASSERT(0, "Unknown train command");
