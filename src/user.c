@@ -149,7 +149,8 @@ void timer_printer() {
 
     cursor_to_row(IDLE_ROW);
 
-    printf(COM2, "Idle: %d%% [%s]\r\n", idle_percentage, status);
+    printf(COM2, "Idle: %d%%\r\n", idle_percentage);
+    //printf(COM2, "Idle: %d%% [%s]\r\n", idle_percentage, status);
     restore_cursor();
     i++;
   }
