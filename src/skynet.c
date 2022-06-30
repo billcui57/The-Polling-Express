@@ -24,42 +24,9 @@ Trainctl
 #include <clockserver.h>
 
 #include <track_data.h>
+#include <magic_numbers.h>
 
 #include "skynet.h"
-
-void next_sensor(track_node *start, const char *branch_a, const char *branch_b, int *distance,
-                 int *next) {
-  track_node *cur = start;
-  while (true) {
-    if (cur->type == NODE_BRANCH) {
-      char branch_state = 2;
-      if(cur->num < 20) {
-        branch_state = branch_a[cur->num];
-      } else if (cur->num  >= 153 && cur->num <=156 ){
-        branch_state = branch_b[cur->num - 153];
-      }
-      if (branch_state > 1) {
-        *distance = 0;
-        *next = -1;
-        return;
-      }
-      *distance += cur->edge[branch_state].dist;
-      cur = cur->edge[branch_state].dest;
-    } else if (cur->type == NODE_EXIT) {
-      *distance = 0;
-      *next = -1;
-      return;
-    } else {
-      *distance += cur->edge[DIR_AHEAD].dist;
-      cur = cur->edge[DIR_AHEAD].dest;
-    }
-    KASSERT(cur, "No Exit");
-    if (cur->type == NODE_SENSOR) {
-      *next = cur->num;
-      return;
-    }
-  }
-}
 
 void task_skynet_worker() {
   task_tid parent = MyParentTid();
@@ -123,8 +90,6 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl){
   t->len = j;
 }
 
-int loop[] = {72, 95, 96, 52, 69, 98, 51, 21, 105, 43, 107, 3, 31, 108, 41, 110, 16, 61, 113, 77};
-
 void task_skynet() {
   task_tid worker = Create(10, task_skynet_worker);
 
@@ -146,6 +111,8 @@ void task_skynet() {
     if (req.type == SKYNET_TARGET) {
       train.train = req.msg.target.train;
       train.speed = req.msg.target.speed;
+      train.state = TRAIN_TOLOOP;
+      train.state_counter = 0;
       controlserver_request c_req;
       memset(&c_req,0,sizeof(c_req));
       c_req.type = PATHFIND;
@@ -160,10 +127,11 @@ void task_skynet() {
       c_req.client.src = 72;
       c_req.client.dest = req.msg.target.destination;
       Send(controlserver, (char*)&c_req,sizeof(c_req),(char*)&c_res,sizeof(c_res));
-      train.dist = (c_res.client.path_dist+req.msg.target.offset)*1000;
-      train.out_len = c_res.client.path_len;
       memcpy(train.next_out,c_res.client.path,TRACK_MAX*sizeof(int));
-      train.state = 1;
+      train.out_len = c_res.client.path_len;
+      train.dist = (c_res.client.path_dist+req.msg.target.offset)*1000;
+      train.stop_marker = -1;
+      train.stop_offset = 0;
       res.msg.worker.node=train.next[train.i];
       Reply(worker,(char*)&res,sizeof(res));
       Reply(client,(char*)&res,0);
@@ -171,10 +139,10 @@ void task_skynet() {
     } else if (req.type == SKYNET_EVENT) {
       if (req.msg.worker.node == -1) continue;
       train.time[train.i] = req.msg.worker.time;
-      if (train.i == train.stop_marker && train.state == 8){
+      if (train.i == train.stop_marker){
           int time = train.time[train.i]+train.stop_offset/train.vel;
           TrainCommand(trainctl,time, SPEED, train.train, 0);
-          train.state = 0;
+          train.stop_marker = -1;
       } else if (train.i+1<train.len){
         res.msg.worker.node = train.next[train.i+1];
         Reply(worker,(char*)&res,sizeof(res));
@@ -192,43 +160,45 @@ void task_skynet() {
       if (train.i<train.len && train.vel){
         train.next_time[train.i] = train.time[train.i-1]+(train.distance[train.i]/train.vel);
         cursor_to_row(SENSOR_PRED_ROW);
-        printf(COM2, "Next Sensor: %s at %d, Stage: %d\r\n", track[train.next[train.i]].name, train.next_time[train.i], train.state);
+        printf(COM2, "Next Sensor: %s at %d, Stage: %d (%d)\r\n", track[train.next[train.i]].name, train.next_time[train.i], train.state, train.state_counter);
       }
       restore_cursor();
       if(train.i==train.len){
-        if (train.state == 1) {
-          process_path(&train, loop, 20, trainctl);
-          train.state = 2;
+        if (train.state == TRAIN_TOLOOP) {
+          process_path(&train, LOOP, LOOP_LEN, trainctl);
+          train.state = TRAIN_SPEEDING;
           train.i = 0;
           res.msg.worker.node=train.next[train.i];
           Reply(worker,(char*)&res,sizeof(res));
-        } else if (train.state >=2 && train.state <=6) {
-          train.state++;
+        } else if (train.state == TRAIN_SPEEDING && train.state_counter < 3) {
+          train.state_counter++;
           train.i = 0;
           res.msg.worker.node=train.next[train.i];
           Reply(worker,(char*)&res,sizeof(res));
-        } else if (train.state == 7){
-          int stopping = 34*train.vel*train.vel+12641*train.vel+115544120;
-          stopping/=1000;
-          int left = train.dist - stopping + 30000;
-          process_path(&train,train.next_out,train.out_len,trainctl);
-          for(int i=0;i<train.len;i++){
-            if(train.distance[i] < left){
-              left -= train.distance[i];
-              train.stop_marker = i;
-            } else {
-              break;
+        } else if (train.state == TRAIN_SPEEDING){
+          int left = train.dist - get_stopping(0,train.train, train.speed);
+          if (left > 0){
+            process_path(&train,train.next_out,train.out_len,trainctl);
+            for(int i=0;i<train.len;i++){
+              if(train.distance[i] < left){
+                left -= train.distance[i];
+                train.stop_marker = i;
+              } else {
+                break;
+              }
             }
+            train.stop_offset = left;
+            train.state = TRAIN_FROMLOOP;
+            train.i = 0;
+            res.msg.worker.node=train.next[train.i];
+            Reply(worker,(char*)&res,sizeof(res));
+            save_cursor();
+            cursor_to_row(SENSOR_PRED_ROW+1);
+            printf(COM2, "Vel: %d, Stop: %d, At: %d + %d",train.vel, 0, train.next[train.stop_marker], left);
+            restore_cursor();
+          } else {
+            KASSERT(0, "Not Implemented");
           }
-          train.stop_offset = left;
-          save_cursor();
-          cursor_to_row(SENSOR_PRED_ROW+1);
-          printf(COM2, "Vel: %d, Stop: %d, At: %d + %d",train.vel, stopping, train.next[train.stop_marker], left);
-          restore_cursor();
-          train.state++;
-          train.i = 0;
-          res.msg.worker.node=train.next[train.i];
-          Reply(worker,(char*)&res,sizeof(res));
         }
       }
     }
