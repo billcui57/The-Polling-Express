@@ -198,8 +198,19 @@ void print_debug(char *input) {
 int atoi(char *str) {
   int res = 0;
 
-  for (int i = 0; str[i] != '\0'; ++i)
+  bool negative = false;
+
+  for (int i = 0; str[i] != '\0'; ++i) {
+    if ((i == 0) && (str[i] == '-')) {
+      negative = true;
+      continue;
+    }
     res = res * 10 + str[i] - '0';
+  }
+
+  if (negative) {
+    return -res;
+  }
 
   return res;
 }
