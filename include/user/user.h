@@ -2,6 +2,7 @@
 
 #include "clockserver.h"
 #include "controlserver.h"
+#include "shell.h"
 #include "skynet.h"
 #include "trainserver.h"
 #include "uartserver.h"
