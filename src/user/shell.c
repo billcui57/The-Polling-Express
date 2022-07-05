@@ -17,14 +17,11 @@ typedef enum {
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
 void hide_cursor() {
-  ;
   printf(COM2, "\033[?25l");
   done_print();
 }
 
 void print_input(char *input, int *input_length) {
-  ;
-
   cursor_to_row(INPUT_ROW);
   printf(COM2, "\033[35m");
   printf(COM2, ">");
@@ -38,7 +35,6 @@ void print_input(char *input, int *input_length) {
 }
 
 void print_debug(char *input) {
-  ;
   cursor_to_row(LOG_ROW);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
