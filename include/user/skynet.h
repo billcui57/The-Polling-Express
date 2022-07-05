@@ -1,5 +1,6 @@
 #pragma once
 
+#include "layout.h"
 #include <track_data.h>
 
 enum train_state {
@@ -24,17 +25,16 @@ typedef struct {
   int next_time[160];
   int i;
   int len;
-  int branches[2*TRACK_MAX];
+  int branches[2 * TRACK_MAX];
   int j;
   // destination info
-  int next_out[2*TRACK_MAX];
+  int next_out[2 * TRACK_MAX];
   int out_len;
   int dist;
   // stopping plan
   int stop_marker;
   int stop_offset;
 } train_record;
-
 
 typedef enum {
   SKYNET_TARGET,

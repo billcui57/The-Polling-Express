@@ -916,29 +916,25 @@ void clear_screen(int com) { printf(com, "\033[2J"); };
 
 void cursor_to_row(int row) {
 #ifndef DEBUG_MODE
-  printf(COM2, "\033[%d;1H\033[K", row);
+  printf(COM2, "\033[%d;1H", row);
+  printf(COM2, "\033[K");
 #endif
 }
 
-void save_cursor() {
-#ifndef DEBUG_MODE
-  printf(COM2, "\0337");
-#endif
-}
+void done_print() {
+  // #ifndef DEBUG_MODE
+  //   printf(COM2, "\0338");
+  // #endif
 
-void restore_cursor() {
-#ifndef DEBUG_MODE
-  printf(COM2, "\0338");
-#endif
-  ReleaseUartLock(WhoIsBlock("uart2txserver"));
+  KASSERT(_uart == WhoIsBlock("uart2txserver"),
+          "Cannot do done print on BWait");
+  ReleaseUartLock(_uart);
 }
 
 int printf_(int channel, const char *format, ...) {
 
   if (channel == COM2) {
-    _uart = -1;
-    while (_uart < 0)
-      _uart = WhoIs("uart2txserver");
+    _uart = WhoIsBlock("uart2txserver");
   } else if (channel == BW_COM2) {
     _uart = -2;
   }

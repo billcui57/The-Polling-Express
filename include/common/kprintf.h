@@ -32,16 +32,6 @@
 
 // #define DEBUG_MODE
 
-#define LOG_ROW 30
-#define INPUT_ROW LOG_ROW + 1
-#define EVENT_ANNOUNCE_ROW INPUT_ROW + 2
-#define TIME_DIFF_ROW EVENT_ANNOUNCE_ROW + 1
-#define SENSOR_PRED_ROW TIME_DIFF_ROW + 1
-#define SENSOR_ROW 7
-#define IDLE_ROW 5
-#define TIME_ROW 6
-#define SWITCH_TABLE_ROW_BEGIN 8
-
 // #define DEBUG_MODE
 
 #ifndef _PRINTF_H_
@@ -59,8 +49,7 @@ extern "C" {
 #define IGNORE 0
 
 void clear_screen(int com);
-void save_cursor();
-void restore_cursor();
+void done_print();
 void cursor_to_row(int row);
 
 /**

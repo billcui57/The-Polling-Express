@@ -1,8 +1,5 @@
 #include "shell.h"
 
-void timer_printer();
-void switch_printer();
-
 void shell();
 typedef enum {
   COMMAND_TR,
@@ -20,13 +17,13 @@ typedef enum {
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
 void hide_cursor() {
-  save_cursor();
+  ;
   printf(COM2, "\033[?25l");
-  restore_cursor();
+  done_print();
 }
 
 void print_input(char *input, int *input_length) {
-  save_cursor();
+  ;
 
   cursor_to_row(INPUT_ROW);
   printf(COM2, "\033[35m");
@@ -34,20 +31,20 @@ void print_input(char *input, int *input_length) {
   for (unsigned int i = 0; i < (*input_length); i++) {
     printf(COM2, "%c", input[i]);
   }
-
-  printf(COM2, "_\r\n");
+  printf(COM2, "_");
   printf(COM2, "\033[0m");
-  restore_cursor();
+  printf(COM2, "\r\n");
+  done_print();
 }
 
 void print_debug(char *input) {
-  save_cursor();
+  ;
   cursor_to_row(LOG_ROW);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
   printf(COM2, "\033[0m");
   printf(COM2, "\r\n");
-  restore_cursor();
+  done_print();
 }
 
 int atoi(char *str) {
@@ -131,75 +128,7 @@ void shell_init() {
   Create(5, shell);
 }
 
-void timer_printer() {
-  task_tid clock_tid = WhoIsBlock("clockserver");
-  int start_time = Time(clock_tid);
-
-  int i = 0;
-
-  for (;;) {
-    int duc = DelayUntil(clock_tid, start_time + (i + 1) * 10);
-
-    int formatted_time[3];
-    memset(formatted_time, 0, sizeof(int) * 3);
-    get_formatted_curr_time(Time(clock_tid), formatted_time, 100);
-
-    save_cursor();
-    cursor_to_row(TIME_ROW);
-    printf(COM2, "Time: %d min %d.%d secs\r\n", formatted_time[0],
-           formatted_time[1], formatted_time[2]);
-    cursor_to_row(IDLE_ROW);
-    printf(COM2, "Idle: %d%%\r\n", idle_percentage);
-    restore_cursor();
-    i++;
-  }
-}
-
-void print_switch_table(char *switch_state) {
-  save_cursor();
-
-  int NUM_VALID_SWITCH_INDICES = 22;
-  const int valid_switch_indices[] = {1,  2,  3,   4,   5,   6,  7,  8,
-                                      9,  10, 11,  12,  13,  14, 15, 16,
-                                      17, 18, 153, 154, 155, 156};
-
-  cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
-
-  for (int i = 0; i < NUM_VALID_SWITCH_INDICES; i++) {
-
-    int switch_index = valid_switch_indices[i];
-
-    printf(COM2, "[%d]:%c\r\n", switch_index, switch_state[switch_index]);
-  }
-
-  restore_cursor();
-}
-
-void switch_printer() {
-  train_msg req;
-  train_event event;
-  memset(&req, 0, sizeof(req));
-  req.type = BRANCH_EVENT;
-  task_tid trainctl = WhoIsBlock("trainctl");
-  while (true) {
-    Send(trainctl, (char *)&req, sizeof(req), (char *)&event,
-         sizeof(train_event));
-    save_cursor();
-    cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
-    for (int i = 1; i < 19; i++) {
-      char s = event.branch_a[i];
-      printf(COM2, "[%d]:%c\r\n", i, "sc?"[s]);
-    }
-    for (int i = 0; i < 4; i++) {
-      char s = event.branch_b[i];
-      printf(COM2, "[%d]:%c\r\n", 153 + i, "sc?"[s]);
-    }
-    restore_cursor();
-  }
-}
-
 void print_art() {
-  save_cursor();
 
   cursor_to_row(1);
 
@@ -215,7 +144,7 @@ void print_art() {
   for (unsigned int i = 0; i < 35; i++) {
     printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
   }
-  restore_cursor();
+  done_print();
 }
 
 void shell() {
