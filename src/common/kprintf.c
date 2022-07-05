@@ -922,10 +922,6 @@ void cursor_to_row(int row) {
 }
 
 void done_print() {
-  // #ifndef DEBUG_MODE
-  //   printf(COM2, "\0338");
-  // #endif
-
   KASSERT(_uart == WhoIsBlock("uart2txserver"),
           "Cannot do done print on BWait");
   ReleaseUartLock(_uart);
