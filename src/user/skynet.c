@@ -45,13 +45,13 @@ void task_skynet_worker() {
     bool found = false;
     while (!found) {
       TrainEvent(trainctl, &event);
-      // cursor_to_row(EVENT_ANNOUNCE_ROW);
-      // printf(COM2, "Event at %d [Next: %d]: ", event.time, watching);
+      cursor_to_row(EVENT_ANNOUNCE_ROW);
+      printf(COM2, "Event at %d [Next: %d]: ", event.time, watching);
       for (int i = 0; i < 80; i++) {
         int a = i >> 3;
         int b = i & 7;
         if (event.sensors[a] & 0x80 >> b) {
-          // printf(COM2, "%c%d ", 'A' + (i >> 4), (i & 15) + 1);
+          printf(COM2, "%c%d ", 'A' + (i >> 4), (i & 15) + 1);
           if (watching == -1)
             watching = i;
           if (watching == i) {
@@ -61,7 +61,7 @@ void task_skynet_worker() {
           }
         }
       }
-      // done_print();
+      done_print();
     }
   }
 }
@@ -181,21 +181,23 @@ void task_skynet() {
         int vel = train.distance[train.i] /
                   (train.time[train.i] - train.time[train.i - 1]);
         int pred = train.next_time[train.i] - train.time[train.i];
-        // cursor_to_row(TIME_DIFF_ROW);
-        // printf(COM2, "Time Diff: %d, Dist Diff: %d, Vel: %d, Svel: %d\r\n",
-        //        pred, vel * pred, vel, train.vel);
+        cursor_to_row(TIME_DIFF_ROW);
+        printf(COM2, "Time Diff: %d, Dist Diff: %d, Vel: %d, Svel: %d\r\n",
+               pred, vel * pred, vel, train.vel);
+        done_print();
         train.vel = (train.vel * 6 + vel * 10) / 16;
       }
       train.i++;
       if (train.i < train.len && train.vel) {
         train.next_time[train.i] =
             train.time[train.i - 1] + (train.distance[train.i] / train.vel);
-        // cursor_to_row(SENSOR_PRED_ROW);
-        // printf(COM2, "Next Sensor: %s at %d, Stage: %d (%d)\r\n",
-        //        track[train.next[train.i]].name, train.next_time[train.i],
-        //        train.state, train.state_counter);
+        cursor_to_row(SENSOR_PRED_ROW);
+        printf(COM2, "Next Sensor: %s at %d, Stage: %d (%d)\r\n",
+               track[train.next[train.i]].name, train.next_time[train.i],
+               train.state, train.state_counter);
+        done_print();
       }
-      // done_print();
+
       if (train.i == train.len) {
         if (train.state == TRAIN_TOLOOP) {
           process_path(&train, LOOP, LOOP_LEN, trainctl,
@@ -233,10 +235,10 @@ void task_skynet() {
             res.msg.worker.node = train.next[train.i];
             Reply(worker, (char *)&res, sizeof(res));
             send_branches(&train, trainctl);
-            // cursor_to_row(SENSOR_PRED_ROW + 1);
-            // printf(COM2, "Vel: %d, Stop: %d, At: %d + %d", train.vel, 0,
-            //        train.next[train.stop_marker], left);
-            // done_print();
+            cursor_to_row(SENSOR_PRED_ROW + 1);
+            printf(COM2, "Vel: %d, Stop: %d, At: %d + %d", train.vel, 0,
+                   train.next[train.stop_marker], left);
+            done_print();
           } else {
             KASSERT(0, "Not Implemented");
           }
