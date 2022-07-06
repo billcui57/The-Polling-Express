@@ -5,8 +5,7 @@
 
 typedef enum {
   DISPATCHHUB_SENSOR_UPDATE,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_INDIVIDUAL,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_ALL
+  DISPATCHHUB_SUBSCRIBE_SENSOR_LIST,
 } dispatchhub_request_type;
 
 typedef enum { DISPATCHHUB_GOOD } dispatchhub_response_type;
@@ -17,13 +16,11 @@ typedef struct dispatchhub_response {
 
   union {
     struct {
+      int triggered_sensors[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+      int len;
       unsigned int time;
-    } subscribe_individual;
+    } subscribe_sensor_list;
 
-    struct {
-      unsigned int time;
-      int sensor_readings[NUM_SENSOR_GROUPS];
-    } subscribe_all;
   } data;
 
 } dispatchhub_response;
@@ -34,8 +31,9 @@ typedef struct dispatchhub_request {
   union {
 
     struct {
-      int subscribed_sensor;
-    } subscribe_individual;
+      int subscribed_sensors[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+      int len;
+    } subscribe_sensor_list;
 
     struct {
       int sensor_readings[NUM_SENSOR_GROUPS];

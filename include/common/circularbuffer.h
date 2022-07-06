@@ -25,3 +25,5 @@ bool cb_is_full(circular_buffer *cb);
 
 // arr capacity must be same as cb capacity
 void cb_to_array(circular_buffer *cb, void **arr);
+
+int cb_shallow_linear_search(circular_buffer *cb, void *find);

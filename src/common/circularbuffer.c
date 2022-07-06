@@ -48,3 +48,36 @@ int cb_pop_front(circular_buffer *cb, void **item) {
 bool cb_is_empty(circular_buffer *cb) { return cb->count = 0; }
 
 bool cb_is_full(circular_buffer *cb) { return cb->count == cb->capacity; }
+
+int cb_shallow_linear_search(circular_buffer *cb, void *find) {
+
+  void **cur = cb->tail;
+
+  for (unsigned int i = 0; i < cb->count; i++) {
+
+    if (*cur == find) {
+      return cur - cb->buffer;
+    }
+
+    cur++;
+    if (cur == cb->buffer_end) {
+      cur = cb->buffer;
+    }
+  }
+
+  return -1;
+}
+
+void cb_to_array(circular_buffer *cb, void **arr) {
+  void **cur = cb->tail;
+
+  for (unsigned int i = 0; i < cb->count; i++) {
+
+    arr[i] = *cur;
+
+    cur++;
+    if (cur == cb->buffer_end) {
+      cur = cb->buffer;
+    }
+  }
+}
