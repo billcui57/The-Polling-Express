@@ -55,5 +55,4 @@ void task_k4_init() {
   Create(10, shell_init);
 }
 
-#define SENSOR_READ_GROUPS 10
 #define SENSOR_CB_BACK_CAPACITY 10

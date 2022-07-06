@@ -44,3 +44,7 @@ int cb_pop_front(circular_buffer *cb, void **item) {
   cb->count--;
   return 0;
 }
+
+bool cb_is_empty(circular_buffer *cb) { return cb->count = 0; }
+
+bool cb_is_full(circular_buffer *cb) { return cb->count == cb->capacity; }

@@ -8,7 +8,7 @@ typedef enum {
   SPEED,
   REVERSE,
   SWITCH,
-  TRAIN_EVENT,
+  SENSOR_EVENT,
   BRANCH_EVENT,
 } train_req_def;
 
@@ -49,4 +49,5 @@ void task_train_worker();
 
 void TrainCommand(task_tid tid, int time, train_req_def type, int target,
                   int data);
-void TrainEvent(task_tid tid, train_event *event);
+void SensorEvent(task_tid tid, train_event *event);
+void BranchEvent(task_tid tid, train_event *event);

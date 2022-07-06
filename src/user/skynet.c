@@ -44,10 +44,10 @@ void task_skynet_worker() {
     watching = res.msg.worker.node;
     bool found = false;
     while (!found) {
-      TrainEvent(trainctl, &event);
+      SensorEvent(trainctl, &event);
       cursor_to_row(EVENT_ANNOUNCE_ROW);
       printf(COM2, "Event at %d [Next: %d]: ", event.time, watching);
-      for (int i = 0; i < 80; i++) {
+      for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
         int a = i >> 3;
         int b = i & 7;
         if (event.sensors[a] & 0x80 >> b) {

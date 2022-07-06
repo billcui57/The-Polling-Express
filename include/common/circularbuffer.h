@@ -19,3 +19,9 @@ typedef struct circular_buffer {
 void cb_init(circular_buffer *cb, void **buffer, size_t capacity);
 int cb_push_back(circular_buffer *cb, void *item, bool aggressive);
 int cb_pop_front(circular_buffer *cb, void **item);
+
+bool cb_is_empty(circular_buffer *cb);
+bool cb_is_full(circular_buffer *cb);
+
+// arr capacity must be same as cb capacity
+void cb_to_array(circular_buffer *cb, void **arr);
