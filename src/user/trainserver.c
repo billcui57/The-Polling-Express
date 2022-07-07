@@ -10,7 +10,8 @@
 
 extern char status[];
 
-train_task *build_task(train_task **free, int time, unsigned char a, unsigned char b, char len) {
+train_task *build_task(train_task **free, int time, unsigned char a,
+                       unsigned char b, char len) {
   KASSERT(*free, "No Free Train Task");
   train_task *cur = *free;
   *free = cur->next;
@@ -64,9 +65,9 @@ void task_trainserver() {
         res.data.cmd.b = top->b;
         res.data.cmd.len = top->len;
         if (top->branch != -1) {
-          if(top->branch < 20) {
+          if (top->branch < 20) {
             event.branch_a[top->branch] = top->branch_state;
-          } else if (top->branch  >= 153 && top->branch <=156 ){
+          } else if (top->branch >= 153 && top->branch <= 156) {
             event.branch_b[top->branch - 153] = top->branch_state;
           } else {
             KASSERT(0, "Bad Branch");
@@ -96,16 +97,18 @@ void task_trainserver() {
     } else if (req.type == BRANCH_EVENT) {
       branch_waiting = client;
     } else if (req.type == SPEED) {
-      heap_add(&h, build_task(&free, req.data.task.time, req.data.task.data | 16,
-                              req.data.task.target, 2));
+      heap_add(&h,
+               build_task(&free, req.data.task.time, req.data.task.data | 16,
+                          req.data.task.target, 2));
       Reply(client, (char *)&res, 0);
     } else if (req.type == REVERSE) {
       heap_add(&h, build_task(&free, req.data.task.time, 16,
                               req.data.task.target, 2));
       heap_add(&h, build_task(&free, req.data.task.time + 500, 15,
                               req.data.task.target, 2));
-      heap_add(&h, build_task(&free, req.data.task.time + 510,
-                              req.data.task.data | 16, req.data.task.target, 2));
+      heap_add(&h,
+               build_task(&free, req.data.task.time + 510,
+                          req.data.task.data | 16, req.data.task.target, 2));
       Reply(client, (char *)&res, 0);
     } else if (req.type == SWITCH) {
       int t = req.data.task.time;
@@ -115,31 +118,35 @@ void task_trainserver() {
       task->branch_state = req.data.task.data;
       heap_add(&h, task);
       if (req.data.task.target == 153) {
-        t+= 20;
-        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 154, 2);
+        t += 20;
+        train_task *task =
+            build_task(&free, t, 33 + !req.data.task.data, 154, 2);
         task->branch = 154;
         task->branch_state = !req.data.task.data;
         heap_add(&h, task);
       } else if (req.data.task.target == 154) {
-        t+= 20;
-        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 153, 2);
+        t += 20;
+        train_task *task =
+            build_task(&free, t, 33 + !req.data.task.data, 153, 2);
         task->branch = 153;
         task->branch_state = !req.data.task.data;
         heap_add(&h, task);
       } else if (req.data.task.target == 155) {
-        t+= 20;
-        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 156, 2);
+        t += 20;
+        train_task *task =
+            build_task(&free, t, 33 + !req.data.task.data, 156, 2);
         task->branch = 156;
         task->branch_state = !req.data.task.data;
         heap_add(&h, task);
       } else if (req.data.task.target == 156) {
-        t+= 20;
-        train_task *task = build_task(&free, t, 33 + !req.data.task.data, 155, 2);
+        t += 20;
+        train_task *task =
+            build_task(&free, t, 33 + !req.data.task.data, 155, 2);
         task->branch = 155;
         task->branch_state = !req.data.task.data;
         heap_add(&h, task);
       }
-      t+=20;
+      t += 20;
       heap_add(&h, build_task(&free, t, 32, 0, 1));
       Reply(client, (char *)&res, 0);
     } else {
@@ -180,15 +187,15 @@ void task_train_worker() {
       if (res.data.cmd.len == 2)
         Putc(uart1, 0, res.data.cmd.b);
     } else if (res.type == WORKER_SENSOR) {
-      //status[0] = 'A'+(i%26);
-      //i++;
+      // status[0] = 'A'+(i%26);
+      // i++;
       req.type = WORKER_SENSOR;
       Putc(uart1, 0, '\x85');
       for (int i = 0; i < 10; i++)
         req.data.sensor.sensors[i] = Getc(uart1, 0);
-      //status[0] = '+';
+      // status[0] = '+';
       req.data.sensor.time = Time(clock);
-      //status[0] = '-';
+      // status[0] = '-';
       Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
     } else if (res.type == WORKER) {
       Delay(clock, 1);

@@ -1,164 +1,6 @@
-#include <user.h>
+#include "shell.h"
 
-void task_k4_test();
-
-void print_art();
-void clear();
 void shell();
-void timer_printer();
-void switch_printer();
-void sensor_reader();
-
-int idle_percentage;
-
-char status[] = "-----";
-
-// track a
-// 156,16,3,
-
-// sensor D1,
-
-// track b
-// 155,156,5
-
-// sensor C13
-
-void task_k4_init() {
-
-  clear_screen(BW_COM2);
-  printf(BW_COM2, "Which track am I on (a,b)?\r\n");
-  char c = bw_uart_get_char(COM2);
-  which_track = c;
-
-  if (c == 'a') {
-    init_tracka(track);
-    mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_CURVED);
-    mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_STRAIGHT);
-    mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_CURVED);
-    mark_switch_broken(track, track_name_to_num(track, "BR3"), DIR_CURVED);
-    mark_sensor_broken(track, track_name_to_num(track, "D1"));
-  } else if (c == 'b') {
-    init_trackb(track);
-    mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_STRAIGHT);
-    mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
-    mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
-    mark_sensor_broken(track, track_name_to_num(track, "C13"));
-  } else {
-    KASSERT(c == 'a' || c == 'b', "Track must be a or b");
-    for (;;)
-      ;
-  }
-
-  Create(20, nameserver);
-  Create(10, clockserver);
-  Create(10, uart_com2_tx_server);
-  Create(10, uart_com1_server);
-  Create(10, uart_com2_rx_server);
-  Create(10, task_trainserver);
-  Create(10, control_server);
-  Create(10, task_skynet);
-#ifndef DEBUG_MODE
-  Create(5, timer_printer);
-#endif
-  Create(5, switch_printer);
-  Create(5, shell);
-}
-
-void print_art() {
-  save_cursor();
-
-  cursor_to_row(1);
-
-  int christmas_colours[3] = {32, 37, 31};
-
-  for (unsigned int i = 0; i < 35; i++) {
-    printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
-  }
-  printf(COM2, "\r\n");
-
-  printf(COM2, "|  The Polling Express (Track %c)  |\r\n", which_track);
-
-  for (unsigned int i = 0; i < 35; i++) {
-    printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
-  }
-  restore_cursor();
-}
-
-#define NUM_SWITCHES 256
-void print_switch_table(char *switch_state) {
-  save_cursor();
-
-  int NUM_VALID_SWITCH_INDICES = 22;
-  const int valid_switch_indices[] = {1,  2,  3,   4,   5,   6,  7,  8,
-                                      9,  10, 11,  12,  13,  14, 15, 16,
-                                      17, 18, 153, 154, 155, 156};
-
-  cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
-
-  for (int i = 0; i < NUM_VALID_SWITCH_INDICES; i++) {
-
-    int switch_index = valid_switch_indices[i];
-
-    printf(COM2, "[%d]:%c\r\n", switch_index, switch_state[switch_index]);
-  }
-
-  restore_cursor();
-}
-
-void switch_printer() {
-  train_msg req;
-  train_event event;
-  memset(&req, 0, sizeof(req));
-  req.type = BRANCH_EVENT;
-  task_tid trainctl = WhoIsBlock("trainctl");
-  while (true) {
-    Send(trainctl, (char *)&req, sizeof(req), (char *)&event,
-         sizeof(train_event));
-    save_cursor();
-    cursor_to_row(SWITCH_TABLE_ROW_BEGIN);
-    for (int i = 1; i < 19; i++) {
-      char s = event.branch_a[i];
-      printf(COM2, "[%d]:%c\r\n", i, "sc?"[s]);
-    }
-    for (int i = 0; i < 4; i++) {
-      char s = event.branch_b[i];
-      printf(COM2, "[%d]:%c\r\n", 153 + i, "sc?"[s]);
-    }
-    restore_cursor();
-  }
-}
-
-void timer_printer() {
-  int clock_tid = -1;
-  while (clock_tid < 0)
-    clock_tid = WhoIs("clockserver");
-
-  int start = Time(clock_tid);
-  int i = 0;
-  while (true) {
-    int duc = DelayUntil(clock_tid, start + (i + 1) * 10);
-    save_cursor();
-
-    cursor_to_row(TIME_ROW);
-
-    int formatted_time[3];
-    memset(formatted_time, 0, sizeof(int) * 3);
-    get_formatted_curr_time(Time(clock_tid), formatted_time, 100);
-    printf(COM2, "Time: %d min %d.%d secs\r\n", formatted_time[0],
-           formatted_time[1], formatted_time[2]);
-
-    cursor_to_row(IDLE_ROW);
-
-    printf(COM2, "Idle: %d%%\r\n", idle_percentage);
-    //printf(COM2, "Idle: %d%% [%s]\r\n", idle_percentage, status);
-    restore_cursor();
-    i++;
-  }
-}
-
-#define SENSOR_READ_GROUPS 10
-#define SENSOR_CB_BACK_CAPACITY 10
-
 typedef enum {
   COMMAND_TR,
   COMMAND_SW,
@@ -168,32 +10,37 @@ typedef enum {
 } command_type;
 
 #define TERMINALMAXINPUTSIZE 20
+#define MAX_COMMAND_TOKENS 6
+#define MAX_NUM_TRAINS 80
+#define NUM_SWITCHES 256
 
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
 
-void print_input(char *input, int *input_length) {
-  save_cursor();
+void hide_cursor() {
+  printf(COM2, "\033[?25l");
+  done_print();
+}
 
+void print_input(char *input, int *input_length) {
   cursor_to_row(INPUT_ROW);
   printf(COM2, "\033[35m");
   printf(COM2, ">");
   for (unsigned int i = 0; i < (*input_length); i++) {
     printf(COM2, "%c", input[i]);
   }
-
-  printf(COM2, "_\r\n");
+  printf(COM2, "_");
   printf(COM2, "\033[0m");
-  restore_cursor();
+  printf(COM2, "\r\n");
+  done_print();
 }
 
 void print_debug(char *input) {
-  save_cursor();
   cursor_to_row(LOG_ROW);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
   printf(COM2, "\033[0m");
   printf(COM2, "\r\n");
-  restore_cursor();
+  done_print();
 }
 
 int atoi(char *str) {
@@ -234,7 +81,6 @@ void tokenizer(char *input, char **tokens, unsigned int num_tokens) {
   }
 }
 
-#define MAX_COMMAND_TOKENS 6
 bool handle_new_char(char c, char *input, int *input_length,
                      char **command_tokens) { // backspace
   bool entered = false;
@@ -270,13 +116,32 @@ bool handle_new_char(char c, char *input, int *input_length,
   return entered;
 }
 
-void hide_cursor() {
-  save_cursor();
-  printf(COM2, "\033[?25l");
-  restore_cursor();
+void shell_init() {
+#ifndef DEBUG_MODE
+  Create(5, timer_printer);
+#endif
+  Create(5, switch_printer);
+  Create(5, shell);
 }
 
-#define MAX_NUM_TRAINS 80
+void print_art() {
+
+  cursor_to_row(1);
+
+  int christmas_colours[3] = {32, 37, 31};
+
+  for (unsigned int i = 0; i < 35; i++) {
+    printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
+  }
+  printf(COM2, "\r\n");
+
+  printf(COM2, "|  The Polling Express (Track %c)  |\r\n", which_track);
+
+  for (unsigned int i = 0; i < 35; i++) {
+    printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
+  }
+  done_print();
+}
 
 void shell() {
   clear_screen(COM2);
@@ -301,9 +166,6 @@ void shell() {
   int prev_speed[MAX_NUM_TRAINS];
   memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
 
-  char switch_state[NUM_SWITCHES];
-  memset(switch_state, '?', sizeof(char) * NUM_SWITCHES);
-
   int train_num;
   int speed;
   int switch_num;
@@ -316,8 +178,6 @@ void shell() {
   char debug_buffer[100];
 
   print_input(input, &input_length);
-
-  print_switch_table(switch_state);
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
@@ -372,7 +232,6 @@ void shell() {
                 switch_orientation);
         print_debug(debug_buffer);
 
-        switch_state[switch_num] = switch_orientation;
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation == 'c' ? 1 : 0);
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
@@ -425,28 +284,6 @@ void shell() {
         print_debug("Invalid Command Type");
       }
       memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
-    }
-  }
-}
-
-void idle() {
-  unsigned int start;
-
-  read_timer(TIMER3, &start);
-
-  unsigned long long sleeping_time = 0;
-
-  int i = 0;
-  while (true) {
-    unsigned int s = AwaitEvent(BREAK_IDLE);
-    sleeping_time += s;
-    i++;
-    if (i % 10 == 0) {
-      unsigned int now;
-      read_timer(TIMER3, &now);
-      unsigned int run = start - now;
-
-      idle_percentage = (100 * sleeping_time) / run;
     }
   }
 }
