@@ -82,8 +82,6 @@ void dispatchhub() {
         int b = i & 7;
         if (sensor_readings[a] & 0x80 >> b) {
 
-          // TODO: if cb_is_empty already then give to unattributed
-
           if (!cb_is_empty(&(subscribers[i]))) {
             // unattributed
             cb_push_back(&sensor_unattributed, (void *)i, false);
