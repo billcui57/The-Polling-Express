@@ -91,7 +91,7 @@ void dispatchhub() {
 
             void *train_num_void;
 
-            cb_pop_front(&(subscribers[i]), &train_num_void);
+            subscribers[i] = -1;
 
             cb_push_back(&(sensor_attribution[(v_train_num)train_num_void]),
                          (void *)i, false);
