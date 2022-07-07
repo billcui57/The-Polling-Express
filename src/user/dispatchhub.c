@@ -89,7 +89,7 @@ void dispatchhub() {
 
           while (!cb_is_empty(&(subscribers[i]))) {
 
-            void *train_num_void;
+            void *train_num_void = NULL;
 
             subscribers[i] = -1;
 
