@@ -31,6 +31,10 @@ void dispatchhub() {
       int *subscribed_sensors =
           req.data.subscribe_sensor_list.subscribed_sensors;
       int subscribed_sensors_len = req.data.subscribe_sensor_list.len;
+
+      KASSERT(subscribed_sensors_len <= MAX_SUBSCRIBED_SENSORS,
+              "Can only subscribe to limited number of sensors");
+
       v_train_num train_num = req.data.subscribe_sensor_list.train_num;
 
       for (int i = 0; i < subscribed_sensors_len; i++) {
@@ -50,54 +54,38 @@ void dispatchhub() {
       int *sensor_readings = req.data.sensor_update.sensor_readings;
       unsigned int time = req.data.sensor_update.time;
 
-      void *sensor_attribution_backing[MAX_NUM_TRAINS]
-                                      [NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+      void *sensor_attribution_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];
       circular_buffer sensor_attribution[MAX_NUM_TRAINS];
 
       for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
         memset(sensor_attribution_backing[train_num], 0,
-               sizeof(void *) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
+               sizeof(void *) * (MAX_SUBSCRIBED_SENSORS));
         cb_init(&(sensor_attribution[train_num]),
-                sensor_attribution_backing[train_num],
-                NUM_SENSOR_GROUPS * SENSORS_PER_GROUP);
+                sensor_attribution_backing[train_num], MAX_SUBSCRIBED_SENSORS);
       }
 
-      void *sensor_unattributed_backing[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
-      circular_buffer sensor_unattributed;
-
-      memset(sensor_unattributed_backing, 0,
-             sizeof(void *) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
-      cb_init(&sensor_unattributed, sensor_unattributed_backing,
-              NUM_SENSOR_GROUPS * SENSORS_PER_GROUP);
-
-      void *sensor_pool_backing[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
-      circular_buffer sensor_pool;
-      memset(sensor_pool_backing, 0,
-             sizeof(void *) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
-      cb_init(&sensor_pool, sensor_pool_backing,
-              NUM_SENSOR_GROUPS * SENSORS_PER_GROUP);
+      v_train_num *sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
 
       for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
+
+        sensor_pool[i] = NOT_TRIGGERED;
+
         int a = i >> 3;
         int b = i & 7;
         if (sensor_readings[a] & 0x80 >> b) {
 
-          if (!cb_is_empty(&(subscribers[i]))) {
+          if (subscribers[i] == -1) {
             // unattributed
-            cb_push_back(&sensor_unattributed, (void *)i, false);
+            sensor_pool[i] = UNATTRIBUTED;
+          } else {
+            int status = cb_push_back(&(sensor_attribution[subscribers[i]]),
+                                      (void *)i, false);
+            KASSERT(status != CB_FULL,
+                    "Attributed sensors len must be <= MAX_SUBSCRIBED_SENSORS");
+            sensor_pool[i] = subscribers[i];
           }
 
-          while (!cb_is_empty(&(subscribers[i]))) {
-
-            void *train_num_void = NULL;
-
-            subscribers[i] = -1;
-
-            cb_push_back(&(sensor_attribution[(v_train_num)train_num_void]),
-                         (void *)i, false);
-          }
-
-          cb_push_back(&sensor_pool, (void *)i, false);
+          subscribers[i] = -1;
         }
       }
 
@@ -118,23 +106,12 @@ void dispatchhub() {
 
       if (sensor_printer != -1) {
         memset((void *)&res, 0, sizeof(dispatchhub_response));
+        res.type = DISPATCHHUB_GOOD;
+        res.data.subscribe_sensor_print.sensor_pool_len =
+            NUM_SENSOR_GROUPS * SENSORS_PER_GROUP;
         res.data.subscribe_sensor_print.time = time;
-        res.data.subscribe_sensor_print.unattributed_len =
-            sensor_unattributed.count;
-        cb_to_array(&sensor_unattributed,
-                    res.data.subscribe_sensor_print.unattributed_sensors);
-        res.data.subscribe_sensor_print.sensor_pool_len = sensor_pool.count;
-        cb_to_array(&sensor_pool, res.data.subscribe_sensor_print.sensor_pool);
-
-        for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS;
-             train_num++) {
-
-          res.data.subscribe_sensor_print.attributed_lens[train_num] =
-              sensor_attribution[train_num].count;
-          cb_to_array(
-              &(sensor_attribution[train_num]),
-              res.data.subscribe_sensor_print.attributed_sensors[train_num]);
-        }
+        memcpy(res.data.subscribe_sensor_print.sensor_pool, sensor_pool,
+               sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
         Reply(sensor_printer, (char *)&res, sizeof(dispatchhub_response));
         sensor_printer = -1;
       }
