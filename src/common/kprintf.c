@@ -922,8 +922,7 @@ void cursor_to_row(int row) {
 }
 
 void done_print() {
-  KASSERT(_uart == WhoIsBlock("uart2txserver"),
-          "Cannot do done print on BWait");
+  KASSERT(_uart > 0, "Can only done print on uart2 no bw");
   ReleaseUartLock(_uart);
 }
 
