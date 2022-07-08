@@ -7,7 +7,6 @@ enum train_state {
   TRAIN_STOP,
   TRAIN_TOLOOP,
   TRAIN_SPEEDING,
-  TRAIN_PADLOOP,
   TRAIN_FROMLOOP,
 };
 
@@ -35,25 +34,5 @@ typedef struct {
   int stop_marker;
   int stop_offset;
 } train_record;
-
-typedef enum {
-  SKYNET_TARGET,
-  SKYNET_EVENT,
-} skynet_msg_type;
-
-typedef struct {
-  skynet_msg_type type;
-  union {
-    struct {
-      char train, speed;
-      char source, destination;
-      int offset;
-    } target;
-    struct {
-      int node;
-      int time;
-    } worker;
-  } msg;
-} skynet_msg;
 
 void task_skynet();

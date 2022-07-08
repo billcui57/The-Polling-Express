@@ -1,4 +1,5 @@
 #include "dispatchhub.h"
+#include "skynet.h"
 
 void dispatchhub() {
 
@@ -12,10 +13,10 @@ void dispatchhub() {
 
   v_train_num skynets[MAX_NUM_TRAINS];
 
-  task_tid sensor_printer;
+  task_tid sensor_printer = -1;
 
-  for (v_train_num train_num; train_num < MAX_NUM_TRAINS; train_num++) {
-    // skynets[train_num] = Create(blah blah blah)
+  for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
+    skynets[train_num] = Create(10, task_skynet);
   }
 
   v_train_num subscribers[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
@@ -45,6 +46,13 @@ void dispatchhub() {
 
     } else if (req.type == DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT) {
       sensor_printer = client;
+    } else if (req.type == DISPATCHHUB_SKYNET_INIT) {
+      // already parked
+    } else if (req.type == DISPATCHHUB_SKYNET_TARGET) {
+      res.data.skynet_target = req.data.skynet_target;
+      Reply(skynets[req.data.skynet_target.train], (char*)&req, sizeof(req));
+      res.type = DISPATCHHUB_GOOD;
+      Reply(client, (char*)&res, sizeof(res));
     } else if (req.type == DISPATCHHUB_SENSOR_UPDATE) {
 
       memset((void *)&res, 0, sizeof(dispatchhub_response));
@@ -64,7 +72,7 @@ void dispatchhub() {
                 sensor_attribution_backing[train_num], MAX_SUBSCRIBED_SENSORS);
       }
 
-      v_train_num *sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+      v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
 
       for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
 
