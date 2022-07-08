@@ -1,5 +1,8 @@
 #include "timerprinter.h"
 
+#include <syscall.h>
+#include <clockserver.h>
+
 void timer_printer() {
   task_tid clock_tid = WhoIsBlock("clockserver");
   int start_time = Time(clock_tid);

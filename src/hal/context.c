@@ -23,9 +23,9 @@ void init_user_task(user_task *t, void (*func)()) {
   t->reg.r10 = 0;
   t->reg.r11 = 0;
   t->reg.r12 = 0;
-  t->reg.r13 = &t->stack[STACK_SIZE - 1];
-  t->reg.r14 = &Exit;
-  t->reg.r15 = func;
+  t->reg.r13 = (uint32_t)&t->stack[STACK_SIZE - 1];
+  t->reg.r14 = (uint32_t)&Exit;
+  t->reg.r15 = (uint32_t)func;
   t->reg.psr = (0b10000);
 }
 
