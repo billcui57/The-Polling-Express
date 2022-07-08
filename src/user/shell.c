@@ -194,7 +194,7 @@ void shell() {
           continue;
         }
 
-        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+        if ((train_num < 0) || (train_num > MAX_NUM_TRAINS)) {
           print_debug("Please enter a valid train num");
           continue;
         }
@@ -237,7 +237,7 @@ void shell() {
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
         train_num = atoi(command_tokens[1]);
 
-        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+        if ((train_num < 0) || (train_num > MAX_NUM_TRAINS)) {
           print_debug("Please enter a valid train num");
           continue;
         }
