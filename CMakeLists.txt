@@ -38,6 +38,9 @@ add_executable(kernel
   src/user/idle.c
   src/user/timerprinter.c
   src/user/switchprinter.c
+  src/user/sensorcourier.c
+  src/user/dispatchhub.c
+  src/user/virtual.c
 )
 target_link_libraries(kernel -static gcc)
 

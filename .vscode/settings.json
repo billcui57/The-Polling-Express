@@ -23,6 +23,7 @@
     "pathfinder.h": "c",
     "algorithms.h": "c",
     "controlserver.h": "c",
-    "track_data.h": "c"
+    "track_data.h": "c",
+    "track_node.h": "c"
   }
 }

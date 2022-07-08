@@ -92,7 +92,7 @@ void task_trainserver() {
       }
       event.time = req.data.sensor.time;
       Reply(client, (char *)&res, 0);
-    } else if (req.type == TRAIN_EVENT) {
+    } else if (req.type == SENSOR_EVENT) {
       sensor_waiting = client;
     } else if (req.type == BRANCH_EVENT) {
       branch_waiting = client;
@@ -217,9 +217,16 @@ void TrainCommand(task_tid tid, int time, train_req_def type, int target,
   Send(tid, (char *)&req, sizeof(req), (char *)&junk, 0);
 }
 
-void TrainEvent(task_tid tid, train_event *event) {
+void SensorEvent(task_tid tid, train_event *event) {
   train_msg req;
   memset(&req, 0, sizeof(req));
-  req.type = TRAIN_EVENT;
+  req.type = SENSOR_EVENT;
+  Send(tid, (char *)&req, sizeof(req), (char *)event, sizeof(train_event));
+}
+
+void BranchEvent(task_tid tid, train_event *event) {
+  train_msg req;
+  memset(&req, 0, sizeof(req));
+  req.type = BRANCH_EVENT;
   Send(tid, (char *)&req, sizeof(req), (char *)event, sizeof(train_event));
 }

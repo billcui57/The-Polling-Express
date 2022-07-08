@@ -13,6 +13,9 @@ typedef enum {
 #define DIR_STRAIGHT 0
 #define DIR_CURVED 1
 
+#define NUM_SENSOR_GROUPS 10
+#define SENSORS_PER_GROUP 8
+
 struct track_node;
 typedef struct track_node track_node;
 typedef struct track_edge track_edge;

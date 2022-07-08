@@ -11,7 +11,7 @@ typedef enum {
 
 #define TERMINALMAXINPUTSIZE 20
 #define MAX_COMMAND_TOKENS 6
-#define MAX_NUM_TRAINS 80
+
 #define NUM_SWITCHES 256
 
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }

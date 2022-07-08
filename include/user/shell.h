@@ -11,5 +11,5 @@
 #include "timerprinter.h"
 #include "track_data.h"
 #include "trainserver.h"
-
+#include "virtual.h"
 void shell_init();
