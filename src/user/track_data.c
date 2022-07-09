@@ -11,10 +11,11 @@ int track_name_to_num(track_node *track, char *name) {
       return i;
     }
   }
-  KASSERT(0, "Invalid track node name");
+  return -1;
 }
 
 void mark_switch_broken(track_node *track, int node, int stuck_direction) {
+  KASSERT(node >= 0, "Node must be valid");
 
   track_node *broken = &track[node];
   KASSERT(broken->type == NODE_BRANCH,
@@ -27,6 +28,7 @@ void mark_switch_broken(track_node *track, int node, int stuck_direction) {
 }
 
 void mark_sensor_broken(track_node *track, int node) {
+  KASSERT(node >= 0, "Node must be valid");
 
   track_node *broken = &track[node];
   KASSERT(broken->type == NODE_SENSOR,

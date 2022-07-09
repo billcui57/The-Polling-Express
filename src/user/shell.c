@@ -168,11 +168,12 @@ void shell() {
   int prev_speed[MAX_NUM_TRAINS];
   memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
 
-  int train_num;
+  v_train_num train_num;
   int speed;
   int switch_num;
   int switch_orientation;
-  char *dest_name;
+  int dest_num;
+  int source_num;
   int offset;
 
   int input_length = 0;
@@ -188,7 +189,8 @@ void shell() {
     if (entered == true) {
 
       if (strncmp(command_tokens[0], "tr", strlen("tr")) == 0) {
-        train_num = atoi(command_tokens[1]);
+        train_num = p_v_train_num(atoi(command_tokens[1]));
+
         speed = atoi(command_tokens[2]);
 
         if ((speed < 0) || (speed > 14)) {
@@ -196,12 +198,13 @@ void shell() {
           continue;
         }
 
-        if ((train_num < 0) || (train_num > MAX_NUM_TRAINS)) {
+        if (train_num < 0) {
           print_debug("Please enter a valid train num");
           continue;
         }
 
-        sprintf(debug_buffer, "SPEED %d %d\r\n", train_num, speed);
+        sprintf(debug_buffer, "SPEED %d %d\r\n", atoi(command_tokens[1]),
+                speed);
         print_debug(debug_buffer);
 
         TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
@@ -237,9 +240,9 @@ void shell() {
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation == 'c' ? 1 : 0);
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
-        train_num = atoi(command_tokens[1]);
+        train_num = p_v_train_num(atoi(command_tokens[1]));
 
-        if ((train_num < 0) || (train_num > MAX_NUM_TRAINS)) {
+        if (train_num < 0) {
           print_debug("Please enter a valid train num");
           continue;
         }
@@ -256,26 +259,45 @@ void shell() {
         Shutdown();
 
       } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
+        train_num = p_v_train_num(atoi(command_tokens[1]));
+        speed = atoi(command_tokens[2]);
+        source_num = track_name_to_num(track, command_tokens[3]);
+        dest_num = track_name_to_num(track, command_tokens[4]);
+        offset = atoi(command_tokens[5]);
+
+        if (train_num < 0) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
+        if ((speed < 0) || (speed > 14)) {
+          print_debug("Please enter a valid speed");
+          continue;
+        }
+
+        if (source_num < 0) {
+          print_debug("Please enter a valid source node");
+          continue;
+        }
+
+        if (dest_num < 0) {
+          print_debug("Please enter a valid destination node");
+          continue;
+        }
+
         dispatchhub_request req;
         memset(&req, 0, sizeof(req));
         req.type = DISPATCHHUB_SKYNET_TARGET;
-        req.data.skynet_target.train = atoi(command_tokens[1]);
-        req.data.skynet_target.speed = atoi(command_tokens[2]);
-        req.data.skynet_target.source =
-            track_name_to_num(track, command_tokens[3]);
-        req.data.skynet_target.destination =
-            track_name_to_num(track, command_tokens[4]);
-        req.data.skynet_target.offset = atoi(command_tokens[5]);
-        // train_num = atoi(command_tokens[1]);
-        // dest_name = command_tokens[2];
-        // offset = atoi(command_tokens[3]);
+        req.data.skynet_target.train = train_num;
+        req.data.skynet_target.speed = speed;
+        req.data.skynet_target.source = source_num;
+        req.data.skynet_target.destination = dest_num;
+        req.data.skynet_target.offset = offset;
 
         controlserver_response res;
 
         int status = Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
 
-        // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
-        //         train_num, dest_name, offset);
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
                 command_tokens[3], command_tokens[4],
                 req.data.skynet_target.offset);
