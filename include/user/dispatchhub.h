@@ -63,7 +63,7 @@ typedef struct dispatchhub_request {
     } subscribe_sensor_list;
 
     struct {
-      int sensor_readings[NUM_SENSOR_GROUPS];
+      char sensor_readings[NUM_SENSOR_GROUPS];
       unsigned int time;
     } sensor_update;
 

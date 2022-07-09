@@ -16,7 +16,7 @@ void sensor_courier() {
 
     dis_req.type = DISPATCHHUB_SENSOR_UPDATE;
     memcpy(dis_req.data.sensor_update.sensor_readings, event.sensors,
-           NUM_SENSOR_GROUPS);
+           sizeof(char) * NUM_SENSOR_GROUPS);
     dis_req.data.sensor_update.time = event.time;
 
     Send(dispatchhub, (char *)&dis_req, sizeof(dispatchhub_request),
