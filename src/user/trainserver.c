@@ -157,6 +157,20 @@ void task_trainserver() {
     }
 
     if (sensor_dirty && sensor_waiting != -1) {
+
+      // for (int i = 0; i < 80; i++) {
+
+      //   int a = i >> 3;
+      //   int b = i & 7;
+      //   if (event.sensors[a] & 0x80 >> b) {
+
+      //     KASSERT(0, "YAY");
+
+      //     // printf(COM2, "Triggered: [%c%d]\r\n", (char)('A' + (i >> 4)),
+      //     //        (int)((i & 0xF) + 1));
+      //   }
+      // }
+
       Reply(sensor_waiting, (char *)&event, sizeof(train_event));
       sensor_waiting = -1;
       sensor_dirty = false;

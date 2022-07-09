@@ -38,6 +38,7 @@
 #define _PRINTF_H_
 
 #include "hal.h"
+#include "layout.h"
 #include "task.h"
 #include <stdarg.h>
 #include <stddef.h>
@@ -50,7 +51,9 @@ extern "C" {
 
 void clear_screen(int com);
 void done_print();
-void cursor_to_row(int row);
+
+void cursor_to_pos(int row, int col, int clearn);
+void n_clear(int n);
 
 /**
  * Output a character to a custom device like UART, used by the printf()

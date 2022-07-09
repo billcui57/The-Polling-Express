@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sensorcourier.h"
 #include "syscall.h"
 #include "track_node.h"
 #include "virtual.h"
@@ -22,9 +23,9 @@ typedef enum { DISPATCHHUB_GOOD } dispatchhub_response_type;
 #define MAX_SUBSCRIBED_SENSORS 5
 
 struct skynet_target {
-      char train, speed;
-      char source, destination;
-      int offset;
+  char train, speed;
+  char source, destination;
+  int offset;
 };
 
 typedef struct dispatchhub_response {
@@ -62,7 +63,7 @@ typedef struct dispatchhub_request {
     } subscribe_sensor_list;
 
     struct {
-      int sensor_readings[NUM_SENSOR_GROUPS];
+      char sensor_readings[NUM_SENSOR_GROUPS];
       unsigned int time;
     } sensor_update;
 

@@ -26,8 +26,8 @@ Trainctl
 #include <magic_numbers.h>
 #include <track_data.h>
 
-#include "skynet.h"
 #include "dispatchhub.h"
+#include "skynet.h"
 
 void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
                   int time) {
@@ -86,7 +86,7 @@ void task_skynet() {
   int next_node = -1;
   while (true) {
     req.type = DISPATCHHUB_SKYNET_INIT;
-    Send(hub, (char *)&req, sizeof(req),(char *)&res, sizeof(res));
+    Send(hub, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
     train.train = res.data.skynet_target.train;
     train.speed = res.data.skynet_target.speed;
     train.state = TRAIN_TOLOOP;
@@ -100,11 +100,10 @@ void task_skynet() {
     c_req.client.min_len = 0;
     controlserver_response c_res;
     Send(controlserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
-          sizeof(c_res));
+         sizeof(c_res));
     memset(train.time, 0, sizeof(int) * 160);
     memset(train.next_time, 0, sizeof(int) * 160);
-    process_path(&train, c_res.client.path, c_res.client.path_len, trainctl,
-                  0);
+    process_path(&train, c_res.client.path, c_res.client.path_len, trainctl, 0);
     train.i = 0;
     train.j = 0;
     c_req.client.src = 57;
@@ -112,7 +111,7 @@ void task_skynet() {
     c_req.client.offset = res.data.skynet_target.offset;
     c_req.client.min_len = get_stopping(train.train, train.speed) / 1000 + 1;
     Send(controlserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
-          sizeof(c_res));
+         sizeof(c_res));
     memcpy(train.next_out, c_res.client.path, 2 * TRACK_MAX * sizeof(int));
     train.out_len = c_res.client.path_len;
     train.dist = c_res.client.path_dist * 1000;
@@ -126,7 +125,7 @@ void task_skynet() {
       req.data.subscribe_sensor_list.subscribed_sensors[0] = next_node;
       req.data.subscribe_sensor_list.len = 1;
       req.data.subscribe_sensor_list.train_num = train.train;
-      Send(hub, (char *)&req, sizeof(req),(char *)&res, sizeof(res));
+      Send(hub, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
       train.time[train.i] = res.data.subscribe_sensor_list.time;
       if (train.i == train.stop_marker) {
         int time = train.time[train.i] + train.stop_offset / train.vel;
@@ -143,7 +142,7 @@ void task_skynet() {
         int vel = train.distance[train.i] /
                   (train.time[train.i] - train.time[train.i - 1]);
         int pred = train.next_time[train.i] - train.time[train.i];
-        cursor_to_row(TIME_DIFF_ROW);
+        cursor_to_pos(TIME_DIFF_ROW, TIME_DIFF_COL, LINE_WIDTH);
         printf(COM2, "Time Diff: %d, Dist Diff: %d, Vel: %d, Svel: %d\r\n",
                pred, vel * pred, vel, train.vel);
         done_print();
@@ -153,7 +152,7 @@ void task_skynet() {
       if (train.i < train.len && train.vel) {
         train.next_time[train.i] =
             train.time[train.i - 1] + (train.distance[train.i] / train.vel);
-        cursor_to_row(SENSOR_PRED_ROW);
+        cursor_to_pos(SENSOR_PRED_ROW, SENSOR_PRED_COL, LINE_WIDTH);
         printf(COM2, "Next Sensor: %s at %d, Stage: %d (%d)\r\n",
                track[train.next[train.i]].name, train.next_time[train.i],
                train.state, train.state_counter);
@@ -194,7 +193,7 @@ void task_skynet() {
             train.j = 0;
             next_node = train.next[train.i];
             send_branches(&train, trainctl);
-            cursor_to_row(SENSOR_PRED_ROW + 1);
+            cursor_to_pos(VELOCITY_ROW, VELOCITY_COL, LINE_WIDTH);
             printf(COM2, "Vel: %d, Stop: %d, At: %d + %d", train.vel, 0,
                    train.next[train.stop_marker], left);
             done_print();

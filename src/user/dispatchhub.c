@@ -5,6 +5,8 @@ void dispatchhub() {
 
   RegisterAs("dispatchhub");
 
+  Create(10, sensor_courier);
+
   dispatchhub_request req;
   dispatchhub_response res;
   memset(&res, 0, sizeof(dispatchhub_response));
@@ -50,16 +52,16 @@ void dispatchhub() {
       // already parked
     } else if (req.type == DISPATCHHUB_SKYNET_TARGET) {
       res.data.skynet_target = req.data.skynet_target;
-      Reply(skynets[req.data.skynet_target.train], (char*)&req, sizeof(req));
+      Reply(skynets[req.data.skynet_target.train], (char *)&req, sizeof(req));
       res.type = DISPATCHHUB_GOOD;
-      Reply(client, (char*)&res, sizeof(res));
+      Reply(client, (char *)&res, sizeof(res));
     } else if (req.type == DISPATCHHUB_SENSOR_UPDATE) {
 
       memset((void *)&res, 0, sizeof(dispatchhub_response));
       res.type = DISPATCHHUB_GOOD;
       Reply(client, (char *)&res, sizeof(dispatchhub_response));
 
-      int *sensor_readings = req.data.sensor_update.sensor_readings;
+      char *sensor_readings = req.data.sensor_update.sensor_readings;
       unsigned int time = req.data.sensor_update.time;
 
       void *sensor_attribution_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];

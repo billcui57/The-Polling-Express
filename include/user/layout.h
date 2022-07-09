@@ -1,9 +1,35 @@
-#define LOG_ROW 30
+#define LINE_WIDTH 200
+
+#define ART_ROW 1
+#define ART_COL 1
+
+#define LOG_ROW 32
+#define LOG_COL 1
+
 #define INPUT_ROW LOG_ROW + 1
+#define INPUT_COL 1
+
 #define EVENT_ANNOUNCE_ROW INPUT_ROW + 2
+#define EVENT_ANNOUNCE_COL 1
+
 #define TIME_DIFF_ROW EVENT_ANNOUNCE_ROW + 1
+#define TIME_DIFF_COL 1
+
+#define VELOCITY_ROW SENSOR_PRED_ROW + 1
+#define VELOCITY_COL 1
+
 #define SENSOR_PRED_ROW TIME_DIFF_ROW + 1
-#define SENSOR_ROW 7
+#define SENSOR_PRED_COL 1
+
+#define SENSOR_TABLE_ROW_BEGIN SWITCH_TABLE_ROW_BEGIN
+#define SENSOR_TABLE_COL 30
+
 #define IDLE_ROW 5
+#define IDLE_COL 1
+
 #define TIME_ROW 6
+#define TIME_COL 1
+
 #define SWITCH_TABLE_ROW_BEGIN 8
+#define SWITCH_TABLE_COL 1
+#define SWITCH_TABLE_WIDTH 20

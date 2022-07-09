@@ -16,10 +16,10 @@ void timer_printer() {
     memset(formatted_time, 0, sizeof(int) * 3);
     get_formatted_curr_time(Time(clock_tid), formatted_time, 100);
 
-    cursor_to_row(TIME_ROW);
+    cursor_to_pos(TIME_ROW, TIME_COL, LINE_WIDTH);
     printf(COM2, "Time: %d min %d.%d secs\r\n", formatted_time[0],
            formatted_time[1], formatted_time[2]);
-    cursor_to_row(IDLE_ROW);
+    cursor_to_pos(IDLE_ROW, IDLE_COL, LINE_WIDTH);
     printf(COM2, "Idle: %d%%\r\n", idle_percentage);
     done_print();
     i++;

@@ -2,9 +2,10 @@
 
 #include "clockserver.h"
 #include "controlserver.h"
+#include "dispatchhub.h"
 #include "layout.h"
 #include "nameserver.h"
-#include "dispatchhub.h"
+#include "sensorprinter.h"
 #include "switchprinter.h"
 #include "syscall.h"
 #include "task.h"
