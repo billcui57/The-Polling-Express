@@ -2,6 +2,7 @@
 #include <heap.h>
 #include <syscall.h>
 #include <trainserver.h>
+#include <virtual.h>
 // have a heap of scheduled tasks
 // run tasks once time
 // run sensors if nothing runable
@@ -97,11 +98,13 @@ void task_trainserver() {
     } else if (req.type == BRANCH_EVENT) {
       branch_waiting = client;
     } else if (req.type == SPEED) {
+      req.data.task.target = v_p_train_num(req.data.task.target);
       heap_add(&h,
                build_task(&free, req.data.task.time, req.data.task.data | 16,
                           req.data.task.target, 2));
       Reply(client, (char *)&res, 0);
     } else if (req.type == REVERSE) {
+      req.data.task.target = v_p_train_num(req.data.task.target);
       heap_add(&h, build_task(&free, req.data.task.time, 16,
                               req.data.task.target, 2));
       heap_add(&h, build_task(&free, req.data.task.time + 500, 15,

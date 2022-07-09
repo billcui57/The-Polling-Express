@@ -7,7 +7,9 @@
 typedef enum {
   DISPATCHHUB_SENSOR_UPDATE,
   DISPATCHHUB_SUBSCRIBE_SENSOR_LIST,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT
+  DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT,
+  DISPATCHHUB_SKYNET_INIT,
+  DISPATCHHUB_SKYNET_TARGET,
 } dispatchhub_request_type;
 
 typedef enum {
@@ -18,6 +20,12 @@ typedef enum {
 typedef enum { DISPATCHHUB_GOOD } dispatchhub_response_type;
 
 #define MAX_SUBSCRIBED_SENSORS 5
+
+struct skynet_target {
+      char train, speed;
+      char source, destination;
+      int offset;
+};
 
 typedef struct dispatchhub_response {
 
@@ -35,6 +43,8 @@ typedef struct dispatchhub_response {
       int sensor_pool_len;
       unsigned int time;
     } subscribe_sensor_print;
+
+    struct skynet_target skynet_target;
 
   } data;
 
@@ -56,6 +66,9 @@ typedef struct dispatchhub_request {
       unsigned int time;
     } sensor_update;
 
+    struct skynet_target skynet_target;
   } data;
 
 } dispatchhub_request;
+
+void dispatchhub();

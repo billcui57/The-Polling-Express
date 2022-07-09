@@ -4,7 +4,7 @@
 #include "controlserver.h"
 #include "layout.h"
 #include "nameserver.h"
-#include "skynet.h"
+#include "dispatchhub.h"
 #include "switchprinter.h"
 #include "syscall.h"
 #include "task.h"

@@ -1,5 +1,7 @@
 #include "idle.h"
 
+#include <syscall.h>
+
 int idle_percentage;
 
 void idle() {

@@ -3,7 +3,7 @@
 #include "clockserver.h"
 #include "controlserver.h"
 #include "shell.h"
-#include "skynet.h"
+#include "dispatchhub.h"
 #include "trainserver.h"
 #include "uartserver.h"
 #include <kprintf.h>

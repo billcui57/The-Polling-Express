@@ -156,7 +156,7 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
-  task_tid skynet_tid = WhoIsBlock("skynet");
+  task_tid hub_tid = WhoIsBlock("dispatchhub");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -194,7 +194,7 @@ void shell() {
           continue;
         }
 
-        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+        if ((train_num < 0) || (train_num > MAX_NUM_TRAINS)) {
           print_debug("Please enter a valid train num");
           continue;
         }
@@ -237,7 +237,7 @@ void shell() {
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
         train_num = atoi(command_tokens[1]);
 
-        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+        if ((train_num < 0) || (train_num > MAX_NUM_TRAINS)) {
           print_debug("Please enter a valid train num");
           continue;
         }
@@ -254,15 +254,15 @@ void shell() {
         Shutdown();
 
       } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
-        skynet_msg req;
+        dispatchhub_request req;
         memset(&req, 0, sizeof(req));
-        req.type = SKYNET_TARGET;
-        req.msg.target.train = atoi(command_tokens[1]);
-        req.msg.target.speed = atoi(command_tokens[2]);
-        req.msg.target.source = track_name_to_num(track, command_tokens[3]);
-        req.msg.target.destination =
+        req.type = DISPATCHHUB_SKYNET_TARGET;
+        req.data.skynet_target.train = atoi(command_tokens[1]);
+        req.data.skynet_target.speed = atoi(command_tokens[2]);
+        req.data.skynet_target.source = track_name_to_num(track, command_tokens[3]);
+        req.data.skynet_target.destination =
             track_name_to_num(track, command_tokens[4]);
-        req.msg.target.offset = atoi(command_tokens[5]);
+        req.data.skynet_target.offset = atoi(command_tokens[5]);
         // train_num = atoi(command_tokens[1]);
         // dest_name = command_tokens[2];
         // offset = atoi(command_tokens[3]);
@@ -270,12 +270,12 @@ void shell() {
         controlserver_response res;
 
         int status =
-            Send(skynet_tid, (char *)&req, sizeof(skynet_msg), (char *)&res, 0);
+            Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
 
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
-                command_tokens[3], command_tokens[4], req.msg.target.offset);
+                command_tokens[3], command_tokens[4], req.data.skynet_target.offset);
         print_debug(debug_buffer);
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {
