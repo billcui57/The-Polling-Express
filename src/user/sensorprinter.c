@@ -17,6 +17,29 @@ void sensor_printer() {
   printf(COM2, "%s\r\n", table_name);
   done_print();
 
+  int sensor_attributions_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];
+  circular_buffer sensor_attributions[MAX_NUM_TRAINS];
+  for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
+    memset(sensor_attributions_backing[train_num], 0,
+           sizeof(int) * MAX_SUBSCRIBED_SENSORS);
+    cb_init(&(sensor_attributions[train_num]),
+            sensor_attributions_backing[train_num], MAX_SUBSCRIBED_SENSORS);
+    cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1, SENSOR_TABLE_COL,
+                  LINE_WIDTH);
+    printf(COM2, "Train %d: ", v_p_train_num(train_num));
+  }
+
+  int unattributed_sensors_backing[MAX_SUBSCRIBED_SENSORS];
+  circular_buffer unattributed_sensors;
+  memset(unattributed_sensors_backing, 0, sizeof(int) * MAX_SUBSCRIBED_SENSORS);
+  cb_init(&unattributed_sensors, unattributed_sensors_backing,
+          MAX_SUBSCRIBED_SENSORS);
+  cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1, SENSOR_TABLE_COL,
+                LINE_WIDTH);
+  printf(COM2, "Unattributed: ");
+
+  done_print();
+
   for (;;) {
 
     Send(dispatchhub, (char *)&req, sizeof(dispatchhub_request), (char *)&res,
@@ -26,56 +49,42 @@ void sensor_printer() {
     v_train_num *pool = res.data.subscribe_sensor_print.sensor_pool;
     unsigned int time = res.data.subscribe_sensor_print.time;
 
-    int attributed_cols[MAX_NUM_TRAINS];
-    int unattributed_col = 0;
-
-    char name_buffer[20];
-    memset(name_buffer, 0, sizeof(char) * 20);
-
-    for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-      attributed_cols[train_num] = 0;
-      cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1, SENSOR_TABLE_COL,
-                    LINE_WIDTH);
-
-      sprintf(name_buffer, "Train %d: ", v_p_train_num(train_num));
-
-      printf(COM2, "%s", name_buffer);
-      attributed_cols[train_num] += strlen(name_buffer);
-    }
-    memset(name_buffer, 0, sizeof(char) * 20);
-    cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1, SENSOR_TABLE_COL,
-                  LINE_WIDTH);
-    sprintf(name_buffer, "Unattributed: ");
-    printf(COM2, "%s", name_buffer);
-    unattributed_col += strlen(name_buffer);
-
     for (int i = 0; i < pool_len; i++) {
-
-      char sensor_print_buffer[20];
-
-      memset(sensor_print_buffer, 0, sizeof(char) * 20);
       if (pool[i] >= 0) {
-        cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + pool[i] + 1,
-                      SENSOR_TABLE_COL + attributed_cols[pool[i]], 0);
-
-        sprintf(sensor_print_buffer, "[%c%d]", (char)('A' + (i >> 4)),
-                (int)((i & 0xF) + 1));
-
-        printf(COM2, "%s\r\n", sensor_print_buffer);
-
-        attributed_cols[pool[i]] += strlen(sensor_print_buffer);
+        cb_push_back(&(sensor_attributions[pool[i]]), (void *)i, true);
       } else if (pool[i] == UNATTRIBUTED) {
-        cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1,
-                      SENSOR_TABLE_COL + unattributed_col, 0);
-
-        sprintf(sensor_print_buffer, "[%c%d]", (char)('A' + (i >> 4)),
-                (int)((i & 0xF) + 1));
-
-        printf(COM2, "%s\r\n", sensor_print_buffer);
-
-        unattributed_col += strlen(sensor_print_buffer);
+        cb_push_back(&unattributed_sensors, (void *)i, true);
       }
     }
+
+    for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
+
+      void *attributed_sensors[sensor_attributions[train_num].count];
+
+      cb_to_array(&(sensor_attributions[train_num]), attributed_sensors);
+
+      cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1,
+                    SENSOR_TABLE_COL + 10, LINE_WIDTH);
+
+      for (int i = 0; i < sensor_attributions[train_num].count; i++) {
+        printf(COM2, "[%c%d]",
+               (char)('A' + ((int)(attributed_sensors[i]) >> 4)),
+               ((int)(attributed_sensors[i]) & 0xF) + 1);
+      }
+    }
+
+    void *unattributed_sensors_arr[unattributed_sensors.count];
+
+    cb_to_array(&unattributed_sensors, unattributed_sensors_arr);
+
+    cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1,
+                  SENSOR_TABLE_COL + 15, LINE_WIDTH);
+    for (int i = 0; i < unattributed_sensors.count; i++) {
+      printf(COM2, "[%c%d]",
+             (char)('A' + ((int)(unattributed_sensors_arr[i]) >> 4)),
+             ((int)(unattributed_sensors_arr[i]) & 0xF) + 1);
+    }
+
     done_print();
   }
 }
