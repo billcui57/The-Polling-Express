@@ -22,7 +22,7 @@ void hide_cursor() {
 }
 
 void print_input(char *input, int *input_length) {
-  cursor_to_row(INPUT_ROW);
+  cursor_to_pos(INPUT_ROW, INPUT_COL, LINE_WIDTH);
   printf(COM2, "\033[35m");
   printf(COM2, ">");
   for (unsigned int i = 0; i < (*input_length); i++) {
@@ -35,7 +35,7 @@ void print_input(char *input, int *input_length) {
 }
 
 void print_debug(char *input) {
-  cursor_to_row(LOG_ROW);
+  cursor_to_pos(LOG_ROW, LOG_COL, LINE_WIDTH);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
   printf(COM2, "\033[0m");
@@ -120,13 +120,15 @@ void shell_init() {
 #ifndef DEBUG_MODE
   Create(5, timer_printer);
 #endif
+  Create(5, sensor_printer);
   Create(5, switch_printer);
-  Create(5, shell);
+
+  Create(6, shell);
 }
 
 void print_art() {
 
-  cursor_to_row(1);
+  cursor_to_pos(ART_ROW, ART_COL, LINE_WIDTH);
 
   int christmas_colours[3] = {32, 37, 31};
 
@@ -259,7 +261,8 @@ void shell() {
         req.type = DISPATCHHUB_SKYNET_TARGET;
         req.data.skynet_target.train = atoi(command_tokens[1]);
         req.data.skynet_target.speed = atoi(command_tokens[2]);
-        req.data.skynet_target.source = track_name_to_num(track, command_tokens[3]);
+        req.data.skynet_target.source =
+            track_name_to_num(track, command_tokens[3]);
         req.data.skynet_target.destination =
             track_name_to_num(track, command_tokens[4]);
         req.data.skynet_target.offset = atoi(command_tokens[5]);
@@ -269,13 +272,13 @@ void shell() {
 
         controlserver_response res;
 
-        int status =
-            Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
+        int status = Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
 
         // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
         //         train_num, dest_name, offset);
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
-                command_tokens[3], command_tokens[4], req.data.skynet_target.offset);
+                command_tokens[3], command_tokens[4],
+                req.data.skynet_target.offset);
         print_debug(debug_buffer);
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {

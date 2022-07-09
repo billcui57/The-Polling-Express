@@ -914,10 +914,28 @@ static int _vsnprintf(out_fct_type out, char *buffer, const size_t maxlen,
 
 void clear_screen(int com) { printf(com, "\033[2J"); };
 
-void cursor_to_row(int row) {
+void cursor_to_pos(int row, int col, int clearn) {
 #ifndef DEBUG_MODE
-  printf(COM2, "\033[%d;1H", row);
-  printf(COM2, "\033[K");
+  printf(COM2, "\033[%d;%dH", row, col);
+  n_clear(clearn);
+  printf(COM2, "\033[%d;%dH", row, col);
+#else
+  printf(COM2, "CURSOR POSITION %d %d:", row, col);
+#endif
+}
+
+void n_clear(int n) {
+  printf(COM2, "");
+#ifndef DEBUG_MODE
+
+  if (n == LINE_WIDTH) {
+    printf(COM2, "\033[K");
+  } else {
+    for (int i = 0; i < n; i++) {
+      printf(COM2, " ");
+    }
+  }
+
 #endif
 }
 

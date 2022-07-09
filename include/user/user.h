@@ -2,6 +2,7 @@
 
 #include "clockserver.h"
 #include "controlserver.h"
+#include "dispatchhub.h"
 #include "shell.h"
 #include "dispatchhub.h"
 #include "trainserver.h"

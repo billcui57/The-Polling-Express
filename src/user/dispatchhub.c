@@ -5,6 +5,8 @@ void dispatchhub() {
 
   RegisterAs("dispatchhub");
 
+  Create(10, sensor_courier);
+
   dispatchhub_request req;
   dispatchhub_response res;
   memset(&res, 0, sizeof(dispatchhub_response));
