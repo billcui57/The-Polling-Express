@@ -42,6 +42,7 @@ add_executable(kernel
   src/user/dispatchhub.c
   src/user/virtual.c
   src/user/sensorprinter.c
+  src/user/subscribeprinter.c
 )
 target_link_libraries(kernel -static gcc)
 

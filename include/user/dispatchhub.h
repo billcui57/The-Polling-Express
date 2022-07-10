@@ -9,6 +9,7 @@ typedef enum {
   DISPATCHHUB_SENSOR_UPDATE,
   DISPATCHHUB_SUBSCRIBE_SENSOR_LIST,
   DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT,
+  DISPATCHHUB_SUBSCRIPTION_PRINT,
   DISPATCHHUB_SKYNET_INIT,
   DISPATCHHUB_SKYNET_TARGET,
 } dispatchhub_request_type;
@@ -41,11 +42,14 @@ typedef struct dispatchhub_response {
 
     struct {
       v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
-      int sensor_pool_len;
       unsigned int time;
     } subscribe_sensor_print;
 
     struct skynet_target skynet_target;
+
+    struct {
+      v_train_num subscriptions[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+    } subscription_print;
 
   } data;
 
