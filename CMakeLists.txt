@@ -54,19 +54,19 @@ target_link_libraries(kernel -static gcc)
 # target_link_libraries(hashtable -static gcc)
 # enable_testing()
 # add_test(hashtable_test hashtable)
-
-# add_executable(circularbuffer
-# tests/unit/circularbuffer.c
-# src/circularbuffer.c
-# )
-# target_link_libraries(circularbuffer -static gcc)
-# enable_testing()
-# add_test(circularbuffer_test circularbuffer)
-add_executable(algorithms
-  tests/unit/algorithms.c
-  src/user/algorithms.c
-  src/user/track_data.c
+add_executable(circularbuffer
+  tests/unit/circularbuffer.c
+  src/common/circularbuffer.c
 )
-target_link_libraries(algorithms)
+target_link_libraries(circularbuffer)
 enable_testing()
-add_test(algorithms_test algorithms)
+add_test(circularbuffer_test circularbuffer)
+
+# add_executable(algorithms
+# tests/unit/algorithms.c
+# src/user/algorithms.c
+# src/user/track_data.c
+# )
+# target_link_libraries(algorithms)
+# enable_testing()
+# add_test(algorithms_test algorithms)

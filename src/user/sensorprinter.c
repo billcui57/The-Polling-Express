@@ -19,7 +19,8 @@ void sensor_printer() {
   circular_buffer sensor_attributions[MAX_NUM_TRAINS];
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
     cb_init(&(sensor_attributions[train_num]),
-            sensor_attributions_backing[train_num], MAX_SUBSCRIBED_SENSORS);
+            (void *)sensor_attributions_backing[train_num],
+            MAX_SUBSCRIBED_SENSORS, sizeof(int));
     cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1, SENSOR_TABLE_COL,
                   LINE_WIDTH);
     printf(COM2, "Train %d: ", v_p_train_num(train_num));
@@ -27,8 +28,8 @@ void sensor_printer() {
 
   int unattributed_sensors_backing[MAX_SUBSCRIBED_SENSORS];
   circular_buffer unattributed_sensors;
-  cb_init(&unattributed_sensors, unattributed_sensors_backing,
-          MAX_SUBSCRIBED_SENSORS);
+  cb_init(&unattributed_sensors, (void *)unattributed_sensors_backing,
+          MAX_SUBSCRIBED_SENSORS, sizeof(int));
   cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1, SENSOR_TABLE_COL,
                 LINE_WIDTH);
   printf(COM2, "Unattributed: ");
@@ -45,9 +46,9 @@ void sensor_printer() {
 
     for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
       if (pool[i] >= 0) {
-        cb_push_back(&(sensor_attributions[pool[i]]), (void *)i, true);
+        cb_push_back(&(sensor_attributions[pool[i]]), (void *)&i, true);
       } else if (pool[i] == UNATTRIBUTED) {
-        cb_push_back(&unattributed_sensors, (void *)i, true);
+        cb_push_back(&unattributed_sensors, (void *)&i, true);
       }
     }
 
@@ -61,7 +62,7 @@ void sensor_printer() {
                     SENSOR_TABLE_COL + 10, LINE_WIDTH);
 
       for (int i = 0; i < sensor_attributions[train_num].count; i++) {
-        printf(COM2, "[%c%d]",
+        printf(COM2, "[Time %d|%c%d]", time,
                (char)('A' + ((int)(attributed_sensors[i]) >> 4)),
                ((int)(attributed_sensors[i]) & 0xF) + 1);
       }
@@ -74,7 +75,7 @@ void sensor_printer() {
     cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1,
                   SENSOR_TABLE_COL + 15, LINE_WIDTH);
     for (int i = 0; i < unattributed_sensors.count; i++) {
-      printf(COM2, "[%c%d]",
+      printf(COM2, "[Time %d|%c%d]", time,
              (char)('A' + ((int)(unattributed_sensors_arr[i]) >> 4)),
              ((int)(unattributed_sensors_arr[i]) & 0xF) + 1);
     }

@@ -76,14 +76,13 @@ void dispatchhub() {
       char *sensor_readings = req.data.sensor_update.sensor_readings;
       unsigned int time = req.data.sensor_update.time;
 
-      void *sensor_attribution_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];
+      int sensor_attribution_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];
       circular_buffer sensor_attribution[MAX_NUM_TRAINS];
 
       for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-        memset(sensor_attribution_backing[train_num], 0,
-               sizeof(void *) * (MAX_SUBSCRIBED_SENSORS));
         cb_init(&(sensor_attribution[train_num]),
-                sensor_attribution_backing[train_num], MAX_SUBSCRIBED_SENSORS);
+                (void *)sensor_attribution_backing[train_num],
+                MAX_SUBSCRIBED_SENSORS, sizeof(int));
       }
 
       v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
@@ -101,7 +100,7 @@ void dispatchhub() {
             sensor_pool[i] = UNATTRIBUTED;
           } else {
             int status = cb_push_back(&(sensor_attribution[subscribers[i]]),
-                                      (void *)i, false);
+                                      (void *)&i, false);
             KASSERT(status != CB_FULL,
                     "Attributed sensors len must be <= MAX_SUBSCRIBED_SENSORS");
             sensor_pool[i] = subscribers[i];

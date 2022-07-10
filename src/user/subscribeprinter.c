@@ -18,8 +18,9 @@ void subscribe_printer() {
   int subscriptions_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];
   circular_buffer subscriptions[MAX_NUM_TRAINS];
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-    cb_init(&(subscriptions[train_num]), subscriptions_backing[train_num],
-            MAX_SUBSCRIBED_SENSORS);
+    cb_init(&(subscriptions[train_num]),
+            (void *)subscriptions_backing[train_num], MAX_SUBSCRIBED_SENSORS,
+            sizeof(int));
     cursor_to_pos(SUBSCRIBE_TABLE_ROW_BEGIN + train_num + 1,
                   SUBSCRIBE_TABLE_COL, LINE_WIDTH);
     printf(COM2, "Train %d: ", v_p_train_num(train_num));
@@ -41,7 +42,8 @@ void subscribe_printer() {
 
     for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
       if (subscription_result[i] >= 0) {
-        cb_push_back(&(subscriptions[subscription_result[i]]), (void *)i, true);
+        cb_push_back(&(subscriptions[subscription_result[i]]), (void *)&i,
+                     true);
       }
     }
 
