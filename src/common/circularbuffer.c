@@ -81,3 +81,5 @@ void cb_to_array(circular_buffer *cb, void **arr) {
     }
   }
 }
+
+void cb_clear(circular_buffer *cb) { cb_init(cb, cb->buffer, cb->capacity); }

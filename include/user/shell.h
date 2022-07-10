@@ -6,6 +6,7 @@
 #include "layout.h"
 #include "nameserver.h"
 #include "sensorprinter.h"
+#include "subscribeprinter.h"
 #include "switchprinter.h"
 #include "syscall.h"
 #include "task.h"

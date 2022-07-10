@@ -122,7 +122,7 @@ void shell_init() {
 #endif
   Create(5, sensor_printer);
   Create(5, switch_printer);
-
+  Create(5, subscribe_printer);
   Create(6, shell);
 }
 

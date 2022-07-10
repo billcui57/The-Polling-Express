@@ -11,17 +11,13 @@ void sensor_printer() {
 
   dispatchhub_response res;
 
-  char table_name[] = "[ Sensor Triggers ]";
-
-  cursor_to_pos(SENSOR_TABLE_ROW_BEGIN, SENSOR_TABLE_COL, strlen(table_name));
-  printf(COM2, "%s\r\n", table_name);
+  cursor_to_pos(SENSOR_TABLE_ROW_BEGIN, SENSOR_TABLE_COL, LINE_WIDTH);
+  printf(COM2, "[ Sensor Triggers ]");
   done_print();
 
   int sensor_attributions_backing[MAX_NUM_TRAINS][MAX_SUBSCRIBED_SENSORS];
   circular_buffer sensor_attributions[MAX_NUM_TRAINS];
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-    memset(sensor_attributions_backing[train_num], 0,
-           sizeof(int) * MAX_SUBSCRIBED_SENSORS);
     cb_init(&(sensor_attributions[train_num]),
             sensor_attributions_backing[train_num], MAX_SUBSCRIBED_SENSORS);
     cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1, SENSOR_TABLE_COL,
@@ -31,7 +27,6 @@ void sensor_printer() {
 
   int unattributed_sensors_backing[MAX_SUBSCRIBED_SENSORS];
   circular_buffer unattributed_sensors;
-  memset(unattributed_sensors_backing, 0, sizeof(int) * MAX_SUBSCRIBED_SENSORS);
   cb_init(&unattributed_sensors, unattributed_sensors_backing,
           MAX_SUBSCRIBED_SENSORS);
   cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1, SENSOR_TABLE_COL,
@@ -45,11 +40,10 @@ void sensor_printer() {
     Send(dispatchhub, (char *)&req, sizeof(dispatchhub_request), (char *)&res,
          sizeof(dispatchhub_response));
 
-    int pool_len = res.data.subscribe_sensor_print.sensor_pool_len;
     v_train_num *pool = res.data.subscribe_sensor_print.sensor_pool;
     unsigned int time = res.data.subscribe_sensor_print.time;
 
-    for (int i = 0; i < pool_len; i++) {
+    for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
       if (pool[i] >= 0) {
         cb_push_back(&(sensor_attributions[pool[i]]), (void *)i, true);
       } else if (pool[i] == UNATTRIBUTED) {

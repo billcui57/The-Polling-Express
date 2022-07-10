@@ -16,6 +16,7 @@ void dispatchhub() {
   v_train_num skynets[MAX_NUM_TRAINS];
 
   task_tid sensor_printer = -1;
+  task_tid subscribe_printer = -1;
 
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
     skynets[train_num] = Create(10, task_skynet);
@@ -46,8 +47,19 @@ void dispatchhub() {
         subscribers[subscribed_sensors[i]] = train_num;
       }
 
+      if (subscribe_printer != -1) {
+        memset(&res, 0, sizeof(dispatchhub_request_type));
+        res.type = DISPATCHHUB_GOOD;
+        memcpy(res.data.subscription_print.subscriptions, subscribers,
+               sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
+        Reply(subscribe_printer, (char *)&res, sizeof(dispatchhub_response));
+        subscribe_printer = -1;
+      }
+
     } else if (req.type == DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT) {
       sensor_printer = client;
+    } else if (req.type == DISPATCHHUB_SUBSCRIPTION_PRINT) {
+      subscribe_printer = client;
     } else if (req.type == DISPATCHHUB_SKYNET_INIT) {
       // already parked
     } else if (req.type == DISPATCHHUB_SKYNET_TARGET) {
@@ -117,8 +129,6 @@ void dispatchhub() {
       if (sensor_printer != -1) {
         memset((void *)&res, 0, sizeof(dispatchhub_response));
         res.type = DISPATCHHUB_GOOD;
-        res.data.subscribe_sensor_print.sensor_pool_len =
-            NUM_SENSOR_GROUPS * SENSORS_PER_GROUP;
         res.data.subscribe_sensor_print.time = time;
         memcpy(res.data.subscribe_sensor_print.sensor_pool, sensor_pool,
                sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
