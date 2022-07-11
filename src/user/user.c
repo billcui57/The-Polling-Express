@@ -33,7 +33,6 @@ void task_k4_init() {
                          DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR3"), DIR_CURVED);
-      mark_sensor_broken(track, track_name_to_num(track, "D1"));
       break;
     } else if (c == 'b') {
       init_trackb(track);
@@ -41,7 +40,6 @@ void task_k4_init() {
                          DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
-      mark_sensor_broken(track, track_name_to_num(track, "C13"));
       break;
     } else {
       printf(BW_COM2, "Please enter a valid track\r\n");
