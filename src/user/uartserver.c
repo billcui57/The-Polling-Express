@@ -30,9 +30,9 @@ void uart_com2_tx_server() {
   memset(&res, 0, sizeof(res));
 
   int MAX_CAPACITY = 100;
-  void *lock_backing[MAX_CAPACITY];
+  task_tid lock_backing[MAX_CAPACITY];
   circular_buffer lock_cb;
-  cb_init(&lock_cb, lock_backing, MAX_CAPACITY);
+  cb_init(&lock_cb, (void *)lock_backing, MAX_CAPACITY, sizeof(task_tid));
 
   char char_buffer[MAX_NUM_TASKS];
 
@@ -79,7 +79,7 @@ void uart_com2_tx_server() {
           Reply(notifier_tid, (char *)&res, sizeof(uartserver_response));
         }
       } else {
-        cb_push_back(&lock_cb, (void *)client, false);
+        cb_push_back(&lock_cb, (void *)&client, false);
         char_buffer[client] = send_char;
       }
 
@@ -87,14 +87,10 @@ void uart_com2_tx_server() {
 
       KASSERT(owned_by == client, "Uart 2 You must own the lock to uart");
 
-      void *next_void;
-      // bw_uart_put_char(COM2, 'E');
-      int status = cb_pop_front(&lock_cb, &next_void);
+      int status = cb_pop_front(&lock_cb, (void *)&owned_by);
 
       if (status == CB_EMPTY) {
         owned_by = -1;
-      } else {
-        owned_by = (task_tid)next_void;
       }
 
       res.data = 0;
@@ -178,9 +174,9 @@ void uart_com1_server() {
   memset(&res, 0, sizeof(res));
   task_tid client;
 
-  void *lock_backing[MAX_NUM_TASKS];
+  task_tid lock_backing[MAX_NUM_TASKS];
   circular_buffer lock_cb;
-  cb_init(&lock_cb, lock_backing, MAX_NUM_TASKS);
+  cb_init(&lock_cb, (void *)lock_backing, MAX_NUM_TASKS, sizeof(task_tid));
 
   task_tid owned_by = -1;
 
@@ -225,7 +221,7 @@ void uart_com1_server() {
           send_buffer[owned_by] = req.data;
         }
       } else {
-        cb_push_back(&lock_cb, (void *)client, false);
+        cb_push_back(&lock_cb, (void *)&client, false);
         send_buffer[client] = req.data;
       }
     } else if (req.type == GET_CHAR) {
@@ -242,14 +238,11 @@ void uart_com1_server() {
 
       KASSERT(owned_by == client, "Uart 1 You must own the lock to uart");
 
-      void *next_void;
-
-      int status = cb_pop_front(&lock_cb, &next_void);
+      int status = cb_pop_front(&lock_cb, (void *)&owned_by);
 
       if (status == CB_EMPTY) {
         owned_by = -1;
       } else {
-        owned_by = (task_tid)next_void;
         if (can_send) {
           can_send = false;
           res.data = 0;
