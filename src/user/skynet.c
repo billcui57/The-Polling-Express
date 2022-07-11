@@ -101,6 +101,17 @@ void task_skynet() {
     controlserver_response c_res;
     Send(controlserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
          sizeof(c_res));
+
+#ifdef DEBUG_MODE
+    cursor_to_pos(PATH_ROW_BEGIN + 3 * train.train + 1, SENSOR_TABLE_COL,
+                  LINE_WIDTH);
+    printf(COM2, "Train %d: ", v_p_train_num(train.train));
+    for (int i = 0; i < c_res.client.path_len; i++) {
+      printf(COM2, "[%s] ", track[c_res.client.path[i]].name);
+    }
+    done_print();
+#endif
+
     memset(train.time, 0, sizeof(int) * 160);
     memset(train.next_time, 0, sizeof(int) * 160);
     process_path(&train, c_res.client.path, c_res.client.path_len, trainctl, 0);
@@ -112,6 +123,15 @@ void task_skynet() {
     c_req.client.min_len = get_stopping(train.train, train.speed) / 1000 + 1;
     Send(controlserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
          sizeof(c_res));
+#ifdef DEBUG_MODE
+    cursor_to_pos(PATH_ROW_BEGIN + 3 * train.train + 1 + 1, SENSOR_TABLE_COL,
+                  LINE_WIDTH);
+    printf(COM2, "Train %d: ", v_p_train_num(train.train));
+    for (int i = 0; i < c_res.client.path_len; i++) {
+      printf(COM2, "[%s] ", track[c_res.client.path[i]].name);
+    }
+    done_print();
+#endif
     memcpy(train.next_out, c_res.client.path, 2 * TRACK_MAX * sizeof(int));
     train.out_len = c_res.client.path_len;
     train.dist = c_res.client.path_dist * 1000;

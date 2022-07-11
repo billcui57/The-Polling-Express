@@ -12,7 +12,7 @@ void sensor_printer() {
   dispatchhub_response res;
 
   cursor_to_pos(SENSOR_TABLE_ROW_BEGIN, SENSOR_TABLE_COL, LINE_WIDTH);
-  printf(COM2, "[ Sensor Triggers ]");
+  printf(COM2, "[ Oldest <- Sensor Triggers -> Newest ]");
   done_print();
 
   typedef struct sensor_trigger {
