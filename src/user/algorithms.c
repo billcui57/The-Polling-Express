@@ -1,4 +1,29 @@
 #include "algorithms.h"
+#include "stdio.h"
+
+int get_path_dist(track_node *track, int *path, int path_len) {
+  int dist = 0;
+  for (int i = 0; i < path_len - 1; i++) {
+
+    if (track[path[i]].type == NODE_BRANCH) {
+      if (track[path[i]].edge[DIR_CURVED].dest == &(track[path[i + 1]])) {
+        dist += track[path[i]].edge[DIR_CURVED].dist;
+      } else if (track[path[i]].edge[DIR_STRAIGHT].dest ==
+                 &(track[path[i + 1]])) {
+        dist += track[path[i]].edge[DIR_STRAIGHT].dist;
+      } else {
+        return -1;
+      }
+    } else {
+      if (track[path[i]].edge[DIR_AHEAD].dest == &(track[path[i + 1]])) {
+        dist += track[path[i]].edge[DIR_AHEAD].dist;
+      } else {
+        return -1;
+      }
+    }
+  }
+  return dist;
+}
 
 bool is_switch_node(track_node *node) {
   return (node->type == NODE_BRANCH) || ((node->type == NODE_MERGE));
