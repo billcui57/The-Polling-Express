@@ -2,6 +2,10 @@
 #include <assert.h>
 #include <stdio.h>
 
+void path_dist_test(track_node *track, track_node *path, int path_len) {
+  printf("%d", get_path_dist(track, path, path_len));
+}
+
 void dijkstra_test(track_node *track, char *src_name, char *dest_name,
                    bool *avoid, int min_dist) {
 
@@ -90,8 +94,8 @@ void dijkstra_test(track_node *track, char *src_name, char *dest_name,
 }
 
 int main() {
-  bool avoid[TRACK_MAX];
-  memset(avoid, 0, sizeof(bool) * TRACK_MAX);
+  // bool avoid[TRACK_MAX];
+  // memset(avoid, 0, sizeof(bool) * TRACK_MAX);
 
   // avoid[104] = true;
   track_node track[TRACK_MAX];
@@ -100,7 +104,29 @@ int main() {
   //                    DIR_CURVED);
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR155")]),
   //                    DIR_STRAIGHT);
-  dijkstra_test(track, "E14", "E9", avoid, 500);
+  // dijkstra_test(track, "E14", "E9", avoid, 500);
+
+  //  track_name_to_num(track, "B16"),   track_name_to_num(track, "BR15"),
+  //     track_name_to_num(track, "C10"),   track_name_to_num(track, "BR16"),
+  //     track_name_to_num(track, "B3"),    track_name_to_num(track, "C2"),
+  //     track_name_to_num(track, "MR153"), track_name_to_num(track, "MR154"),
+  //     track_name_to_num(track, "BR156"), track_name_to_num(track, "E2"),
+  //     track_name_to_num(track, "E15"),   track_name_to_num(track, "MR13"),
+  //     track_name_to_num(track, "C12"),   track_name_to_num(track, "MR14"),
+  //     track_name_to_num(track, "A4"),    track_name_to_num(track, "B16"),
+
+  int path[] = {
+      track_name_to_num(track, "B16"),   track_name_to_num(track, "BR15"),
+      track_name_to_num(track, "C10"),   track_name_to_num(track, "BR16"),
+      track_name_to_num(track, "B3"),    track_name_to_num(track, "C2"),
+      track_name_to_num(track, "MR153"), track_name_to_num(track, "MR154"),
+      track_name_to_num(track, "BR156"), track_name_to_num(track, "E2"),
+      track_name_to_num(track, "E15"),   track_name_to_num(track, "MR13"),
+      track_name_to_num(track, "C12"),   track_name_to_num(track, "MR14"),
+      track_name_to_num(track, "A4"),    track_name_to_num(track, "B16"),
+  };
+
+  path_dist_test(track, path, 16);
 
   // printf("%d\r\n",
   //        track[track_name_to_num(track, "C15")].edge[DIR_STRAIGHT].dist);
