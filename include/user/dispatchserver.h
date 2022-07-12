@@ -6,20 +6,20 @@
 #include "virtual.h"
 
 typedef enum {
-  DISPATCHHUB_SENSOR_UPDATE,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_LIST,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT,
-  DISPATCHHUB_SUBSCRIPTION_PRINT,
-  DISPATCHHUB_straightpathworker_INIT,
-  DISPATCHHUB_straightpathworker_TARGET,
-} dispatchhub_request_type;
+  DISPATCHSERVER_SENSOR_UPDATE,
+  DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST,
+  DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT,
+  DISPATCHSERVER_SUBSCRIPTION_PRINT,
+  DISPATCHSERVER_STRAIGHTPATHWORKER_INIT,
+  DISPATCHSERVER_STRAIGHTPATHWORKER_TARGET,
+} dispatchserver_request_type;
 
 typedef enum {
   NOT_TRIGGERED = -1,
   UNATTRIBUTED = -2
 } dispatch_sensor_pool_type;
 
-typedef enum { DISPATCHHUB_GOOD } dispatchhub_response_type;
+typedef enum { DISPATCHSERVER_GOOD } dispatchserver_response_type;
 
 #define MAX_SUBSCRIBED_SENSORS 5
 
@@ -29,9 +29,9 @@ struct straightpathworker_target {
   int offset;
 };
 
-typedef struct dispatchhub_response {
+typedef struct dispatchserver_response {
 
-  dispatchhub_response_type type;
+  dispatchserver_response_type type;
 
   union {
     struct {
@@ -53,10 +53,10 @@ typedef struct dispatchhub_response {
 
   } data;
 
-} dispatchhub_response;
+} dispatchserver_response;
 
-typedef struct dispatchhub_request {
-  dispatchhub_request_type type;
+typedef struct dispatchserver_request {
+  dispatchserver_request_type type;
 
   union {
 
@@ -74,6 +74,6 @@ typedef struct dispatchhub_request {
     struct straightpathworker_target straightpathworker_target;
   } data;
 
-} dispatchhub_request;
+} dispatchserver_request;
 
-void dispatchhub();
+void dispatchserver();

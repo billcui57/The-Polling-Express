@@ -1,15 +1,15 @@
-#include "dispatchhub.h"
+#include "dispatchserver.h"
 #include "straightpathworker.h"
 
-void dispatchhub() {
+void dispatchserver() {
 
-  RegisterAs("dispatchhub");
+  RegisterAs("dispatchserver");
 
   Create(10, sensor_courier);
 
-  dispatchhub_request req;
-  dispatchhub_response res;
-  memset(&res, 0, sizeof(dispatchhub_response));
+  dispatchserver_request req;
+  dispatchserver_response res;
+  memset(&res, 0, sizeof(dispatchserver_response));
 
   task_tid client;
 
@@ -28,9 +28,9 @@ void dispatchhub() {
   }
 
   for (;;) {
-    Receive(&client, (char *)&req, sizeof(dispatchhub_request));
+    Receive(&client, (char *)&req, sizeof(dispatchserver_request));
 
-    if (req.type == DISPATCHHUB_SUBSCRIBE_SENSOR_LIST) {
+    if (req.type == DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST) {
 
       int *subscribed_sensors =
           req.data.subscribe_sensor_list.subscribed_sensors;
@@ -48,31 +48,31 @@ void dispatchhub() {
       }
 
       if (subscribe_printer != -1) {
-        memset(&res, 0, sizeof(dispatchhub_request_type));
-        res.type = DISPATCHHUB_GOOD;
+        memset(&res, 0, sizeof(dispatchserver_request_type));
+        res.type = DISPATCHSERVER_GOOD;
         memcpy(res.data.subscription_print.subscriptions, subscribers,
                sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
-        Reply(subscribe_printer, (char *)&res, sizeof(dispatchhub_response));
+        Reply(subscribe_printer, (char *)&res, sizeof(dispatchserver_response));
         subscribe_printer = -1;
       }
 
-    } else if (req.type == DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT) {
+    } else if (req.type == DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT) {
       sensor_printer = client;
-    } else if (req.type == DISPATCHHUB_SUBSCRIPTION_PRINT) {
+    } else if (req.type == DISPATCHSERVER_SUBSCRIPTION_PRINT) {
       subscribe_printer = client;
-    } else if (req.type == DISPATCHHUB_straightpathworker_INIT) {
+    } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_INIT) {
       // already parked
-    } else if (req.type == DISPATCHHUB_straightpathworker_TARGET) {
+    } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_TARGET) {
       res.data.straightpathworker_target = req.data.straightpathworker_target;
       Reply(straightpathworkers[req.data.straightpathworker_target.train],
             (char *)&req, sizeof(req));
-      res.type = DISPATCHHUB_GOOD;
+      res.type = DISPATCHSERVER_GOOD;
       Reply(client, (char *)&res, sizeof(res));
-    } else if (req.type == DISPATCHHUB_SENSOR_UPDATE) {
+    } else if (req.type == DISPATCHSERVER_SENSOR_UPDATE) {
 
-      memset((void *)&res, 0, sizeof(dispatchhub_response));
-      res.type = DISPATCHHUB_GOOD;
-      Reply(client, (char *)&res, sizeof(dispatchhub_response));
+      memset((void *)&res, 0, sizeof(dispatchserver_response));
+      res.type = DISPATCHSERVER_GOOD;
+      Reply(client, (char *)&res, sizeof(dispatchserver_response));
 
       char *sensor_readings = req.data.sensor_update.sensor_readings;
       unsigned int time = req.data.sensor_update.time;
@@ -116,24 +116,24 @@ void dispatchhub() {
         if (sensor_attribution[train_num].count == 0) {
           continue;
         }
-        memset((void *)&res, 0, sizeof(dispatchhub_response));
-        res.type = DISPATCHHUB_GOOD;
+        memset((void *)&res, 0, sizeof(dispatchserver_response));
+        res.type = DISPATCHSERVER_GOOD;
         res.data.subscribe_sensor_list.len =
             sensor_attribution[train_num].count;
         res.data.subscribe_sensor_list.time = time;
         cb_to_array(&(sensor_attribution[train_num]),
                     res.data.subscribe_sensor_list.triggered_sensors);
         Reply(straightpathworkers[train_num], (char *)&res,
-              sizeof(dispatchhub_response));
+              sizeof(dispatchserver_response));
       }
 
       if (sensor_printer != -1) {
-        memset((void *)&res, 0, sizeof(dispatchhub_response));
-        res.type = DISPATCHHUB_GOOD;
+        memset((void *)&res, 0, sizeof(dispatchserver_response));
+        res.type = DISPATCHSERVER_GOOD;
         res.data.subscribe_sensor_print.time = time;
         memcpy(res.data.subscribe_sensor_print.sensor_pool, sensor_pool,
                sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
-        Reply(sensor_printer, (char *)&res, sizeof(dispatchhub_response));
+        Reply(sensor_printer, (char *)&res, sizeof(dispatchserver_response));
         sensor_printer = -1;
       }
     }

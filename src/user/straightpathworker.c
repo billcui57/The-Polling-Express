@@ -26,7 +26,7 @@ Trainctl
 #include <magic_numbers.h>
 #include <track_data.h>
 
-#include "dispatchhub.h"
+#include "dispatchserver.h"
 #include "straightpathworker.h"
 
 void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
@@ -77,15 +77,15 @@ void task_straightpathworker() {
   task_tid pathserver = WhoIsBlock("pathserver");
   task_tid trainctl = WhoIsBlock("trainctl");
 
-  dispatchhub_request req;
-  dispatchhub_response res;
+  dispatchserver_request req;
+  dispatchserver_response res;
   memset(&req, 0, sizeof(req));
 
   train_record train;
   train.vel = 0;
   int next_node = -1;
   while (true) {
-    req.type = DISPATCHHUB_straightpathworker_INIT;
+    req.type = DISPATCHSERVER_STRAIGHTPATHWORKER_INIT;
     Send(hub, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
     train.train = res.data.straightpathworker_target.train;
     train.speed = res.data.straightpathworker_target.speed;
@@ -121,7 +121,7 @@ void task_straightpathworker() {
     send_branches(&train, trainctl);
     TrainCommand(trainctl, Time(clock) + 5, SPEED, train.train, train.speed);
     while (next_node != -1) {
-      req.type = DISPATCHHUB_SUBSCRIBE_SENSOR_LIST;
+      req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST;
       req.data.subscribe_sensor_list.subscribed_sensors[0] = next_node;
       req.data.subscribe_sensor_list.len = 1;
       req.data.subscribe_sensor_list.train_num = train.train;

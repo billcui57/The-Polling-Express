@@ -25,6 +25,6 @@
     "pathserver.h": "c",
     "track_data.h": "c",
     "track_node.h": "c",
-    "dispatchhub.h": "c"
+    "dispatchserver.h": "c"
   }
 }

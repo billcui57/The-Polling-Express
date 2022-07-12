@@ -39,7 +39,7 @@ add_executable(kernel
   src/user/timerprinter.c
   src/user/switchprinter.c
   src/user/sensorcourier.c
-  src/user/dispatchhub.c
+  src/user/dispatchserver.c
   src/user/virtual.c
   src/user/sensorprinter.c
   src/user/subscribeprinter.c
