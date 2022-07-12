@@ -26,7 +26,7 @@ add_executable(kernel
   src/user/uartserver.c
   src/user/trainserver.c
   src/user/straightpathworker.c
-  src/user/pathserver.c
+  src/user/pathworker.c
   src/common/circularbuffer.c
   src/common/heap.c
   src/common/my_string.c

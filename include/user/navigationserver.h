@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nameserver.h"
-#include "pathserver.h"
+#include "pathworker.h"
 #include "straightpathworker.h"
 #include "task.h"
 #include "virtual.h"

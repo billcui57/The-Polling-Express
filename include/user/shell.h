@@ -1,10 +1,10 @@
 #pragma once
 
 #include "clockserver.h"
-#include "pathserver.h"
 #include "dispatchserver.h"
 #include "layout.h"
 #include "nameserver.h"
+#include "pathworker.h"
 #include "sensorprinter.h"
 #include "subscribeprinter.h"
 #include "switchprinter.h"

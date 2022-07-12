@@ -294,7 +294,7 @@ void shell() {
         req.data.straightpathworker_target.destination = dest_num;
         req.data.straightpathworker_target.offset = offset;
 
-        pathserver_response res;
+        pathworker_response res;
 
         int status = Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
 
