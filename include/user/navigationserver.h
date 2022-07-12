@@ -41,7 +41,7 @@ typedef struct navigationserver_request {
 
     struct {
       v_train_num train_num;
-      int *path;
+      int path[TRACK_MAX];
       int path_len;
       int path_dist;
       bool updated_reserved_nodes[TRACK_MAX];
@@ -63,9 +63,8 @@ typedef struct navigationserver_response {
   navigationserver_response_type type;
   union {
     struct {
-      v_train_num train;
       int speed;
-      int *path;
+      int path[TRACK_MAX];
       int path_len;
       int offset;
     } straightpathworker;
@@ -84,3 +83,5 @@ typedef struct navigationserver_response {
   } data;
 
 } navigationserver_response;
+
+void navigation_server();

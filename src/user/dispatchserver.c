@@ -40,6 +40,8 @@ void dispatchserver() {
 
       v_train_num train_num = req.data.subscribe_sensor_list.train_num;
 
+      straightpathworkers[train_num] = client;
+
       for (int i = 0; i < subscribed_sensors_len; i++) {
         KASSERT(subscribers[subscribed_sensors[i]] == -1,
                 "Only one task can subscribe to a sensor at a time");

@@ -4,7 +4,7 @@
 #include "dispatchserver.h"
 #include "layout.h"
 #include "nameserver.h"
-#include "pathworker.h"
+#include "navigationserver.h"
 #include "sensorprinter.h"
 #include "subscribeprinter.h"
 #include "switchprinter.h"
