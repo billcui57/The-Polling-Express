@@ -13,14 +13,13 @@ void dispatchserver() {
 
   task_tid client;
 
-  v_train_num straightpathworkers[MAX_NUM_TRAINS];
+  task_tid straightpathworkers[MAX_NUM_TRAINS];
+  for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
+    straightpathworkers[train_num] = -1;
+  }
 
   task_tid sensor_printer = -1;
   task_tid subscribe_printer = -1;
-
-  for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-    straightpathworkers[train_num] = Create(10, task_straightpathworker);
-  }
 
   v_train_num subscribers[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
   for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
@@ -61,13 +60,8 @@ void dispatchserver() {
     } else if (req.type == DISPATCHSERVER_SUBSCRIPTION_PRINT) {
       subscribe_printer = client;
     } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_INIT) {
-      // already parked
-    } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_TARGET) {
-      res.data.straightpathworker_target = req.data.straightpathworker_target;
-      Reply(straightpathworkers[req.data.straightpathworker_target.train],
-            (char *)&req, sizeof(req));
-      res.type = DISPATCHSERVER_GOOD;
-      Reply(client, (char *)&res, sizeof(res));
+      v_train_num train_num = req.data.worker_init.train_num;
+      straightpathworkers[train_num] = client;
     } else if (req.type == DISPATCHSERVER_SENSOR_UPDATE) {
 
       memset((void *)&res, 0, sizeof(dispatchserver_response));

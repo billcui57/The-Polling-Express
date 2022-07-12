@@ -65,10 +65,11 @@ void navigation_server() {
 
   RegisterAs("navigationserver");
 
+  task_tid straightpath_workers[MAX_NUM_TRAINS];
   task_tid straightpath_workers_parking[MAX_NUM_TRAINS];
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
     straightpath_workers_parking[train_num] = -1;
-    Create(10, task_straightpathworker);
+    straightpath_workers[train_num] = Create(10, task_straightpathworker);
   }
 
   straightpath_task_t straightpath_tasks_backing[MAX_NUM_TRAINS]
@@ -167,8 +168,11 @@ void navigation_server() {
 
       int *path = req.data.pathfindworker_done.path;
       int path_len = req.data.pathfindworker_done.path_len;
+      int path_dist = req.data.pathfindworker_done.path_dist;
 
-      // TODO: reservation
+      memset(reserved_nodes,
+             req.data.pathfindworker_done.updated_reserved_nodes,
+             sizeof(bool) * TRACK_MAX);
 
       segments_fill_straightpath_tasks(track, path, path_len,
                                        &(straightpath_tasks[train_num]),
@@ -209,90 +213,19 @@ void navigation_server() {
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
       Reply(client, (char *)&res, sizeof(navigationserver_response));
+    } else if (req.type == STRAIGHTPATH_WORKER_WHOAMI) {
+      memset(&res, 0, sizeof(navigationserver_response));
+
+      for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
+        if (straightpath_workers[train_num] == client) {
+          res.type = NAVIGATIONSERVER_GOOD;
+          res.data.whoami.train = train_num;
+          Reply(client, (char *)&res, sizeof(navigationserver_response));
+          break;
+        }
+      }
+
+      KASSERT(0, "Invalid straightpath worker");
     }
   }
 }
-
-// void navigation_server() {
-
-//   RegisterAs("navigationserver");
-
-//   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-//     Create(10, task_straightpathworker);
-//   }
-
-//   straightpath_task_t straightpath_tasks_backing[MAX_NUM_TRAINS]
-//                                                 [MAX_STRAIGHTPATH_TASKS];
-//   circular_buffer straightpath_tasks[MAX_NUM_TRAINS];
-//   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-//     cb_init(&(straightpath_tasks[0]),
-//             (void *)straightpath_tasks_backing[train_num],
-//             MAX_STRAIGHTPATH_TASKS, sizeof(straightpath_task_t));
-//   }
-
-//   task_tid pathfind_workers[MAX_NUM_TRAINS];
-//   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-//     pathfind_workers[train_num] = Create(10, pathfind_worker);
-//   }
-//   pathfind_task_t pathfind_tasks[MAX_NUM_TRAINS];
-
-//   bool pathfind_worker_parked[MAX_NUM_TRAINS];
-//   bool straightpath_worker_parked[MAX_NUM_TRAINS];
-//   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-//     pathfind_worker_parked[train_num] = false;
-//     straightpath_worker_parked[train_num] = false;
-//   }
-
-//   int train_speeds[MAX_NUM_TRAINS];
-//   memset(train_speeds, 0, sizeof(int) * MAX_NUM_TRAINS);
-
-//   navigationserver_request req;
-//   navigationserver_response res;
-//   memset(&res, 0, sizeof(navigationserver_response));
-
-//   task_tid client;
-
-//   for (;;) {
-
-//     Receive(&client, &req, sizeof(navigationserver_request));
-
-//     if (req.type == NAVIGATION_REQUEST) {
-
-//       v_train_num train_num = req.data.navigation_request.train;
-
-//       if (!pathfind_worker_parked[train_num] ||
-//           !straightpath_worker_parked[train_num]) {
-//         memset(&res, 0, sizeof(navigationserver_response));
-//         res.type = NAVIGATIONSERVER_BUSY;
-//         Reply(client, &res, sizeof(nameserver_response));
-//         continue;
-//       }
-
-//       memset(&res, 0, sizeof(navigationserver_response));
-//       res.type = PATHFIND_WORKER_HERES_WORK;
-//       res.data.pathfindworker.offset = req.data.navigation_request.offset;
-//       res.data.pathfindworker.train = train_num;
-//       res.data.pathfindworker.dest =
-//           req.data.navigation_request.destination_num;
-//       res.data.pathfindworker.src = req.data.navigation_request.source_num;
-//       train_speeds[train_num] = req.data.navigation_request.speed;
-
-//       pathfind_worker_parked[train_num] = false;
-
-//       Reply(pathfind_workers[train_num], &res,
-//             sizeof(navigationserver_response));
-
-//     } else if (req.type == PATHFIND_WORKER) {
-//       v_train_num train_num = req.data.pathfindworker.train_num;
-//       pathfind_worker_parked[train_num] = true;
-//     } else if (req.type == PATHFIND_WORKER_DONE) {
-//       v_train_num train_num = req.data.pathfindworker_done.train_num;
-//       int *path = req.data.pathfindworker_done.path;
-//       int path_len = req.data.pathfindworker_done.path_len;
-
-//       segments_fill_straightpath_tasks(track, path, path_len,
-//                                        &(straightpath_tasks[train_num]));
-//       // break it up in to segments and add to straightpath cb
-//     }
-//   }
-// }
