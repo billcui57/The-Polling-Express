@@ -18,8 +18,8 @@ Trainctl
  */
 
 #include <clockserver.h>
-#include <controlserver.h>
 #include <kprintf.h>
+#include <pathserver.h>
 #include <syscall.h>
 #include <trainserver.h>
 
@@ -27,7 +27,7 @@ Trainctl
 #include <track_data.h>
 
 #include "dispatchhub.h"
-#include "skynet.h"
+#include "straightpathworker.h"
 
 void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
                   int time) {
@@ -71,10 +71,10 @@ void send_branches(train_record *t, task_tid trainctl) {
   }
 }
 
-void task_skynet() {
+void task_straightpathworker() {
   task_tid hub = MyParentTid();
   task_tid clock = WhoIsBlock("clockserver");
-  task_tid controlserver = WhoIsBlock("controlserver");
+  task_tid pathserver = WhoIsBlock("pathserver");
   task_tid trainctl = WhoIsBlock("trainctl");
 
   dispatchhub_request req;
@@ -85,21 +85,21 @@ void task_skynet() {
   train.vel = 0;
   int next_node = -1;
   while (true) {
-    req.type = DISPATCHHUB_SKYNET_INIT;
+    req.type = DISPATCHHUB_straightpathworker_INIT;
     Send(hub, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
-    train.train = res.data.skynet_target.train;
-    train.speed = res.data.skynet_target.speed;
+    train.train = res.data.straightpathworker_target.train;
+    train.speed = res.data.straightpathworker_target.speed;
     train.state = TRAIN_TOLOOP;
     train.state_counter = 0;
-    controlserver_request c_req;
+    pathserver_request c_req;
     memset(&c_req, 0, sizeof(c_req));
     c_req.type = PATHFIND;
-    c_req.client.src = res.data.skynet_target.source;
+    c_req.client.src = res.data.straightpathworker_target.source;
     c_req.client.dest = 74;
     c_req.client.offset = 0;
     c_req.client.min_len = 0;
-    controlserver_response c_res;
-    Send(controlserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
+    pathserver_response c_res;
+    Send(pathserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
          sizeof(c_res));
 
 #ifdef DEBUG_MODE
@@ -118,10 +118,10 @@ void task_skynet() {
     train.i = 0;
     train.j = 0;
     c_req.client.src = 57;
-    c_req.client.dest = res.data.skynet_target.destination;
-    c_req.client.offset = res.data.skynet_target.offset;
+    c_req.client.dest = res.data.straightpathworker_target.destination;
+    c_req.client.offset = res.data.straightpathworker_target.offset;
     c_req.client.min_len = get_stopping(train.train, train.speed) / 1000 + 1;
-    Send(controlserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
+    Send(pathserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
          sizeof(c_res));
 #ifdef DEBUG_MODE
     cursor_to_pos(PATH_ROW_BEGIN + 3 * train.train + 1 + 1, SENSOR_TABLE_COL,

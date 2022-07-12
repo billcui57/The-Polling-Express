@@ -8,24 +8,24 @@
 #include "trainserver.h"
 
 typedef enum {
-  CONTROLSERVER_GOOD,
+  pathserver_GOOD,
   WORKER_PATHFIND
-} controlserver_response_type;
+} pathserver_response_type;
 
 typedef enum {
   PATHFIND,
   CONTROL_WORKER,
   CONTROL_WORKER_DONE,
-} controlserver_request_type;
+} pathserver_request_type;
 
-typedef enum { TASK_PATHFIND } controlserver_client_task_type;
+typedef enum { TASK_PATHFIND } pathserver_client_task_type;
 
 typedef enum {
   WORKER_PATHFIND_GOOD,
-} controlserver_worker_response_type;
+} pathserver_worker_response_type;
 
-typedef struct controlserver_client_task {
-  controlserver_client_task_type type;
+typedef struct pathserver_client_task {
+  pathserver_client_task_type type;
 
   union {
     struct {
@@ -36,11 +36,11 @@ typedef struct controlserver_client_task {
       int min_len;
     } pathfind;
   };
-} controlserver_client_task;
+} pathserver_client_task;
 
-typedef struct controlserver_request {
+typedef struct pathserver_request {
 
-  controlserver_request_type type;
+  pathserver_request_type type;
 
   union {
     struct {
@@ -51,7 +51,7 @@ typedef struct controlserver_request {
     } client;
 
     struct {
-      controlserver_worker_response_type type;
+      pathserver_worker_response_type type;
       task_tid whomfor;
       int path_len;
       int path_dist;
@@ -59,10 +59,10 @@ typedef struct controlserver_request {
     } worker;
   };
 
-} controlserver_request;
+} pathserver_request;
 
-typedef struct controlserver_response {
-  controlserver_response_type type;
+typedef struct pathserver_response {
+  pathserver_response_type type;
 
   union {
     struct {
@@ -80,6 +80,6 @@ typedef struct controlserver_response {
       int path[2 * TRACK_MAX];
     } client;
   };
-} controlserver_response;
+} pathserver_response;
 
 void control_server();

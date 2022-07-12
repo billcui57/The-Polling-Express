@@ -22,7 +22,7 @@
     "user.h": "c",
     "pathfinder.h": "c",
     "algorithms.h": "c",
-    "controlserver.h": "c",
+    "pathserver.h": "c",
     "track_data.h": "c",
     "track_node.h": "c",
     "dispatchhub.h": "c"
