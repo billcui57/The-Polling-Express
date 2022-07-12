@@ -10,8 +10,7 @@ typedef enum {
   DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST,
   DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT,
   DISPATCHSERVER_SUBSCRIPTION_PRINT,
-  DISPATCHSERVER_STRAIGHTPATHWORKER_INIT,
-  DISPATCHSERVER_STRAIGHTPATHWORKER_TARGET,
+  DISPATCHSERVER_STRAIGHTPATHWORKER_INIT
 } dispatchserver_request_type;
 
 typedef enum {
@@ -22,12 +21,6 @@ typedef enum {
 typedef enum { DISPATCHSERVER_GOOD } dispatchserver_response_type;
 
 #define MAX_SUBSCRIBED_SENSORS 5
-
-struct straightpathworker_target {
-  char train, speed;
-  char source, destination;
-  int offset;
-};
 
 typedef struct dispatchserver_response {
 
@@ -44,8 +37,6 @@ typedef struct dispatchserver_response {
       v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
       unsigned int time;
     } subscribe_sensor_print;
-
-    struct straightpathworker_target straightpathworker_target;
 
     struct {
       v_train_num subscriptions[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
@@ -71,7 +62,10 @@ typedef struct dispatchserver_request {
       unsigned int time;
     } sensor_update;
 
-    struct straightpathworker_target straightpathworker_target;
+    struct {
+      v_train_num train_num;
+    } worker_init;
+
   } data;
 
 } dispatchserver_request;
