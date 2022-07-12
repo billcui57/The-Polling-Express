@@ -25,8 +25,8 @@ add_executable(kernel
   src/user/clockserver.c
   src/user/uartserver.c
   src/user/trainserver.c
-  src/user/skynet.c
-  src/user/controlserver.c
+  src/user/straightpathworker.c
+  src/user/pathserver.c
   src/common/circularbuffer.c
   src/common/heap.c
   src/common/my_string.c

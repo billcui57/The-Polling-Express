@@ -1,7 +1,7 @@
 #pragma once
 
 #include "clockserver.h"
-#include "controlserver.h"
+#include "pathserver.h"
 #include "dispatchhub.h"
 #include "layout.h"
 #include "nameserver.h"

@@ -1,4 +1,4 @@
-#include "controlserver.h"
+#include "pathserver.h"
 #include <syscall.h>
 
 // return path + distance
@@ -8,9 +8,9 @@ void control_worker() {
   task_tid clock = WhoIsBlock("clockserver");
   task_tid parent = MyParentTid();
 
-  controlserver_request req;
-  controlserver_response res;
-  memset(&req, 0, sizeof(controlserver_request));
+  pathserver_request req;
+  pathserver_response res;
+  memset(&req, 0, sizeof(pathserver_request));
 
   while (true) {
     req.type = CONTROL_WORKER;
@@ -106,27 +106,27 @@ void control_worker() {
 
 void control_server() {
 
-  RegisterAs("controlserver");
+  RegisterAs("pathserver");
 
   task_tid worker = Create(7, control_worker);
 
-  controlserver_request req;
-  controlserver_response res;
-  memset(&res, 0, sizeof(controlserver_response));
+  pathserver_request req;
+  pathserver_response res;
+  memset(&res, 0, sizeof(pathserver_response));
   task_tid client;
 
   memset(&res, 0, sizeof(res));
 
   bool worker_parked = false;
 
-  controlserver_client_task task_backing;
-  controlserver_client_task *task = NULL;
+  pathserver_client_task task_backing;
+  pathserver_client_task *task = NULL;
 
   bool node_reserved[TRACK_MAX];
   memset(node_reserved, 0, sizeof(bool) * TRACK_MAX);
 
   for (;;) {
-    Receive(&client, (char *)&req, sizeof(controlserver_request));
+    Receive(&client, (char *)&req, sizeof(pathserver_request));
 
     if (req.type == PATHFIND) {
       int src_num = req.client.src;
@@ -143,7 +143,7 @@ void control_server() {
         res.worker.min_len = min_len;
         memcpy(res.worker.reserved, node_reserved, sizeof(bool) * TRACK_MAX);
         worker_parked = false;
-        Reply(worker, (char *)&res, sizeof(controlserver_response));
+        Reply(worker, (char *)&res, sizeof(pathserver_response));
       } else {
         task = &task_backing;
         task->type = TASK_PATHFIND;
@@ -166,17 +166,17 @@ void control_server() {
         res.worker.min_len = task->pathfind.min_len;
         memcpy(res.worker.reserved, node_reserved, sizeof(bool) * TRACK_MAX);
         task = NULL;
-        Reply(worker, (char *)&res, sizeof(controlserver_response));
+        Reply(worker, (char *)&res, sizeof(pathserver_response));
       }
     } else if (req.type == CONTROL_WORKER_DONE) {
 
       if (req.worker.type == WORKER_PATHFIND_GOOD) {
-        res.type = CONTROLSERVER_GOOD;
+        res.type = pathserver_GOOD;
         memcpy(res.client.path, req.worker.path, sizeof(int) * TRACK_MAX * 2);
         res.client.path_dist = req.worker.path_dist;
         res.client.path_len = req.worker.path_len;
       }
-      Reply(req.worker.whomfor, (char *)&res, sizeof(controlserver_response));
+      Reply(req.worker.whomfor, (char *)&res, sizeof(pathserver_response));
       Reply(worker, (char *)&res, 0);
     } else {
       KASSERT(0, "Shouldnt be here in control server");

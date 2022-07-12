@@ -287,20 +287,20 @@ void shell() {
 
         dispatchhub_request req;
         memset(&req, 0, sizeof(req));
-        req.type = DISPATCHHUB_SKYNET_TARGET;
-        req.data.skynet_target.train = train_num;
-        req.data.skynet_target.speed = speed;
-        req.data.skynet_target.source = source_num;
-        req.data.skynet_target.destination = dest_num;
-        req.data.skynet_target.offset = offset;
+        req.type = DISPATCHHUB_straightpathworker_TARGET;
+        req.data.straightpathworker_target.train = train_num;
+        req.data.straightpathworker_target.speed = speed;
+        req.data.straightpathworker_target.source = source_num;
+        req.data.straightpathworker_target.destination = dest_num;
+        req.data.straightpathworker_target.offset = offset;
 
-        controlserver_response res;
+        pathserver_response res;
 
         int status = Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
 
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
                 command_tokens[3], command_tokens[4],
-                req.data.skynet_target.offset);
+                req.data.straightpathworker_target.offset);
         print_debug(debug_buffer);
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {

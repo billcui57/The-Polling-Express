@@ -35,4 +35,4 @@ typedef struct {
   int stop_offset;
 } train_record;
 
-void task_skynet();
+void task_straightpathworker();

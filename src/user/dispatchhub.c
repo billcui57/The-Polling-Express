@@ -1,5 +1,5 @@
 #include "dispatchhub.h"
-#include "skynet.h"
+#include "straightpathworker.h"
 
 void dispatchhub() {
 
@@ -13,13 +13,13 @@ void dispatchhub() {
 
   task_tid client;
 
-  v_train_num skynets[MAX_NUM_TRAINS];
+  v_train_num straightpathworkers[MAX_NUM_TRAINS];
 
   task_tid sensor_printer = -1;
   task_tid subscribe_printer = -1;
 
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-    skynets[train_num] = Create(10, task_skynet);
+    straightpathworkers[train_num] = Create(10, task_straightpathworker);
   }
 
   v_train_num subscribers[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
@@ -60,11 +60,12 @@ void dispatchhub() {
       sensor_printer = client;
     } else if (req.type == DISPATCHHUB_SUBSCRIPTION_PRINT) {
       subscribe_printer = client;
-    } else if (req.type == DISPATCHHUB_SKYNET_INIT) {
+    } else if (req.type == DISPATCHHUB_straightpathworker_INIT) {
       // already parked
-    } else if (req.type == DISPATCHHUB_SKYNET_TARGET) {
-      res.data.skynet_target = req.data.skynet_target;
-      Reply(skynets[req.data.skynet_target.train], (char *)&req, sizeof(req));
+    } else if (req.type == DISPATCHHUB_straightpathworker_TARGET) {
+      res.data.straightpathworker_target = req.data.straightpathworker_target;
+      Reply(straightpathworkers[req.data.straightpathworker_target.train],
+            (char *)&req, sizeof(req));
       res.type = DISPATCHHUB_GOOD;
       Reply(client, (char *)&res, sizeof(res));
     } else if (req.type == DISPATCHHUB_SENSOR_UPDATE) {
@@ -122,7 +123,8 @@ void dispatchhub() {
         res.data.subscribe_sensor_list.time = time;
         cb_to_array(&(sensor_attribution[train_num]),
                     res.data.subscribe_sensor_list.triggered_sensors);
-        Reply(skynets[train_num], (char *)&res, sizeof(dispatchhub_response));
+        Reply(straightpathworkers[train_num], (char *)&res,
+              sizeof(dispatchhub_response));
       }
 
       if (sensor_printer != -1) {
