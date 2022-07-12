@@ -2,14 +2,14 @@
 
 void sensor_printer() {
 
-  task_tid dispatchhub = WhoIsBlock("dispatchhub");
+  task_tid dispatchserver = WhoIsBlock("dispatchserver");
 
-  dispatchhub_request req;
-  memset(&req, 0, sizeof(dispatchhub_request));
+  dispatchserver_request req;
+  memset(&req, 0, sizeof(dispatchserver_request));
 
-  req.type = DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT;
+  req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT;
 
-  dispatchhub_response res;
+  dispatchserver_response res;
 
   cursor_to_pos(SENSOR_TABLE_ROW_BEGIN, SENSOR_TABLE_COL, LINE_WIDTH);
   printf(COM2, "[ Oldest <- Sensor Triggers -> Newest ]");
@@ -44,8 +44,8 @@ void sensor_printer() {
 
   for (;;) {
 
-    Send(dispatchhub, (char *)&req, sizeof(dispatchhub_request), (char *)&res,
-         sizeof(dispatchhub_response));
+    Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
+         (char *)&res, sizeof(dispatchserver_response));
 
     v_train_num *pool = res.data.subscribe_sensor_print.sensor_pool;
     unsigned int time = res.data.subscribe_sensor_print.time;

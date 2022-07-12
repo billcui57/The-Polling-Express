@@ -2,7 +2,7 @@
 
 #include "clockserver.h"
 #include "pathserver.h"
-#include "dispatchhub.h"
+#include "dispatchserver.h"
 #include "layout.h"
 #include "nameserver.h"
 #include "sensorprinter.h"

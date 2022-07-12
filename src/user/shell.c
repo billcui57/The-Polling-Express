@@ -158,7 +158,7 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
-  task_tid hub_tid = WhoIsBlock("dispatchhub");
+  task_tid hub_tid = WhoIsBlock("dispatchserver");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -285,9 +285,9 @@ void shell() {
           continue;
         }
 
-        dispatchhub_request req;
+        dispatchserver_request req;
         memset(&req, 0, sizeof(req));
-        req.type = DISPATCHHUB_straightpathworker_TARGET;
+        req.type = DISPATCHSERVER_STRAIGHTPATHWORKER_TARGET;
         req.data.straightpathworker_target.train = train_num;
         req.data.straightpathworker_target.speed = speed;
         req.data.straightpathworker_target.source = source_num;

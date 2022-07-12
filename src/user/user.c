@@ -54,7 +54,7 @@ void task_k4_init() {
   Create(10, task_trainserver);
   Create(10, control_server);
   Create(10, shell_init);
-  Create(10, dispatchhub);
+  Create(10, dispatchserver);
 }
 
 #define SENSOR_CB_BACK_CAPACITY 10
