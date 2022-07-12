@@ -136,8 +136,7 @@ int main() {
   //                    DIR_CURVED);
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR155")]),
   //                    DIR_STRAIGHT);
-  dijkstra_test(track, "A5", "B9", avoid);
-  dijkstra_test(track, "A5", "MR12", avoid);
+  dijkstra_test(track, "A1", "A7", avoid);
 
   //  track_name_to_num(track, "B16"),   track_name_to_num(track, "BR15"),
   //     track_name_to_num(track, "C10"),   track_name_to_num(track, "BR16"),

@@ -26,8 +26,6 @@ void pathfind_worker() {
 
       bool *reserved = res.data.pathfindworker.reserved_nodes;
 
-      track_node *intermediate;
-
       int result = dijkstra(track, src, dest, prev, reserved);
 
       char debug_buffer[100];
@@ -35,24 +33,24 @@ void pathfind_worker() {
               src->name, dest->name);
       KASSERT(result != -1, debug_buffer);
 
-      track_node *node = dest;
-
-      track_node *path[TRACK_MAX];
-
-      unsigned int path_len = 1;
+      unsigned int path_len = 0;
       unsigned int path_dist = result;
 
-      while (node != src) {
-        path[prev[node - track] - track] = node;
+      track_node *node = dest;
+      while (1) {
+        if (node == NULL) {
+          break;
+        }
+        path_len++;
         node = prev[node - track];
-        path_len += 1;
       }
 
-      node = src;
+      memset(&req, 0, sizeof(navigationserver_request));
 
-      for (unsigned int i = 0; i < path_len; i++) {
+      node = dest;
+      for (int i = path_len - 1; i > -1; i--) {
         req.data.pathfindworker_done.path[i] = node - track;
-        node = path[node - track];
+        node = prev[node - track];
       }
 
       req.type = PATHFIND_WORKER_DONE;

@@ -45,7 +45,6 @@ void give_straightpath_work(task_tid straightpath_worker,
   res.data.straightpathworker.offset = task->offset;
   res.data.straightpathworker.path_len = task->path_len;
   res.data.straightpathworker.speed = task->speed;
-  res.data.straightpathworker.train = task->train;
   res.type = STRAIGHTPATH_WORKER_HERES_WORK;
   Reply(straightpath_worker, (char *)&res, sizeof(navigationserver_response));
 }
@@ -216,8 +215,11 @@ void navigation_server() {
     } else if (req.type == STRAIGHTPATH_WORKER_WHOAMI) {
       memset(&res, 0, sizeof(navigationserver_response));
 
+      bool found = false;
+
       for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
         if (straightpath_workers[train_num] == client) {
+          found = true;
           res.type = NAVIGATIONSERVER_GOOD;
           res.data.whoami.train = train_num;
           Reply(client, (char *)&res, sizeof(navigationserver_response));
@@ -225,7 +227,9 @@ void navigation_server() {
         }
       }
 
-      KASSERT(0, "Invalid straightpath worker");
+      if (!found) {
+        KASSERT(0, "Invalid straightpath worker");
+      }
     }
   }
 }
