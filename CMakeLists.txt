@@ -43,6 +43,7 @@ add_executable(kernel
   src/user/virtual.c
   src/user/sensorprinter.c
   src/user/subscribeprinter.c
+  src/user/navigationserver.c
 )
 target_link_libraries(kernel -static gcc)
 
