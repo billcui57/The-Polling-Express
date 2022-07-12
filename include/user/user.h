@@ -2,7 +2,7 @@
 
 #include "clockserver.h"
 #include "dispatchserver.h"
-#include "pathserver.h"
+#include "pathworker.h"
 #include "shell.h"
 #include "trainserver.h"
 #include "uartserver.h"

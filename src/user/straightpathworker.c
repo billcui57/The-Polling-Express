@@ -19,7 +19,7 @@ Trainctl
 
 #include <clockserver.h>
 #include <kprintf.h>
-#include <pathserver.h>
+#include <pathworker.h>
 #include <syscall.h>
 #include <trainserver.h>
 
@@ -74,7 +74,7 @@ void send_branches(train_record *t, task_tid trainctl) {
 void task_straightpathworker() {
   task_tid hub = MyParentTid();
   task_tid clock = WhoIsBlock("clockserver");
-  task_tid pathserver = WhoIsBlock("pathserver");
+  task_tid pathworker = WhoIsBlock("pathworker");
   task_tid trainctl = WhoIsBlock("trainctl");
 
   dispatchserver_request req;
@@ -91,15 +91,15 @@ void task_straightpathworker() {
     train.speed = res.data.straightpathworker_target.speed;
     train.state = TRAIN_TOLOOP;
     train.state_counter = 0;
-    pathserver_request c_req;
+    pathworker_request c_req;
     memset(&c_req, 0, sizeof(c_req));
     c_req.type = PATHFIND;
     c_req.client.src = res.data.straightpathworker_target.source;
     c_req.client.dest = 74;
     c_req.client.offset = 0;
     c_req.client.min_len = 0;
-    pathserver_response c_res;
-    Send(pathserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
+    pathworker_response c_res;
+    Send(pathworker, (char *)&c_req, sizeof(c_req), (char *)&c_res,
          sizeof(c_res));
 
 #ifdef DEBUG_MODE
@@ -121,7 +121,7 @@ void task_straightpathworker() {
     c_req.client.dest = res.data.straightpathworker_target.destination;
     c_req.client.offset = res.data.straightpathworker_target.offset;
     c_req.client.min_len = get_stopping(train.train, train.speed) / 1000 + 1;
-    Send(pathserver, (char *)&c_req, sizeof(c_req), (char *)&c_res,
+    Send(pathworker, (char *)&c_req, sizeof(c_req), (char *)&c_res,
          sizeof(c_res));
 #ifdef DEBUG_MODE
     cursor_to_pos(PATH_ROW_BEGIN + 3 * train.train + 1 + 1, SENSOR_TABLE_COL,
