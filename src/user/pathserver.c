@@ -3,7 +3,7 @@
 
 // return path + distance
 
-void control_worker() {
+void pathfind_worker() {
   task_tid trainserver = WhoIsBlock("trainctl");
   task_tid clock = WhoIsBlock("clockserver");
   task_tid parent = MyParentTid();
@@ -108,7 +108,7 @@ void control_server() {
 
   RegisterAs("pathserver");
 
-  task_tid worker = Create(7, control_worker);
+  task_tid worker = Create(7, pathfind_worker);
 
   pathserver_request req;
   pathserver_response res;
