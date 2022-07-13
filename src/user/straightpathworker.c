@@ -106,17 +106,17 @@ void task_straightpathworker() {
     Send(navigationserver, (char *)&nav_req, sizeof(navigationserver_request),
          (char *)&nav_res, sizeof(navigationserver_response));
 
-    int offset = nav_res.data.straightpathworker.offset;
+    int path_dist = nav_res.data.straightpathworker.path_dist;
     int *path = nav_res.data.straightpathworker.path;
     int path_len = nav_res.data.straightpathworker.path_len;
     int speed = nav_res.data.straightpathworker.speed;
 
     printf(COM2, "Straighpathworker got work\r\n");
-    printf(COM2, "%d\r\n", offset);
+    printf(COM2, "%d\r\n", path_dist);
     printf(COM2, "%d\r\n", path_len);
     printf(COM2, "%d\r\n", speed);
     for (int i = 0; i < path_len; i++) {
-      printf(COM2, "[%d]", path[i]);
+      printf(COM2, "[%s]", track[path[i]].name);
     }
     done_print();
 
