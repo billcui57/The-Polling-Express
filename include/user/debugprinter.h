@@ -8,6 +8,9 @@
 #include "syscall.h"
 
 #define MAX_DEBUG_STRING_LEN 100
+#define MAX_DEBUG_LINES 20
+
+extern circular_buffer *debug_cb;
 
 void debugprint(char *str);
 void debugprinter();

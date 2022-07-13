@@ -1,6 +1,7 @@
 #pragma once
 
 #include "circularbuffer.h"
+#include "debugprinter.h"
 #include "kprintf.h"
 #include "my_assert.h"
 #include "my_event.h"

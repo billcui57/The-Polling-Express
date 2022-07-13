@@ -85,6 +85,7 @@ void task_trainserver() {
       }
       Reply(client, (char *)&res, sizeof(res));
     } else if (req.type == WORKER_SENSOR) {
+      // debugprint("Got worker sensor");
       char *sensor_res = req.data.sensor.sensors;
       for (int i = 0; i < 10; i++) {
         event.sensors[i] |= sensor_res[i] & ~sensors[i];
@@ -92,6 +93,7 @@ void task_trainserver() {
         sensors[i] = sensor_res[i];
       }
       event.time = req.data.sensor.time;
+      // debugprint("Replying to worker sensor");
       Reply(client, (char *)&res, 0);
     } else if (req.type == SENSOR_EVENT) {
       sensor_waiting = client;
@@ -198,12 +200,15 @@ void task_train_worker() {
   while (true) {
     req.type = WORKER;
     req.data.task.time = Time(clock);
+    // debugprint("Back here");
     Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
+    // debugprint("Got work");
     if (res.type == WORKER_CMD) {
       Putc(uart1, 0, res.data.cmd.a);
       if (res.data.cmd.len == 2)
         Putc(uart1, 0, res.data.cmd.b);
     } else if (res.type == WORKER_SENSOR) {
+      // debugprint("Before putc");
       status[0] = 'A' + (i % 26);
       i++;
       req.type = WORKER_SENSOR;
@@ -214,8 +219,10 @@ void task_train_worker() {
       // debugprint("After polling sensors");
       status[0] = '+';
       req.data.sensor.time = Time(clock);
+      // debugprint("After time");
       status[0] = '-';
       Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
+      // debugprint("After send");
     } else if (res.type == WORKER) {
       Delay(clock, 1);
     } else {
