@@ -27,8 +27,6 @@ typedef struct {
   int branches[2 * TRACK_MAX];
   int j;
   // destination info
-  int next_out[2 * TRACK_MAX];
-  int out_len;
   int dist;
   // stopping plan
   int stop_marker;

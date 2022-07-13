@@ -53,8 +53,8 @@ void task_k4_init() {
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
   Create(10, navigation_server);
-  Create(10, shell_init);
   Create(10, dispatchserver);
+  Create(10, shell_init);
 }
 
 #define SENSOR_CB_BACK_CAPACITY 10

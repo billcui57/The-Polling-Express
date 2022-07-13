@@ -6,3 +6,5 @@
 #include "task.h"
 
 void timer_printer();
+
+extern char status[10];

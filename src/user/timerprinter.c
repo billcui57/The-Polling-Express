@@ -20,7 +20,7 @@ void timer_printer() {
     printf(COM2, "Time: %d min %d.%d secs\r\n", formatted_time[0],
            formatted_time[1], formatted_time[2]);
     cursor_to_pos(IDLE_ROW, IDLE_COL, LINE_WIDTH);
-    printf(COM2, "Idle: %d%%\r\n", idle_percentage);
+    printf(COM2, "Idle: %d%% %s\r\n", idle_percentage, status);
     done_print();
     i++;
   }
