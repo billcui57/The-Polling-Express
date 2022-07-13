@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clockserver.h"
+#include "debugprinter.h"
 #include "dispatchserver.h"
 #include "layout.h"
 #include "nameserver.h"

@@ -117,6 +117,7 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
+  Create(5, debugprinter);
 #ifndef DEBUG_MODE
   Create(5, timer_printer);
 #endif

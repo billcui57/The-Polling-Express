@@ -26,9 +26,11 @@
     "track_data.h": "c",
     "track_node.h": "c",
     "dispatchhub.h": "c",
-    "pathworker.h": "c",
+    "pathserver.h": "c",
     "dispatchserver.h": "c",
     "navigationserver.h": "c",
-    "nameserver.h": "c"
+    "nameserver.h": "c",
+    "pathworker.h": "c",
+    "idle.h": "c"
   }
 }
