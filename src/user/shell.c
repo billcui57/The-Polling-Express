@@ -286,7 +286,7 @@ void shell() {
         }
 
         navigationserver_request req;
-        navigationserver_request res;
+        navigationserver_response res;
         memset(&req, 0, sizeof(navigationserver_request));
         req.type = NAVIGATION_REQUEST;
         req.data.navigation_request.train = train_num;
@@ -296,7 +296,7 @@ void shell() {
         req.data.navigation_request.offset = offset;
 
         int status =
-            Send(navigation_server, (char *)&req, sizeof(req), (char *)&res, 0);
+            Send(navigation_server, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
 
         if (res.type == NAVIGATIONSERVER_BUSY) {
           printf(COM2, "Navigation server busy\r\n");
