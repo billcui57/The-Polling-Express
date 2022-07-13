@@ -89,7 +89,8 @@ void task_straightpathworker() {
   navigationserver_response nav_res;
   memset(&nav_req, 0, sizeof(navigationserver_request));
 
-  nav_req.type = STRAIGHTPATH_WORKER_WHOAMI;
+  nav_req.type = WHOAMI;
+  nav_req.data.whoami.worker_type = STRAIGHTPATH;
   Send(navigationserver, (char *)&nav_req, sizeof(navigationserver_request),
        (char *)&nav_res, sizeof(navigationserver_response));
 
@@ -119,6 +120,13 @@ void task_straightpathworker() {
       printf(COM2, "[%s]", track[path[i]].name);
     }
     done_print();
+
+    memset(&nav_req, 0, sizeof(navigationserver_request));
+
+    nav_req.type = STRAIGHTPATH_WORKER_DONE;
+    nav_req.data.straightpathworker_done.train_num = train.train;
+    Send(navigationserver, (char *)&nav_req, sizeof(navigationserver_request),
+         (char *)&nav_res, sizeof(navigationserver_response));
 
     // req.type = DISPATCHSERVER_STRAIGHTPATHWORKER_INIT;
     // Send(hub, (char *)&req, sizeof(req), (char *)&res, sizeof(res));

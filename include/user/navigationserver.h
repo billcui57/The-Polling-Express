@@ -14,7 +14,7 @@ typedef enum {
   STRAIGHTPATH_WORKER_DONE,
   PATHFIND_WORKER,
   PATHFIND_WORKER_DONE,
-  STRAIGHTPATH_WORKER_WHOAMI
+  WHOAMI,
 } navigationserver_request_type;
 
 typedef enum {
@@ -24,6 +24,7 @@ typedef enum {
   NAVIGATIONSERVER_BUSY,
 } navigationserver_response_type;
 
+typedef enum { PATHFIND, STRAIGHTPATH } navigationserver_worker_type;
 typedef struct navigationserver_request {
 
   navigationserver_request_type type;
@@ -45,7 +46,6 @@ typedef struct navigationserver_request {
       v_train_num train_num;
       int path[TRACK_MAX];
       int path_len;
-      int path_dist;
       bool updated_reserved_nodes[TRACK_MAX];
     } pathfindworker_done;
 
@@ -56,6 +56,10 @@ typedef struct navigationserver_request {
     struct {
       v_train_num train_num;
     } straightpathworker_done;
+
+    struct {
+      navigationserver_worker_type worker_type;
+    } whoami;
 
   } data;
 } navigationserver_request;

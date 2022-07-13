@@ -5,15 +5,25 @@
 
 void pathfind_worker() {
 
-  task_tid parent = MyParentTid();
+  task_tid navigationserver = MyParentTid();
 
   navigationserver_request req;
   navigationserver_response res;
   memset(&req, 0, sizeof(navigationserver_request));
 
+  req.type = WHOAMI;
+  req.data.whoami.worker_type = PATHFIND;
+  Send(navigationserver, (char *)&req, sizeof(navigationserver_request),
+       (char *)&res, sizeof(navigationserver_response));
+
+  v_train_num train = res.data.whoami.train;
+
   while (true) {
+    memset(&req, 0, sizeof(navigationserver_request));
     req.type = PATHFIND_WORKER;
-    Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
+    req.data.pathfindworker.train_num = train;
+    Send(navigationserver, (char *)&req, sizeof(req), (char *)&res,
+         sizeof(res));
 
     if (res.type == PATHFIND_WORKER_HERES_WORK) {
 
@@ -54,12 +64,11 @@ void pathfind_worker() {
       }
 
       req.type = PATHFIND_WORKER_DONE;
-      req.data.pathfindworker_done.train_num = res.data.pathfindworker.train;
-      req.data.pathfindworker_done.path_dist = path_dist;
+      req.data.pathfindworker_done.train_num = train;
       req.data.pathfindworker_done.path_len = path_len;
 
       // printf(BW_COM2, "worker good\r\n");
-      Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
+      Send(navigationserver, (char *)&req, sizeof(req), (char *)&res, 0);
     }
   }
 }

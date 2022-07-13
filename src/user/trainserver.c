@@ -204,15 +204,15 @@ void task_train_worker() {
       if (res.data.cmd.len == 2)
         Putc(uart1, 0, res.data.cmd.b);
     } else if (res.type == WORKER_SENSOR) {
-      // status[0] = 'A'+(i%26);
-      // i++;
+      status[0] = 'A' + (i % 26);
+      i++;
       req.type = WORKER_SENSOR;
       Putc(uart1, 0, '\x85');
       for (int i = 0; i < 10; i++)
         req.data.sensor.sensors[i] = Getc(uart1, 0);
-      // status[0] = '+';
+      status[0] = '+';
       req.data.sensor.time = Time(clock);
-      // status[0] = '-';
+      status[0] = '-';
       Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
     } else if (res.type == WORKER) {
       Delay(clock, 1);

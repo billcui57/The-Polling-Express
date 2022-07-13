@@ -148,14 +148,16 @@ void navigation_server() {
                                             [MAX_NAVIGATION_TASKS];
   circular_buffer navigation_tasks[MAX_NUM_TRAINS];
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-    cb_init(&(navigation_tasks[0]), (void *)navigation_tasks_backing[train_num],
-            MAX_NAVIGATION_TASKS, sizeof(navigation_task_t));
+    cb_init(&(navigation_tasks[train_num]),
+            (void *)navigation_tasks_backing[train_num], MAX_NAVIGATION_TASKS,
+            sizeof(navigation_task_t));
   }
 
+  task_tid pathfind_workers[MAX_NUM_TRAINS];
   task_tid pathfind_workers_parking[MAX_NUM_TRAINS];
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
     pathfind_workers_parking[train_num] = -1;
-    Create(10, pathfind_worker);
+    pathfind_workers[train_num] = Create(10, pathfind_worker);
   }
   pathfind_task_t pathfind_tasks[MAX_NUM_TRAINS];
   memset(pathfind_tasks, 0, sizeof(pathfind_task_t) * MAX_NUM_TRAINS);
@@ -241,11 +243,10 @@ void navigation_server() {
 
       int *path = req.data.pathfindworker_done.path;
       int path_len = req.data.pathfindworker_done.path_len;
-      int path_dist = req.data.pathfindworker_done.path_dist; // TODO:REMOVE
 
-      memcpy(reserved_nodes,
-             req.data.pathfindworker_done.updated_reserved_nodes,
-             sizeof(bool) * TRACK_MAX);
+      // memcpy(reserved_nodes,
+      //        req.data.pathfindworker_done.updated_reserved_nodes,
+      //        sizeof(bool) * TRACK_MAX);
 
       segments_fill_navigation_tasks(
           track, path, path_len, &(navigation_tasks[train_num]),
@@ -302,18 +303,19 @@ void navigation_server() {
       v_train_num train_num = req.data.straightpathworker_done.train_num;
       if (cb_is_empty(&(navigation_tasks[train_num]))) {
         states[train_num] = IDLE;
-        continue;
       }
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
       Reply(client, (char *)&res, sizeof(navigationserver_response));
-    } else if (req.type == STRAIGHTPATH_WORKER_WHOAMI) {
+    } else if (req.type == WHOAMI) {
       memset(&res, 0, sizeof(navigationserver_response));
 
       bool found = false;
 
       for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-        if (straightpath_workers[train_num] == client) {
+        if (req.data.whoami.worker_type == STRAIGHTPATH
+                ? straightpath_workers[train_num] == client
+                : pathfind_workers[train_num] == client) {
           found = true;
           res.type = NAVIGATIONSERVER_GOOD;
           res.data.whoami.train = train_num;
@@ -323,7 +325,7 @@ void navigation_server() {
       }
 
       if (!found) {
-        KASSERT(0, "Invalid straightpath worker");
+        KASSERT(0, "Invalid worker");
       }
     }
   }

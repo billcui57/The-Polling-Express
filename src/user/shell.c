@@ -298,6 +298,11 @@ void shell() {
         int status =
             Send(navigation_server, (char *)&req, sizeof(req), (char *)&res, 0);
 
+        if (res.type == NAVIGATIONSERVER_BUSY) {
+          printf(COM2, "Navigation server busy\r\n");
+          done_print();
+        }
+
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
                 command_tokens[3], command_tokens[4], offset);
         print_debug(debug_buffer);
