@@ -17,6 +17,8 @@ void debugprint(char *str) {
 
 void debugprinter() {
 
+  task_tid clock = WhoIsBlock("clockserver");
+
   circular_buffer debug_cb;
   cb = &debug_cb;
 
@@ -33,17 +35,22 @@ void debugprinter() {
 
   for (;;) {
     if (!changed) {
-      Yield();
+      Delay(clock, 10);
+      continue;
     }
 
-    int row = 0;
+    for (int i = 0; i < MAX_DEBUG_LINES; i++) {
+      cursor_to_pos(DEBUG_TABLE_ROW_BEGIN + i + 1, DEBUG_TABLE_COL, LINE_WIDTH);
+    }
+    done_print();
 
-    while (!cb_is_empty(&debug_cb)) {
-      char str[MAX_DEBUG_STRING_LEN];
-      cb_pop_front(cb, (void *)str);
+    int row = 0;
+    char debug[MAX_DEBUG_LINES][MAX_DEBUG_STRING_LEN];
+    cb_to_array(cb, debug);
+    for (int i = 0; i < cb->count; i++) {
       cursor_to_pos(DEBUG_TABLE_ROW_BEGIN + row + 1, DEBUG_TABLE_COL,
                     LINE_WIDTH);
-      printf(COM2, "%s\r\n", str);
+      printf(COM2, "%s\r\n", debug[i]);
       row++;
       done_print();
     }
