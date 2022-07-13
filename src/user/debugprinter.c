@@ -20,14 +20,15 @@ void debugprinter() {
   task_tid clock = WhoIsBlock("clockserver");
 
   circular_buffer debug_cb;
-  cb = &debug_cb;
 
   char debug_backing[MAX_DEBUG_LINES][MAX_DEBUG_STRING_LEN];
   for (int i = 0; i < MAX_DEBUG_LINES; i++) {
     memset(debug_backing[i], 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
-    cb_init(&debug_cb, debug_backing, MAX_DEBUG_LINES,
-            sizeof(char) * MAX_DEBUG_STRING_LEN);
   }
+  cb_init(&debug_cb, debug_backing, MAX_DEBUG_LINES,
+          sizeof(char) * MAX_DEBUG_STRING_LEN);
+
+  cb = &debug_cb;
 
   cursor_to_pos(DEBUG_TABLE_ROW_BEGIN, DEBUG_TABLE_COL, LINE_WIDTH);
   printf(COM2, "[ Debug Prints ]\r\n");

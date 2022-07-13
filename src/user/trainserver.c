@@ -208,8 +208,10 @@ void task_train_worker() {
       i++;
       req.type = WORKER_SENSOR;
       Putc(uart1, 0, '\x85');
+      // debugprint("Before polling sensors");
       for (int i = 0; i < 10; i++)
         req.data.sensor.sensors[i] = Getc(uart1, 0);
+      // debugprint("After polling sensors");
       status[0] = '+';
       req.data.sensor.time = Time(clock);
       status[0] = '-';

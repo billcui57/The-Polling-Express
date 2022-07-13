@@ -1,6 +1,7 @@
 #pragma once
 
 #include "circularbuffer.h"
+#include "clockserver.h"
 #include "kprintf.h"
 #include "stdbool.h"
 #include "string.h"
