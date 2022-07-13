@@ -55,8 +55,7 @@ void pathfind_worker() {
 
       req.type = PATHFIND_WORKER_DONE;
       req.data.pathfindworker_done.train_num = res.data.pathfindworker.train;
-      req.data.pathfindworker_done.path_dist =
-          path_dist + res.data.pathfindworker.offset;
+      req.data.pathfindworker_done.path_dist = path_dist;
       req.data.pathfindworker_done.path_len = path_len;
 
       // printf(BW_COM2, "worker good\r\n");

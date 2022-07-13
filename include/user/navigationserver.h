@@ -1,9 +1,11 @@
 #pragma once
 
+#include "clockserver.h"
 #include "nameserver.h"
 #include "pathworker.h"
 #include "straightpathworker.h"
 #include "task.h"
+#include "trainserver.h"
 #include "virtual.h"
 
 typedef enum {
@@ -66,7 +68,7 @@ typedef struct navigationserver_response {
       int speed;
       int path[TRACK_MAX];
       int path_len;
-      int offset;
+      int path_dist;
     } straightpathworker;
 
     struct {
