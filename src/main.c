@@ -1,3 +1,4 @@
+#include "debugprinter.h"
 #include <context.h>
 #include <hal.h>
 #include <kprintf.h>
@@ -38,7 +39,22 @@ bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
   return false;
 }
 
+circular_buffer *debug_cb;
+
 void kmain() {
+
+  debug_cb = NULL;
+  circular_buffer cb;
+
+  char debug_backing[MAX_DEBUG_LINES][MAX_DEBUG_STRING_LEN];
+  for (int i = 0; i < MAX_DEBUG_LINES; i++) {
+    memset(debug_backing[i], 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
+  }
+  cb_init(&cb, debug_backing, MAX_DEBUG_LINES,
+          sizeof(char) * MAX_DEBUG_STRING_LEN);
+
+  debug_cb = &cb;
+
   uart_init(COM2);
 
   enable_cache();
@@ -78,7 +94,9 @@ void kmain() {
   scheduler_add(100, task_k4_init, -1);
 
   while (scheduler_length() > 1 || interrupt_tasks != 0) {
-    KASSERT(!((*(volatile int*)(get_base_addr(COM1)+UART_RSR_OFFSET))&OE_MASK), "Dropped sensor byte");
+    KASSERT(
+        !((*(volatile int *)(get_base_addr(COM1) + UART_RSR_OFFSET)) & OE_MASK),
+        "Dropped sensor byte");
 
     // printf(BW_COM2, "[Vic1 enable] %d\r\n",
     //        *(int *)(VIC1_BASE + INT_ENABLE_OFFSET));

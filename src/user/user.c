@@ -6,8 +6,6 @@ void clear();
 void shell();
 void sensor_reader();
 
-char status[] = "-----";
-
 // track a
 // 156,16,3,
 

@@ -200,7 +200,7 @@ void enable_irq() {
   enable_vic_interrupt(TC1);
   enable_vic_interrupt(UART2INTR);
   enable_vic_interrupt(UART1RXINTR);
-  enable_vic_interrupt(UART2TXINTR);
+  // enable_vic_interrupt(UART2TXINTR);
   disable_interrupt(UART2RXINTR);
   disable_interrupt(UART2TXINTR);
   disable_interrupt(UART2RTIEINTR);
