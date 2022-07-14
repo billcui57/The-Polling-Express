@@ -6,6 +6,7 @@
 #include "layout.h"
 #include "nameserver.h"
 #include "navigationserver.h"
+#include "pathprinter.h"
 #include "reservationprinter.h"
 #include "sensorprinter.h"
 #include "subscribeprinter.h"

@@ -21,7 +21,8 @@ typedef enum {
   PATHFIND_WORKER,
   PATHFIND_WORKER_DONE,
   WHOAMI,
-  GET_RESERVATIONS
+  GET_RESERVATIONS,
+  GET_PATH_DISPLAY_INFO
 } navigationserver_request_type;
 
 typedef enum {
@@ -99,6 +100,10 @@ typedef struct navigationserver_response {
     struct {
       v_train_num train;
     } whoami;
+
+    struct {
+      int dest_num[MAX_NUM_TRAINS];
+    } get_path_display_info;
   } data;
 
 } navigationserver_response;
