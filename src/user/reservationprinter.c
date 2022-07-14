@@ -10,7 +10,7 @@ void reservation_printer() {
 
   req.type = GET_RESERVATIONS;
 
-  cursor_to_pos(RESERVATION_ROW, RESERVATION_COL, SUBSCRIBE_TABLE_WIDTH);
+  cursor_to_pos(RESERVATION_ROW, RESERVATION_COL, RESERVATION_WIDTH);
   printf(COM2, "[ Track Reservations ]\r\n");
   done_print();
 
@@ -18,7 +18,7 @@ void reservation_printer() {
     Send(navigationserver_tid, (char *)&req, sizeof(navigationserver_request),
          (char *)&res, sizeof(navigationserver_response));
 
-    cursor_to_pos(RESERVATION_ROW + 1, RESERVATION_COL, SUBSCRIBE_TABLE_WIDTH);
+    cursor_to_pos(RESERVATION_ROW + 1, RESERVATION_COL, RESERVATION_WIDTH);
     printf(COM2, " ");
 
     for (int i = 0; i < TRACK_MAX; i++) {
