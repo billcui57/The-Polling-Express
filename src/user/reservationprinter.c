@@ -18,8 +18,6 @@ void reservation_printer() {
     Send(navigationserver_tid, (char *)&req, sizeof(navigationserver_request),
          (char *)&res, sizeof(navigationserver_response));
 
-    debugprint("Got back");
-
     cursor_to_pos(RESERVATION_ROW + 1, RESERVATION_COL, SUBSCRIBE_TABLE_WIDTH);
     printf(COM2, " ");
 

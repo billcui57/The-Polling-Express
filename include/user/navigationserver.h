@@ -21,12 +21,15 @@ typedef enum {
   PATHFIND_WORKER,
   PATHFIND_WORKER_DONE,
   WHOAMI,
-  GET_RESERVATIONS
+  GET_RESERVATIONS,
+  GET_PATH_DISPLAY_INFO,
+  REGISTER_LOCATION
 } navigationserver_request_type;
 
 typedef enum {
   NAVIGATIONSERVER_GOOD,
   NAVIGATIONSERVER_NO_PATH,
+  NAVIGATIONSERVER_NEED_REGISTER,
   STRAIGHTPATH_WORKER_HERES_WORK,
   PATHFIND_WORKER_HERES_WORK,
   NAVIGATIONSERVER_BUSY,
@@ -41,7 +44,6 @@ typedef struct navigationserver_request {
     struct {
       v_train_num train;
       int speed;
-      int source_num;
       int destination_num;
       int offset;
     } navigation_request;
@@ -68,6 +70,11 @@ typedef struct navigationserver_request {
     struct {
       navigationserver_worker_type worker_type;
     } whoami;
+
+    struct {
+      v_train_num train_num;
+      int node_num;
+    } register_location;
 
   } data;
 } navigationserver_request;
@@ -99,6 +106,11 @@ typedef struct navigationserver_response {
     struct {
       v_train_num train;
     } whoami;
+
+    struct {
+      int src_num[MAX_NUM_TRAINS];
+      int dest_num[MAX_NUM_TRAINS];
+    } get_path_display_info;
   } data;
 
 } navigationserver_response;

@@ -2,6 +2,9 @@
 
 v_train_num reserved_nodes[TRACK_MAX];
 task_tid reservation_client;
+task_tid pathprint_client;
+int dests[MAX_NUM_TRAINS];
+int srcs[MAX_NUM_TRAINS];
 
 typedef struct straightpath_task_t {
   v_train_num train;
@@ -160,7 +163,7 @@ bool can_reserve_path(int *path, int path_len) {
   return true;
 }
 
-void updated_printer() {
+void update_reservation_printer() {
   if (reservation_client != -1) {
     navigationserver_response res;
     debugprint("Reply to reservation printer");
@@ -170,6 +173,21 @@ void updated_printer() {
            sizeof(v_train_num) * TRACK_MAX);
     Reply(reservation_client, (char *)&res, sizeof(navigationserver_response));
     reservation_client = -1;
+  }
+}
+
+void update_path_printer() {
+  if (pathprint_client != -1) {
+    navigationserver_response res;
+    debugprint("Reply to path printer");
+    memset(&res, 0, sizeof(navigationserver_response));
+    res.type = NAVIGATIONSERVER_GOOD;
+    memcpy(res.data.get_path_display_info.dest_num, dests,
+           sizeof(int) * MAX_NUM_TRAINS);
+    memcpy(res.data.get_path_display_info.src_num, srcs,
+           sizeof(int) * MAX_NUM_TRAINS);
+    Reply(pathprint_client, (char *)&res, sizeof(navigationserver_response));
+    pathprint_client = -1;
   }
 }
 
@@ -184,7 +202,7 @@ void reserve_path(int *path, int path_len, v_train_num train_num) {
     reserved_nodes[path[i]] = train_num;
   }
 
-  updated_printer();
+  update_reservation_printer();
 }
 
 void clear_reserved_by_train(v_train_num train_num) {
@@ -201,7 +219,7 @@ void clear_reserved_by_train(v_train_num train_num) {
     }
   }
   if (cleared) {
-    updated_printer();
+    update_reservation_printer();
   }
 }
 
@@ -260,16 +278,15 @@ bool process_next_task(circular_buffer *navigation_tasks,
 
 void restart_pathfind(train_navigation_state *state,
                       circular_buffer *navigation_tasks,
-                      pathfind_task_t *pathfind_task, int source_num,
-                      int dest_num, v_train_num train_num) {
+                      pathfind_task_t *pathfind_task, v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
   sprintf(debug_buffer, "[Pathfind] Restarting pathfind for train %d",
           v_p_train_num(train_num));
   debugprint(debug_buffer);
   *state = PATHFINDING;
   cb_clear(navigation_tasks);
-  pathfind_task->destination_num = dest_num;
-  pathfind_task->source_num = source_num;
+  pathfind_task->destination_num = dests[train_num];
+  pathfind_task->source_num = srcs[train_num];
   pathfind_task->train = train_num;
   pathfind_task->is_valid = true;
   pathfind_task->delay_time = 100;
@@ -321,10 +338,11 @@ void navigation_server() {
   memset(train_speeds, 0, sizeof(int) * MAX_NUM_TRAINS);
   int offsets[MAX_NUM_TRAINS];
   memset(offsets, 0, sizeof(int) * MAX_NUM_TRAINS);
-  int srcs[MAX_NUM_TRAINS];
-  memset(srcs, 0, sizeof(int) * MAX_NUM_TRAINS);
-  int dests[MAX_NUM_TRAINS];
-  memset(dests, 0, sizeof(int) * MAX_NUM_TRAINS);
+
+  for (int i = 0; i < MAX_NUM_TRAINS; i++) {
+    srcs[i] = -1;
+    dests[i] = -1;
+  }
 
   navigationserver_request req;
   navigationserver_response res;
@@ -336,6 +354,7 @@ void navigation_server() {
   memset(clients, -1, sizeof(task_tid) * MAX_NUM_TRAINS);
 
   reservation_client = -1;
+  pathprint_client = -1;
 
   for (;;) {
 
@@ -358,18 +377,25 @@ void navigation_server() {
         continue;
       }
 
+      if (srcs[train_num] == -1) {
+        memset(&res, 0, sizeof(navigationserver_response));
+        res.type = NAVIGATIONSERVER_NEED_REGISTER;
+        Reply(client, (char *)&res, sizeof(nameserver_response));
+        continue;
+      }
+
       states[train_num] = PATHFINDING;
       clients[train_num] = client;
 
       pathfind_task_t task;
       task.destination_num = req.data.navigation_request.destination_num;
-      task.source_num = req.data.navigation_request.source_num;
+      task.source_num = srcs[train_num];
       task.train = req.data.navigation_request.train;
       task.is_valid = true;
       task.delay_time = 0;
       train_speeds[train_num] = req.data.navigation_request.speed;
-      srcs[train_num] = task.source_num;
       dests[train_num] = task.destination_num;
+      update_path_printer();
       offsets[train_num] = req.data.navigation_request.offset;
 
       if (pathfind_workers_parking[train_num] != -1) {
@@ -448,8 +474,7 @@ void navigation_server() {
 
       if (found_path == NO_PATH_WITH_RESERVE) {
         restart_pathfind(&(states[train_num]), &(navigation_tasks[train_num]),
-                         &(pathfind_tasks[train_num]), srcs[train_num],
-                         dests[train_num], train_num);
+                         &(pathfind_tasks[train_num]), train_num);
         continue;
       }
 
@@ -475,7 +500,6 @@ void navigation_server() {
 
       if ((states[train_num] != STRAIGHTPATHING) ||
           cb_is_empty(&(navigation_tasks[train_num]))) {
-        clear_reserved_by_train(train_num);
         continue;
       }
 
@@ -484,8 +508,7 @@ void navigation_server() {
                             timer_tid, train_num, straightpath_workers_parking);
       if (should_restart_pathfind) {
         restart_pathfind(&(states[train_num]), &(navigation_tasks[train_num]),
-                         &(pathfind_tasks[train_num]), srcs[train_num],
-                         dests[train_num], train_num);
+                         &(pathfind_tasks[train_num]), train_num);
         continue;
       }
     }
@@ -502,6 +525,8 @@ void navigation_server() {
       if (cb_is_empty(&(navigation_tasks[train_num]))) {
         clear_reserved_by_train(train_num);
         states[train_num] = IDLE;
+        srcs[train_num] = dests[train_num];
+        update_path_printer();
       }
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
@@ -529,6 +554,17 @@ void navigation_server() {
     } else if (req.type == GET_RESERVATIONS) {
       debugprint("Got reservation printer");
       reservation_client = client;
+    } else if (req.type == GET_PATH_DISPLAY_INFO) {
+      debugprint("Got path printer");
+      pathprint_client = client;
+    } else if (req.type == REGISTER_LOCATION) {
+      debugprint("Got register location");
+      v_train_num train_num = req.data.register_location.train_num;
+      srcs[train_num] = req.data.register_location.node_num;
+      memset(&res, 0, sizeof(navigationserver_response));
+      res.type = NAVIGATIONSERVER_GOOD;
+      Reply(client, (char *)&res, sizeof(navigationserver_response));
+      update_path_printer();
     }
   }
 }
