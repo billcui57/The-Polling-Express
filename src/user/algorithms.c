@@ -49,13 +49,13 @@ track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path,
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
 
     if (min_index == -1) {
-      if (!in_shortest_path[i] &&
-          (!(avoid[i]) || (i == (dest - track)) || (i == (src - track)))) {
+      if (!in_shortest_path[i] && !(avoid[i]) &&
+          !(avoid[track[i].reverse - track])) {
         min_index = i;
       }
     } else {
       if ((dist[i] < dist[min_index]) && (!in_shortest_path[i]) &&
-          (!(avoid[i]) || (i == (dest - track)) || (i == (src - track)))) {
+          !(avoid[i])) {
         min_index = i;
       }
     }

@@ -6,6 +6,7 @@
 void pathfind_worker() {
 
   task_tid navigationserver = MyParentTid();
+  task_tid clockserver = WhoIsBlock("clockserver");
 
   navigationserver_request req;
   navigationserver_response res;
@@ -17,6 +18,10 @@ void pathfind_worker() {
        (char *)&res, sizeof(navigationserver_response));
 
   v_train_num train = res.data.whoami.train;
+  char debug_buffer[MAX_DEBUG_STRING_LEN];
+  sprintf(debug_buffer, "[Pathworker] Got whoami as train %d",
+          v_p_train_num(train));
+  debugprint(debug_buffer);
 
   while (true) {
     memset(&req, 0, sizeof(navigationserver_request));
@@ -26,6 +31,9 @@ void pathfind_worker() {
          sizeof(res));
 
     if (res.type == PATHFIND_WORKER_HERES_WORK) {
+      sprintf(debug_buffer, "[Pathworker] Got work for train %d",
+              v_p_train_num(train));
+      debugprint(debug_buffer);
 
       // printf(BW_COM2, "got here\r\n");
 
@@ -33,6 +41,10 @@ void pathfind_worker() {
 
       track_node *src = &(track[res.data.pathfindworker.src]);
       track_node *dest = &(track[res.data.pathfindworker.dest]);
+
+      int delay_time = res.data.pathfindworker.delay_time;
+
+      Delay(clockserver, delay_time);
 
       bool no_reserve[TRACK_MAX];
       memset(no_reserve, 0, sizeof(bool) * TRACK_MAX);
@@ -43,6 +55,7 @@ void pathfind_worker() {
         memset(&req, 0, sizeof(navigationserver_request));
         req.type = PATHFIND_WORKER_DONE;
         req.data.pathfindworker_done.pathfind_result = NO_PATH_AT_ALL;
+        req.data.pathfindworker_done.train_num = train;
         Send(navigationserver, (char *)&req, sizeof(req), (char *)&res, 0);
         continue;
       }
@@ -55,6 +68,7 @@ void pathfind_worker() {
         memset(&req, 0, sizeof(navigationserver_request));
         req.type = PATHFIND_WORKER_DONE;
         req.data.pathfindworker_done.pathfind_result = NO_PATH_WITH_RESERVE;
+        req.data.pathfindworker_done.train_num = train;
         Send(navigationserver, (char *)&req, sizeof(req), (char *)&res, 0);
         continue;
       }

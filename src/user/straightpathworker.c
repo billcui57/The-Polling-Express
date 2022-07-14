@@ -117,7 +117,7 @@ void task_straightpathworker() {
 
     char debug_buffer[MAX_DEBUG_STRING_LEN];
     sprintf(debug_buffer, "[Straightpathworker] Got work for train %d",
-            train.train);
+            v_p_train_num(train.train));
     debugprint(debug_buffer);
     memset(debug_buffer, 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
     sprintf(debug_buffer, "Path Dist: %d Path Len : %d Speed: %d", path_dist,

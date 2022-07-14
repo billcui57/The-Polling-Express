@@ -1,12 +1,11 @@
 #include "debugprinter.h"
 
-bool changed = false;
-
 void debugprint(char *str) {
   char new_str[MAX_DEBUG_STRING_LEN];
-  strncpy(new_str, str, MAX_DEBUG_STRING_LEN);
+  sprintf(new_str, "[%d]%s", debug_index, str);
   cb_push_back(debug_cb, (void *)new_str, true);
-  changed = true;
+  debug_changed = true;
+  debug_index++;
 }
 
 void debugprinter() {
@@ -18,7 +17,7 @@ void debugprinter() {
   done_print();
 
   for (;;) {
-    if (!changed) {
+    if (!debug_changed) {
       Delay(clock, 10);
       continue;
     }
@@ -39,6 +38,6 @@ void debugprinter() {
       done_print();
     }
 
-    changed = false;
+    debug_changed = false;
   }
 }

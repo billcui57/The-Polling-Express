@@ -122,7 +122,7 @@ void shell_init() {
   Create(5, timer_printer);
   Create(5, sensor_printer);
 #endif
-
+  Create(5, reservation_printer);
   Create(5, switch_printer);
   Create(5, subscribe_printer);
   Create(6, shell);

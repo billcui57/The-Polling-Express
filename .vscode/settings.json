@@ -32,6 +32,7 @@
     "nameserver.h": "c",
     "pathworker.h": "c",
     "idle.h": "c",
-    "debugprinter.h": "c"
+    "debugprinter.h": "c",
+    "circularbuffer.h": "c"
   }
 }
