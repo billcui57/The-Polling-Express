@@ -48,16 +48,21 @@ To run the program, issue the following:
 
 ### (NEW TC2) Demo Notes
 
-reg 1 A13
-reg 24 A1
-gt 1 10 B1 0
-gt 24 10 B13 0
+
+Track a
+
+reg 1 A5
+reg 74 A10
+gt 1 10 A3 0
+gt 74 10 D10 0
 
 
 
 ### (NEW TC2) Straightpathworker
 
 Straightpathworker controls the train from point A to point B. The only constraint is that point B must be reachable from point A without reversing. Straightpathworker maintains the invariant that the train is stopped before and after its navigation. This allows for dividing the problem of efficient navigation, where the path may consist of many reverses, into several simple subproblems of going from point A to point B without reversing.
+
+Straightpathworker uses the equations taught in class. Namely deriving acceleration based on the time difference between two sensor triggers. 
 
 ### (NEW TC2) NavigationServer
 

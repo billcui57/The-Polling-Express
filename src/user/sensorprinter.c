@@ -72,7 +72,7 @@ void sensor_printer() {
                     SENSOR_TABLE_COL + 10, SENSOR_TABLE_WIDTH);
 
       for (int i = 0; i < sensor_attributions[train_num].count; i++) {
-        printf(COM2, "[Time %d|%c%d]", attributed_sensors[i].triggered_time,
+        printf(COM2, "[%d|%c%d]", attributed_sensors[i].triggered_time,
                (char)('A' + ((int)(attributed_sensors[i].sensor_num) >> 4)),
                ((int)(attributed_sensors[i].sensor_num) & 0xF) + 1);
       }
@@ -85,7 +85,7 @@ void sensor_printer() {
     cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1,
                   SENSOR_TABLE_COL + 15, SENSOR_TABLE_WIDTH);
     for (int i = 0; i < unattributed_sensors.count; i++) {
-      printf(COM2, "[Time %d|%c%d]", unattributed_sensors_arr[i].triggered_time,
+      printf(COM2, "[%d|%c%d]", unattributed_sensors_arr[i].triggered_time,
              (char)('A' + ((int)(unattributed_sensors_arr[i].sensor_num) >> 4)),
              ((int)(unattributed_sensors_arr[i].sensor_num) & 0xF) + 1);
     }
