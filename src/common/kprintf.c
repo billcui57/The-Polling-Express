@@ -920,7 +920,7 @@ void cursor_to_pos(int row, int col, int clearn) {
   n_clear(clearn);
   printf(COM2, "\033[%d;%dH", row, col);
 #else
-  // printf(COM2, "CURSOR POSITION %d %d:", row, col);
+  printf(COM2, "#");
 #endif
 }
 

@@ -13,7 +13,6 @@ void sensor_courier() {
 
   for (;;) {
     SensorEvent(trainctl, &event);
-
     dis_req.type = DISPATCHSERVER_SENSOR_UPDATE;
     memcpy(dis_req.data.sensor_update.sensor_readings, event.sensors,
            sizeof(char) * NUM_SENSOR_GROUPS);

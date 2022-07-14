@@ -31,6 +31,7 @@
     "navigationserver.h": "c",
     "nameserver.h": "c",
     "pathworker.h": "c",
-    "idle.h": "c"
+    "idle.h": "c",
+    "debugprinter.h": "c"
   }
 }

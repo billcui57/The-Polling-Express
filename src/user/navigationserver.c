@@ -32,6 +32,12 @@ void add_navigation_task(circular_buffer *navigation_tasks,
   int segment_path[segment->count];
   cb_to_array(segment, (void *)segment_path);
 
+  char debug_buffer[MAX_DEBUG_STRING_LEN];
+  sprintf(debug_buffer, "[Segmenting] [%s] -> [%s]",
+          track[segment_path[0]].name,
+          track[segment_path[segment->count - 1]].name);
+  debugprint(debug_buffer);
+
   memset(&task, 0, sizeof(navigation_task_t));
   memcpy(task.data.straightpath_task.path, segment_path,
          sizeof(int) * segment->count);
@@ -44,6 +50,8 @@ void add_navigation_task(circular_buffer *navigation_tasks,
   cb_push_back(navigation_tasks, (void *)&task, false);
 }
 
+#define TRAIN_LEN 250
+
 void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
                                     circular_buffer *navigation_tasks,
                                     int train_speed, v_train_num train_num,
@@ -55,18 +63,24 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
 
   for (int i = 0; i < path_len; i++) {
 
-    if (track[path[i]].reverse == &(track[path[i + 1]])) {
+    // char debug_buffer[MAX_DEBUG_STRING_LEN];
+    // sprintf(debug_buffer, "%s", track[path[i]].name);
+    // debugprint(debug_buffer);
 
+    if (track[path[i]].reverse == &(track[path[i + 1]])) {
+      // debugprint("found reverse");
       bool terminate = false;
-      if (segment.count > 1) {
+      if (segment.count >= 1) {
         cb_push_back(&segment, (void *)&(path[i]), false);
         if (i == path_len - 2) {
+          // debugprint("terminate");
           add_navigation_task(navigation_tasks, &segment, train_speed,
                               train_num, offset * -1);
           terminate = true;
         } else {
+          // debugprint("reverse");
           add_navigation_task(navigation_tasks, &segment, train_speed,
-                              train_num, 0);
+                              train_num, TRAIN_LEN);
         }
 
         cb_clear(&segment);
@@ -82,12 +96,13 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
       }
 
     } else {
-
+      // debugprint("straight");
       cb_push_back(&segment, (void *)&(path[i]), false);
       if (i == path_len - 1) {
         add_navigation_task(navigation_tasks, &segment, train_speed, train_num,
                             offset);
         cb_clear(&segment);
+        // debugprint("end");
         break;
       }
     }
@@ -257,14 +272,27 @@ void navigation_server() {
         cb_pop_front(&(navigation_tasks[train_num]), (void *)&task);
 
         if (task.type == NAVIGATION_REVERSE) {
-          TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num, 0);
+          debugprint("[Navigation] Reversing");
+          HardReverse(trainserver_tid, train_num, Time(timer_tid));
           if (!cb_is_empty(&(navigation_tasks[train_num]))) {
             cb_pop_front(&(navigation_tasks[train_num]), (void *)&task);
+            char debug_buffer[MAX_DEBUG_STRING_LEN];
+            sprintf(
+                debug_buffer,
+                "[Navigation] Sending next straight path command for train %d",
+                train_num);
+            debugprint(debug_buffer);
             give_straightpath_work(straightpath_workers_parking[train_num],
                                    &(task.data.straightpath_task));
             straightpath_workers_parking[train_num] = -1;
           }
         } else {
+          char debug_buffer[MAX_DEBUG_STRING_LEN];
+          sprintf(
+              debug_buffer,
+              "[Navigation] Sending next straight path command for train %d",
+              train_num);
+          debugprint(debug_buffer);
           give_straightpath_work(straightpath_workers_parking[train_num],
                                  &(task.data.straightpath_task));
           straightpath_workers_parking[train_num] = -1;
@@ -285,14 +313,28 @@ void navigation_server() {
       cb_pop_front(&(navigation_tasks[train_num]), (void *)&task);
 
       if (task.type == NAVIGATION_REVERSE) {
-        TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num, 0);
+        debugprint("[Navigation] Reversing");
+
+        HardReverse(trainserver_tid, train_num, Time(timer_tid));
+
         if (!cb_is_empty(&(navigation_tasks[train_num]))) {
           cb_pop_front(&(navigation_tasks[train_num]), (void *)&task);
+          char debug_buffer[MAX_DEBUG_STRING_LEN];
+          sprintf(
+              debug_buffer,
+              "[Navigation] Sending next straight path command for train %d",
+              train_num);
+          debugprint(debug_buffer);
           give_straightpath_work(straightpath_workers_parking[train_num],
                                  &(task.data.straightpath_task));
           straightpath_workers_parking[train_num] = -1;
         }
       } else {
+        char debug_buffer[MAX_DEBUG_STRING_LEN];
+        sprintf(debug_buffer,
+                "[Navigation] Sending next straight path command for train %d",
+                train_num);
+        debugprint(debug_buffer);
         give_straightpath_work(straightpath_workers_parking[train_num],
                                &(task.data.straightpath_task));
         straightpath_workers_parking[train_num] = -1;

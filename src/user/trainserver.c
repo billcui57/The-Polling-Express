@@ -101,6 +101,13 @@ void task_trainserver() {
       branch_waiting = client;
     } else if (req.type == SPEED) {
       req.data.task.target = v_p_train_num(req.data.task.target);
+      char debug_buffer[MAX_DEBUG_STRING_LEN];
+      sprintf(
+          debug_buffer,
+          "[Train Server] Got speed command for train %d, speed %d, time %d",
+          req.data.task.target, req.data.task.data, req.data.task.time);
+      debugprint(debug_buffer);
+
       heap_add(&h,
                build_task(&free, req.data.task.time, req.data.task.data | 16,
                           req.data.task.target, 2));
@@ -188,6 +195,8 @@ void task_trainserver() {
   }
 }
 
+// #define DUMMY
+
 void task_train_worker() {
   task_tid clock = WhoIsBlock("clockserver");
   task_tid uart1 = WhoIsBlock("uart1");
@@ -204,14 +213,21 @@ void task_train_worker() {
     Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
     // debugprint("Got work");
     if (res.type == WORKER_CMD) {
+      char debug_buffer[MAX_DEBUG_STRING_LEN];
+      sprintf(debug_buffer, "[Train Worker] Command working %d %d %d",
+              res.data.cmd.a, res.data.cmd.b, res.data.cmd.len);
+      debugprint(debug_buffer);
+#ifndef DUMMY
       Putc(uart1, 0, res.data.cmd.a);
       if (res.data.cmd.len == 2)
         Putc(uart1, 0, res.data.cmd.b);
+#endif
     } else if (res.type == WORKER_SENSOR) {
       // debugprint("Before putc");
       status[0] = 'A' + (i % 26);
       i++;
       req.type = WORKER_SENSOR;
+#ifndef DUMMY
       Putc(uart1, 0, '\x85');
       // debugprint("Before polling sensors");
       for (int i = 0; i < 10; i++)
@@ -221,6 +237,12 @@ void task_train_worker() {
       req.data.sensor.time = Time(clock);
       // debugprint("After time");
       status[0] = '-';
+#else
+      int z = i;
+      for (int i = 0; i < 10; i++)
+        req.data.sensor.sensors[i] = z % 2 ? 0xFF : 0x00;
+      req.data.sensor.time = Delay(clock, 5);
+#endif
       Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
       // debugprint("After send");
     } else if (res.type == WORKER) {
@@ -255,4 +277,8 @@ void BranchEvent(task_tid tid, train_event *event) {
   memset(&req, 0, sizeof(req));
   req.type = BRANCH_EVENT;
   Send(tid, (char *)&req, sizeof(req), (char *)event, sizeof(train_event));
+}
+
+void HardReverse(task_tid tid, v_train_num train_num, int time) {
+  TrainCommand(tid, time, SPEED, train_num, 15);
 }

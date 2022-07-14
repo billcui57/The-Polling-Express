@@ -120,8 +120,9 @@ void shell_init() {
   Create(5, debugprinter);
 #ifndef DEBUG_MODE
   Create(5, timer_printer);
-#endif
   Create(5, sensor_printer);
+#endif
+
   Create(5, switch_printer);
   Create(5, subscribe_printer);
   Create(6, shell);
@@ -296,8 +297,8 @@ void shell() {
         req.data.navigation_request.destination_num = dest_num;
         req.data.navigation_request.offset = offset;
 
-        int status =
-            Send(navigation_server, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
+        int status = Send(navigation_server, (char *)&req, sizeof(req),
+                          (char *)&res, sizeof(res));
 
         if (res.type == NAVIGATIONSERVER_BUSY) {
           printf(COM2, "Navigation server busy\r\n");
