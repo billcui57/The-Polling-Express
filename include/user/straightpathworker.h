@@ -1,5 +1,6 @@
 #pragma once
 
+#include "debugprinter.h"
 #include "layout.h"
 #include <track_data.h>
 
@@ -27,12 +28,10 @@ typedef struct {
   int branches[2 * TRACK_MAX];
   int j;
   // destination info
-  int next_out[2 * TRACK_MAX];
-  int out_len;
   int dist;
   // stopping plan
   int stop_marker;
   int stop_offset;
 } train_record;
 
-void task_skynet();
+void task_straightpathworker();

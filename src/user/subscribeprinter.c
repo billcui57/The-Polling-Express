@@ -2,14 +2,14 @@
 
 void subscribe_printer() {
 
-  task_tid dispatchhub = WhoIsBlock("dispatchhub");
+  task_tid dispatchserver = WhoIsBlock("dispatchserver");
 
-  dispatchhub_request req;
-  memset(&req, 0, sizeof(dispatchhub_request));
+  dispatchserver_request req;
+  memset(&req, 0, sizeof(dispatchserver_request));
 
-  req.type = DISPATCHHUB_SUBSCRIPTION_PRINT;
+  req.type = DISPATCHSERVER_SUBSCRIPTION_PRINT;
 
-  dispatchhub_response res;
+  dispatchserver_response res;
 
   cursor_to_pos(SUBSCRIBE_TABLE_ROW_BEGIN, SUBSCRIBE_TABLE_COL, LINE_WIDTH);
   printf(COM2, "[ Sensor Subscriptions ]\r\n");
@@ -34,8 +34,8 @@ void subscribe_printer() {
       cb_clear(&(subscriptions[train_num]));
     }
 
-    Send(dispatchhub, (char *)&req, sizeof(dispatchhub_request), (char *)&res,
-         sizeof(dispatchhub_response));
+    Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
+         (char *)&res, sizeof(dispatchserver_response));
 
     v_train_num *subscription_result =
         res.data.subscription_print.subscriptions;

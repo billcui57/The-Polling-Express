@@ -6,8 +6,6 @@ void clear();
 void shell();
 void sensor_reader();
 
-char status[] = "-----";
-
 // track a
 // 156,16,3,
 
@@ -40,6 +38,8 @@ void task_k4_init() {
                          DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
+
+      // TOOD: mark that one sensor broken and provide UI for it
       break;
     } else {
       printf(BW_COM2, "Please enter a valid track\r\n");
@@ -52,9 +52,9 @@ void task_k4_init() {
   Create(10, uart_com1_server);
   Create(10, uart_com2_rx_server);
   Create(10, task_trainserver);
-  Create(10, control_server);
+  Create(10, navigation_server);
+  Create(10, dispatchserver);
   Create(10, shell_init);
-  Create(10, dispatchhub);
 }
 
 #define SENSOR_CB_BACK_CAPACITY 10

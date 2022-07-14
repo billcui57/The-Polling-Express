@@ -6,32 +6,25 @@
 #include "virtual.h"
 
 typedef enum {
-  DISPATCHHUB_SENSOR_UPDATE,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_LIST,
-  DISPATCHHUB_SUBSCRIBE_SENSOR_PRINT,
-  DISPATCHHUB_SUBSCRIPTION_PRINT,
-  DISPATCHHUB_SKYNET_INIT,
-  DISPATCHHUB_SKYNET_TARGET,
-} dispatchhub_request_type;
+  DISPATCHSERVER_SENSOR_UPDATE,
+  DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST,
+  DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT,
+  DISPATCHSERVER_SUBSCRIPTION_PRINT,
+  DISPATCHSERVER_STRAIGHTPATHWORKER_INIT
+} dispatchserver_request_type;
 
 typedef enum {
   NOT_TRIGGERED = -1,
   UNATTRIBUTED = -2
 } dispatch_sensor_pool_type;
 
-typedef enum { DISPATCHHUB_GOOD } dispatchhub_response_type;
+typedef enum { DISPATCHSERVER_GOOD } dispatchserver_response_type;
 
 #define MAX_SUBSCRIBED_SENSORS 5
 
-struct skynet_target {
-  char train, speed;
-  char source, destination;
-  int offset;
-};
+typedef struct dispatchserver_response {
 
-typedef struct dispatchhub_response {
-
-  dispatchhub_response_type type;
+  dispatchserver_response_type type;
 
   union {
     struct {
@@ -45,18 +38,16 @@ typedef struct dispatchhub_response {
       unsigned int time;
     } subscribe_sensor_print;
 
-    struct skynet_target skynet_target;
-
     struct {
       v_train_num subscriptions[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
     } subscription_print;
 
   } data;
 
-} dispatchhub_response;
+} dispatchserver_response;
 
-typedef struct dispatchhub_request {
-  dispatchhub_request_type type;
+typedef struct dispatchserver_request {
+  dispatchserver_request_type type;
 
   union {
 
@@ -71,9 +62,12 @@ typedef struct dispatchhub_request {
       unsigned int time;
     } sensor_update;
 
-    struct skynet_target skynet_target;
+    struct {
+      v_train_num train_num;
+    } worker_init;
+
   } data;
 
-} dispatchhub_request;
+} dispatchserver_request;
 
-void dispatchhub();
+void dispatchserver();

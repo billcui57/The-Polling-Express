@@ -25,8 +25,8 @@ add_executable(kernel
   src/user/clockserver.c
   src/user/uartserver.c
   src/user/trainserver.c
-  src/user/skynet.c
-  src/user/controlserver.c
+  src/user/straightpathworker.c
+  src/user/pathworker.c
   src/common/circularbuffer.c
   src/common/heap.c
   src/common/my_string.c
@@ -39,10 +39,12 @@ add_executable(kernel
   src/user/timerprinter.c
   src/user/switchprinter.c
   src/user/sensorcourier.c
-  src/user/dispatchhub.c
+  src/user/dispatchserver.c
   src/user/virtual.c
   src/user/sensorprinter.c
   src/user/subscribeprinter.c
+  src/user/navigationserver.c
+  src/user/debugprinter.c
 )
 target_link_libraries(kernel -static gcc)
 
@@ -54,19 +56,18 @@ target_link_libraries(kernel -static gcc)
 # target_link_libraries(hashtable -static gcc)
 # enable_testing()
 # add_test(hashtable_test hashtable)
-add_executable(circularbuffer
-  tests/unit/circularbuffer.c
-  src/common/circularbuffer.c
-)
-target_link_libraries(circularbuffer)
-enable_testing()
-add_test(circularbuffer_test circularbuffer)
-
-# add_executable(algorithms
-# tests/unit/algorithms.c
-# src/user/algorithms.c
-# src/user/track_data.c
+# add_executable(circularbuffer
+# tests/unit/circularbuffer.c
+# src/common/circularbuffer.c
 # )
-# target_link_libraries(algorithms)
+# target_link_libraries(circularbuffer)
 # enable_testing()
-# add_test(algorithms_test algorithms)
+# add_test(circularbuffer_test circularbuffer)
+add_executable(algorithms
+  tests/unit/algorithms.c
+  src/user/algorithms.c
+  src/user/track_data.c
+)
+target_link_libraries(algorithms)
+enable_testing()
+add_test(algorithms_test algorithms)

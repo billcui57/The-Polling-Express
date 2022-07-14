@@ -66,7 +66,7 @@ Cool stuff: Just in time branch switching, pathfinding that accounts of min dist
 
 Pathfinding uses a modified version of dijkstras. The aim is to find a path between two nodes that has the minimum distance. However since there are edge cases for when source and destination nodes are too close together for the train to achieve constant velocity, the dijkstras algorithm is modified to return a path that has a minimum distance of at least $min$. The final pathfinding algorithm calls dijkstras twice with an intermediate node that controls the total distance of the path.
 
-Pathfinding is done in controlserver.c, where the control server offloads the task to a worker. The result, which is an array of node indices that must be traversed, is then sent back to the control server which is returned to the client.
+Pathfinding is done in pathworker.c, where the control server offloads the task to a worker. The result, which is an array of node indices that must be traversed, is then sent back to the control server which is returned to the client.
 
 ### (NEW TC1) Sensor Prediction / Stopping
 

@@ -117,10 +117,12 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
+  Create(5, debugprinter);
 #ifndef DEBUG_MODE
   Create(5, timer_printer);
-#endif
   Create(5, sensor_printer);
+#endif
+
   Create(5, switch_printer);
   Create(5, subscribe_printer);
   Create(6, shell);
@@ -158,7 +160,7 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
-  task_tid hub_tid = WhoIsBlock("dispatchhub");
+  task_tid navigation_server = WhoIsBlock("navigationserver");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -285,22 +287,26 @@ void shell() {
           continue;
         }
 
-        dispatchhub_request req;
-        memset(&req, 0, sizeof(req));
-        req.type = DISPATCHHUB_SKYNET_TARGET;
-        req.data.skynet_target.train = train_num;
-        req.data.skynet_target.speed = speed;
-        req.data.skynet_target.source = source_num;
-        req.data.skynet_target.destination = dest_num;
-        req.data.skynet_target.offset = offset;
+        navigationserver_request req;
+        navigationserver_response res;
+        memset(&req, 0, sizeof(navigationserver_request));
+        req.type = NAVIGATION_REQUEST;
+        req.data.navigation_request.train = train_num;
+        req.data.navigation_request.speed = speed;
+        req.data.navigation_request.source_num = source_num;
+        req.data.navigation_request.destination_num = dest_num;
+        req.data.navigation_request.offset = offset;
 
-        controlserver_response res;
+        int status = Send(navigation_server, (char *)&req, sizeof(req),
+                          (char *)&res, sizeof(res));
 
-        int status = Send(hub_tid, (char *)&req, sizeof(req), (char *)&res, 0);
+        if (res.type == NAVIGATIONSERVER_BUSY) {
+          printf(COM2, "Navigation server busy\r\n");
+          done_print();
+        }
 
         sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
-                command_tokens[3], command_tokens[4],
-                req.data.skynet_target.offset);
+                command_tokens[3], command_tokens[4], offset);
         print_debug(debug_buffer);
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {

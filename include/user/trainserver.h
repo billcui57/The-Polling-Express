@@ -1,4 +1,6 @@
 #pragma once
+#include "debugprinter.h"
+#include "virtual.h"
 #include <syscall.h>
 
 typedef enum {
@@ -51,3 +53,5 @@ void TrainCommand(task_tid tid, int time, train_req_def type, int target,
                   int data);
 void SensorEvent(task_tid tid, train_event *event);
 void BranchEvent(task_tid tid, train_event *event);
+
+void HardReverse(task_tid tid, v_train_num train_num, int time);

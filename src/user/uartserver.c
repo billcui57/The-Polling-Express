@@ -126,20 +126,28 @@ void uart_com1_tx_notifier() {
     int cts_ready = 0;
 
     while (true) {
+      // debugprint("Before Await");
       AwaitEvent(UART1_INTR);
+      // debugprint("After await");
       int status = *uart1_intr;
       if (status & TIS_MASK) {
+        // debugprint("TISMASK");
         tx_ready = 1;
         *uart1_ctrl = *uart1_ctrl & ~TIEN_MASK;
       }
       if ((status & MIS_MASK) && (*uart1_mdmsts & MSR_DCTS)) {
+        // debugprint("MISMASK AND MSRDCTS");
         *uart1_intr = 0;
         cts_ready++;
+        if (*uart1_mdmsts & MSR_CTS) {
+          cts_ready = 2;
+        }
         if (cts_ready == 2) {
           *uart1_ctrl = *uart1_ctrl & ~MSIEN_MASK;
         }
       }
       if (tx_ready == 1 && cts_ready == 2) {
+        // debugprint("tx ready and cts ready");
         break;
       }
     }
