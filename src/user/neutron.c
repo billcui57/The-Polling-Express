@@ -17,8 +17,8 @@ uint32_t SquareRoot(uint32_t a_nInput);
 const uint32_t constants[][8] = {
     {293004,1526,205,179,7448,8520,6979,874}, //tr 1 7
     {1927195,4707,496,322,9483,14595,7822,650}, //tr 1 12
-    {359021,1582,252,202,6288,7821,5671,804}, //tr 24 7
-    {1687417,4523,384,363,11792,12474,11470,945}, //tr 24 12
+    {1108617,3198,421,272,7591,11755,6247,646}, //tr 74 7
+    {2447697,5761,586,264,9833,21835,7130,450}, //tr 74 12
 };
 
 
@@ -35,7 +35,7 @@ void create_neutron(neutron *n, int train, uint32_t distance) {
     n->distance = distance;
     if (train == 0) {
         offset = 0;
-    } else if (train == 1) {
+    } else if (train == 3) {
         offset = 2;
     } else {
         KASSERT(0,"Unknown Train");
