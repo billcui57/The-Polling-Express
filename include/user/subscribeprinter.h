@@ -5,4 +5,4 @@
 #include "layout.h"
 #include "trainserver.h"
 
-void sensor_printer();
+void subscribe_printer();

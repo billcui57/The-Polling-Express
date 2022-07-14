@@ -9,23 +9,23 @@ int LOOP_LEN = 20;
 
 int get_stopping(char train, char speed){
     if (which_track == 'a') {
-        if (train == 1) {
+        if (train == 0) {
             if (speed == 10) {
                 return 435000;
             } else if (speed == 12) {
                 return 773000;
             }
-        } else if (train == 24) {
+        } else if (train == 1) {
             if (speed == 10) {
                 return 448000;
             }
         }
     } else if (which_track == 'b') {
-        if (train == 1) {
+        if (train == 0) {
             if (speed == 10) {
                 return 405000;
             }
-        } else if (train == 24) {
+        } else if (train == 1) {
             if (speed == 10) {
                 return 448000;
             }

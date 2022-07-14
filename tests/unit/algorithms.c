@@ -2,8 +2,45 @@
 #include <assert.h>
 #include <stdio.h>
 
+void path_dist_test(track_node *track, track_node *path, int path_len) {
+  printf("%d", get_path_dist(track, path, path_len));
+}
+
 void dijkstra_test(track_node *track, char *src_name, char *dest_name,
-                   bool *avoid, int min_dist) {
+                   bool *avoid) {
+
+  printf("Pathfind from [%s] to [%s]\r\n", src_name, dest_name);
+
+  track_node *prev[TRACK_MAX];
+
+  // printf("%d\r\n", track_name_to_num(track, src));
+
+  track_node *src = &(track[track_name_to_num(track, src_name)]);
+  track_node *dest = &(track[track_name_to_num(track, dest_name)]);
+
+  int status = dijkstra(track, src, dest, prev, avoid);
+
+  if (status == -1) {
+    printf("Could not find path\r\n");
+    return;
+  }
+
+  track_node *node = dest;
+
+  while (1) {
+
+    if (node == NULL) {
+      break;
+    }
+
+    printf("[%s]\r\n", node->name);
+
+    node = prev[node - track];
+  }
+}
+
+void dijkstra_test_min_dist(track_node *track, char *src_name, char *dest_name,
+                            bool *avoid, int min_dist) {
 
   printf("Pathfind from [%s] to [%s]\r\n", src_name, dest_name);
 
@@ -93,14 +130,37 @@ int main() {
   bool avoid[TRACK_MAX];
   memset(avoid, 0, sizeof(bool) * TRACK_MAX);
 
-  // avoid[104] = true;
   track_node track[TRACK_MAX];
   init_tracka(track);
+
+  avoid[0] = true;
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR156")]),
   //                    DIR_CURVED);
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR155")]),
   //                    DIR_STRAIGHT);
-  dijkstra_test(track, "E14", "E9", avoid, 500);
+  dijkstra_test(track, "A1", "A7", avoid);
+
+  //  track_name_to_num(track, "B16"),   track_name_to_num(track, "BR15"),
+  //     track_name_to_num(track, "C10"),   track_name_to_num(track, "BR16"),
+  //     track_name_to_num(track, "B3"),    track_name_to_num(track, "C2"),
+  //     track_name_to_num(track, "MR153"), track_name_to_num(track, "MR154"),
+  //     track_name_to_num(track, "BR156"), track_name_to_num(track, "E2"),
+  //     track_name_to_num(track, "E15"),   track_name_to_num(track, "MR13"),
+  //     track_name_to_num(track, "C12"),   track_name_to_num(track, "MR14"),
+  //     track_name_to_num(track, "A4"),    track_name_to_num(track, "B16"),
+
+  // int path[] = {
+  //     track_name_to_num(track, "B16"),   track_name_to_num(track, "BR15"),
+  //     track_name_to_num(track, "C10"),   track_name_to_num(track, "BR16"),
+  //     track_name_to_num(track, "B3"),    track_name_to_num(track, "C2"),
+  //     track_name_to_num(track, "MR153"), track_name_to_num(track, "MR154"),
+  //     track_name_to_num(track, "BR156"), track_name_to_num(track, "E2"),
+  //     track_name_to_num(track, "E15"),   track_name_to_num(track, "MR13"),
+  //     track_name_to_num(track, "C12"),   track_name_to_num(track, "MR14"),
+  //     track_name_to_num(track, "A4"),    track_name_to_num(track, "B16"),
+  // };
+
+  // path_dist_test(track, path, 16);
 
   // printf("%d\r\n",
   //        track[track_name_to_num(track, "C15")].edge[DIR_STRAIGHT].dist);

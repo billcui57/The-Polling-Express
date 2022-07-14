@@ -1,9 +1,9 @@
 #pragma once
 
 #include "clockserver.h"
-#include "controlserver.h"
+#include "dispatchserver.h"
+#include "pathworker.h"
 #include "shell.h"
-#include "skynet.h"
 #include "trainserver.h"
 #include "uartserver.h"
 #include <kprintf.h>

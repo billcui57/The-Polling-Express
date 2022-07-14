@@ -7,6 +7,7 @@ typedef enum {
   COMMAND_RV,
   COMMAND_Q,
   COMMAND_PF,
+  COMMAND_REG
 } command_type;
 
 #define TERMINALMAXINPUTSIZE 20
@@ -22,7 +23,7 @@ void hide_cursor() {
 }
 
 void print_input(char *input, int *input_length) {
-  cursor_to_row(INPUT_ROW);
+  cursor_to_pos(INPUT_ROW, INPUT_COL, INPUT_WIDTH);
   printf(COM2, "\033[35m");
   printf(COM2, ">");
   for (unsigned int i = 0; i < (*input_length); i++) {
@@ -35,7 +36,7 @@ void print_input(char *input, int *input_length) {
 }
 
 void print_debug(char *input) {
-  cursor_to_row(LOG_ROW);
+  cursor_to_pos(LOG_ROW, LOG_COL, LOG_WIDTH);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
   printf(COM2, "\033[0m");
@@ -117,16 +118,21 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
+  Create(5, debugprinter);
 #ifndef DEBUG_MODE
   Create(5, timer_printer);
+  Create(5, sensor_printer);
 #endif
+  Create(5, path_printer);
+  Create(5, reservation_printer);
   Create(5, switch_printer);
-  Create(5, shell);
+  Create(5, subscribe_printer);
+  Create(6, shell);
 }
 
 void print_art() {
 
-  cursor_to_row(1);
+  cursor_to_pos(ART_ROW, ART_COL, LINE_WIDTH);
 
   int christmas_colours[3] = {32, 37, 31};
 
@@ -156,7 +162,7 @@ void shell() {
 
   task_tid timer_tid = WhoIsBlock("clockserver");
 
-  task_tid skynet_tid = WhoIsBlock("skynet");
+  task_tid navigation_server = WhoIsBlock("navigationserver");
 
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
@@ -166,11 +172,12 @@ void shell() {
   int prev_speed[MAX_NUM_TRAINS];
   memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
 
-  int train_num;
+  v_train_num train_num;
   int speed;
   int switch_num;
   int switch_orientation;
-  char *dest_name;
+  int dest_num;
+  int source_num;
   int offset;
 
   int input_length = 0;
@@ -181,12 +188,14 @@ void shell() {
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
+    print_debug("");
     bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
     if (entered == true) {
 
       if (strncmp(command_tokens[0], "tr", strlen("tr")) == 0) {
-        train_num = atoi(command_tokens[1]);
+        train_num = p_v_train_num(atoi(command_tokens[1]));
+
         speed = atoi(command_tokens[2]);
 
         if ((speed < 0) || (speed > 14)) {
@@ -194,12 +203,13 @@ void shell() {
           continue;
         }
 
-        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+        if (train_num < 0) {
           print_debug("Please enter a valid train num");
           continue;
         }
 
-        sprintf(debug_buffer, "SPEED %d %d\r\n", train_num, speed);
+        sprintf(debug_buffer, "SPEED %d %d\r\n", atoi(command_tokens[1]),
+                speed);
         print_debug(debug_buffer);
 
         TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
@@ -235,9 +245,9 @@ void shell() {
         TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
                      switch_orientation == 'c' ? 1 : 0);
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
-        train_num = atoi(command_tokens[1]);
+        train_num = p_v_train_num(atoi(command_tokens[1]));
 
-        if ((train_num < 1) || (train_num > MAX_NUM_TRAINS)) {
+        if (train_num < 0) {
           print_debug("Please enter a valid train num");
           continue;
         }
@@ -254,32 +264,74 @@ void shell() {
         Shutdown();
 
       } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
-        skynet_msg req;
-        memset(&req, 0, sizeof(req));
-        req.type = SKYNET_TARGET;
-        req.msg.target.train = atoi(command_tokens[1]);
-        req.msg.target.speed = atoi(command_tokens[2]);
-        req.msg.target.source = track_name_to_num(track, command_tokens[3]);
-        req.msg.target.destination =
-            track_name_to_num(track, command_tokens[4]);
-        req.msg.target.offset = atoi(command_tokens[5]);
-        // train_num = atoi(command_tokens[1]);
-        // dest_name = command_tokens[2];
-        // offset = atoi(command_tokens[3]);
+        train_num = p_v_train_num(atoi(command_tokens[1]));
+        speed = atoi(command_tokens[2]);
+        dest_num = track_name_to_num(track, command_tokens[3]);
+        offset = atoi(command_tokens[4]);
 
-        controlserver_response res;
+        if (train_num < 0) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
 
-        int status =
-            Send(skynet_tid, (char *)&req, sizeof(skynet_msg), (char *)&res, 0);
+        if ((speed < 0) || (speed > 14)) {
+          print_debug("Please enter a valid speed");
+          continue;
+        }
 
-        // sprintf(debug_buffer, "Path Finding Train %d to %s, offset %d \r\n",
-        //         train_num, dest_name, offset);
-        sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
-                command_tokens[3], command_tokens[4], req.msg.target.offset);
-        print_debug(debug_buffer);
+        if (dest_num < 0) {
+          print_debug("Please enter a valid destination node");
+          continue;
+        }
+
+        navigationserver_request req;
+        navigationserver_response res;
+        memset(&req, 0, sizeof(navigationserver_request));
+        req.type = NAVIGATION_REQUEST;
+        req.data.navigation_request.train = train_num;
+        req.data.navigation_request.speed = speed;
+        req.data.navigation_request.destination_num = dest_num;
+        req.data.navigation_request.offset = offset;
+
+        Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
+             sizeof(res));
+
+        if (res.type == NAVIGATIONSERVER_BUSY) {
+          print_debug("Navigation server busy");
+        } else if (res.type == NAVIGATIONSERVER_NO_PATH) {
+          print_debug("No path");
+        } else if (res.type == NAVIGATIONSERVER_NEED_REGISTER) {
+          print_debug("Need to register train location first");
+        } else {
+          sprintf(debug_buffer, "Path Finding to %s + %d\r\n",
+                  command_tokens[3], offset);
+          print_debug(debug_buffer);
+        }
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {
         KASSERT(0, "DIE!");
+      } else if (strncmp(command_tokens[0], "reg", strlen("reg")) == 0) {
+        train_num = p_v_train_num(atoi(command_tokens[1]));
+        source_num = track_name_to_num(track, command_tokens[2]);
+        if (train_num < 0) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
+        if (source_num < 0) {
+          print_debug("Please enter a valid node");
+          continue;
+        }
+
+        navigationserver_request req;
+        navigationserver_response res;
+        memset(&req, 0, sizeof(navigationserver_request));
+        req.type = REGISTER_LOCATION;
+        req.data.register_location.train_num = train_num;
+        req.data.register_location.node_num = source_num;
+        Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
+             sizeof(res));
+
       } else {
         print_debug("Invalid Command Type");
       }

@@ -1,4 +1,29 @@
 #include "algorithms.h"
+#include "stdio.h"
+
+int get_path_dist(track_node *track, int *path, int path_len) {
+  int dist = 0;
+  for (int i = 0; i < path_len - 1; i++) {
+
+    if (track[path[i]].type == NODE_BRANCH) {
+      if (track[path[i]].edge[DIR_CURVED].dest == &(track[path[i + 1]])) {
+        dist += track[path[i]].edge[DIR_CURVED].dist;
+      } else if (track[path[i]].edge[DIR_STRAIGHT].dest ==
+                 &(track[path[i + 1]])) {
+        dist += track[path[i]].edge[DIR_STRAIGHT].dist;
+      } else {
+        return -1;
+      }
+    } else {
+      if (track[path[i]].edge[DIR_AHEAD].dest == &(track[path[i + 1]])) {
+        dist += track[path[i]].edge[DIR_AHEAD].dist;
+      } else {
+        return -1;
+      }
+    }
+  }
+  return dist;
+}
 
 bool is_switch_node(track_node *node) {
   return (node->type == NODE_BRANCH) || ((node->type == NODE_MERGE));
@@ -24,13 +49,13 @@ track_node *min_distance(track_node *track, int *dist, bool *in_shortest_path,
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
 
     if (min_index == -1) {
-      if (!in_shortest_path[i] &&
-          (!(avoid[i]) || (i == (dest - track)) || (i == (src - track)))) {
+      if (!in_shortest_path[i] && !(avoid[i]) &&
+          !(avoid[track[i].reverse - track])) {
         min_index = i;
       }
     } else {
       if ((dist[i] < dist[min_index]) && (!in_shortest_path[i]) &&
-          (!(avoid[i]) || (i == (dest - track)) || (i == (src - track)))) {
+          !(avoid[i])) {
         min_index = i;
       }
     }
@@ -87,9 +112,17 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
       update_dist(track, u, v, in_shortest_path, prev, uv, dist);
       uv = &((u->edge)[DIR_CURVED]);
       v = uv->dest;
-
       update_dist(track, u, v, in_shortest_path, prev, uv, dist);
     }
+
+    track_edge mock_reverse_edge;
+    mock_reverse_edge.dest = u->reverse;
+    mock_reverse_edge.dist = 0;
+    mock_reverse_edge.reverse = NULL;
+    mock_reverse_edge.src = u;
+    v = mock_reverse_edge.dest;
+
+    update_dist(track, u, v, in_shortest_path, prev, &mock_reverse_edge, dist);
   }
 }
 
@@ -126,66 +159,3 @@ int dijkstras_min_length(track_node *track, track_node *src, track_node *dest,
   }
   return best_dist;
 }
-
-// int augment_path(track_node *track, track_node **prev, track_node *dest,
-//                  int offset, int *new_offset, int *orientation,
-//                  track_node **new_dest, int dist, int *new_dist) {
-
-//   *new_offset = 0;
-
-//   *new_dist = dist + offset;
-
-//   if (offset < 0) {
-
-//     track_node *prev_node = prev[dest - track];
-
-//     *new_offset = offset + dest->reverse->edge[DIR_STRAIGHT].dist;
-
-//     *orientation = -1;
-
-//     if (prev_node->type == NODE_BRANCH) {
-//       if (prev_node->edge[DIR_AHEAD].dest == dest) {
-//         *orientation = DIR_AHEAD;
-//       } else {
-//         *orientation = DIR_CURVED;
-//       }
-//     }
-
-//     prev[dest - track] = NULL;
-
-//     *new_dest = prev_node;
-
-//     if (*new_offset < 0) {
-//       return -1;
-//     }
-//     return 0;
-//   } else if (offset > 0) {
-
-//     bool is_offset_valid = true;
-
-//     if (dest->type == NODE_BRANCH) {
-
-//       if (dest->edge[DIR_STRAIGHT].dist < offset) {
-//         is_offset_valid = false;
-//       }
-
-//       if (dest->edge[DIR_CURVED].dist < offset) {
-//         is_offset_valid = false;
-//       }
-//     }
-
-//     if (dest->edge[DIR_STRAIGHT].dist < offset) {
-//       is_offset_valid = false;
-//     }
-
-//     if (!is_offset_valid) {
-//       return -1;
-//     }
-
-//     *new_offset = offset;
-//     *orientation = -1;
-//     *new_dest = dest;
-
-//     return 0;
-//   }
-// }

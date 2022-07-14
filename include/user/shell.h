@@ -1,10 +1,15 @@
 #pragma once
 
 #include "clockserver.h"
-#include "controlserver.h"
+#include "debugprinter.h"
+#include "dispatchserver.h"
 #include "layout.h"
 #include "nameserver.h"
-#include "skynet.h"
+#include "navigationserver.h"
+#include "pathprinter.h"
+#include "reservationprinter.h"
+#include "sensorprinter.h"
+#include "subscribeprinter.h"
 #include "switchprinter.h"
 #include "syscall.h"
 #include "task.h"

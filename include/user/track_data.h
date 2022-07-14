@@ -3,7 +3,12 @@
 /* THIS FILE IS GENERATED CODE -- DO NOT EDIT */
 
 #include "memory.h"
+
+#ifdef IS_TARGET
 #include "my_assert.h"
+#else
+#include "assert.h"
+#endif
 #include "track_node.h"
 
 // The track initialization functions expect an array of this size.
