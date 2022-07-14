@@ -2,6 +2,8 @@
 
 #include "debugprinter.h"
 #include "layout.h"
+#include "neutron.h"
+
 #include <track_data.h>
 
 enum train_state {
@@ -15,9 +17,9 @@ typedef struct {
   // train info
   char train;
   char speed;
-  int vel;
   enum train_state state;
   int state_counter;
+  neutron n;
   // current path state
   int time[160];
   int distance[160];
@@ -32,6 +34,7 @@ typedef struct {
   // stopping plan
   int stop_marker;
   int stop_offset;
+  int wiggle;
 } train_record;
 
 void task_straightpathworker();

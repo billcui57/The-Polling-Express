@@ -46,6 +46,7 @@ add_executable(kernel
   src/user/navigationserver.c
   src/user/debugprinter.c
   src/user/reservationprinter.c
+  src/user/neutron.c
 )
 target_link_libraries(kernel -static gcc)
 
