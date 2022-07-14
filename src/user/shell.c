@@ -22,7 +22,7 @@ void hide_cursor() {
 }
 
 void print_input(char *input, int *input_length) {
-  cursor_to_pos(INPUT_ROW, INPUT_COL, LINE_WIDTH);
+  cursor_to_pos(INPUT_ROW, INPUT_COL, INPUT_WIDTH);
   printf(COM2, "\033[35m");
   printf(COM2, ">");
   for (unsigned int i = 0; i < (*input_length); i++) {
@@ -35,7 +35,7 @@ void print_input(char *input, int *input_length) {
 }
 
 void print_debug(char *input) {
-  cursor_to_pos(LOG_ROW, LOG_COL, LINE_WIDTH);
+  cursor_to_pos(LOG_ROW, LOG_COL, LOG_WIDTH);
   printf(COM2, "\033[32m");
   printf(COM2, "%s", input);
   printf(COM2, "\033[0m");
@@ -122,7 +122,7 @@ void shell_init() {
   Create(5, timer_printer);
   Create(5, sensor_printer);
 #endif
-
+  Create(5, reservation_printer);
   Create(5, switch_printer);
   Create(5, subscribe_printer);
   Create(6, shell);

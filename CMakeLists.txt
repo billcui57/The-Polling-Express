@@ -45,6 +45,7 @@ add_executable(kernel
   src/user/subscribeprinter.c
   src/user/navigationserver.c
   src/user/debugprinter.c
+  src/user/reservationprinter.c
 )
 target_link_libraries(kernel -static gcc)
 

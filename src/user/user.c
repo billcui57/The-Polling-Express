@@ -16,6 +16,7 @@ void sensor_reader();
 
 // sensor C13
 
+// gt 78 10 A13 D13 0
 void task_k4_init() {
   clear_screen(BW_COM2);
   while (true) {
@@ -38,6 +39,7 @@ void task_k4_init() {
                          DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
+      mark_sensor_broken(track, track_name_to_num(track, "C13"));
 
       // TOOD: mark that one sensor broken and provide UI for it
       break;

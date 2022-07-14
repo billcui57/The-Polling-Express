@@ -11,7 +11,7 @@ void sensor_printer() {
 
   dispatchserver_response res;
 
-  cursor_to_pos(SENSOR_TABLE_ROW_BEGIN, SENSOR_TABLE_COL, LINE_WIDTH);
+  cursor_to_pos(SENSOR_TABLE_ROW_BEGIN, SENSOR_TABLE_COL, SENSOR_TABLE_WIDTH);
   printf(COM2, "[ Oldest <- Sensor Triggers -> Newest ]");
   done_print();
 
@@ -28,7 +28,7 @@ void sensor_printer() {
             (void *)sensor_attributions_backing[train_num],
             MAX_SUBSCRIBED_SENSORS, sizeof(sensor_trigger));
     cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1, SENSOR_TABLE_COL,
-                  LINE_WIDTH);
+                  SENSOR_TABLE_WIDTH);
     printf(COM2, "Train %d: ", v_p_train_num(train_num));
   }
 
@@ -37,7 +37,7 @@ void sensor_printer() {
   cb_init(&unattributed_sensors, (void *)unattributed_sensors_backing,
           MAX_SUBSCRIBED_SENSORS, sizeof(sensor_trigger));
   cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1, SENSOR_TABLE_COL,
-                LINE_WIDTH);
+                SENSOR_TABLE_WIDTH);
   printf(COM2, "Unattributed: ");
 
   done_print();
@@ -69,7 +69,7 @@ void sensor_printer() {
                   (void *)attributed_sensors);
 
       cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + train_num + 1,
-                    SENSOR_TABLE_COL + 10, LINE_WIDTH);
+                    SENSOR_TABLE_COL + 10, SENSOR_TABLE_WIDTH);
 
       for (int i = 0; i < sensor_attributions[train_num].count; i++) {
         printf(COM2, "[Time %d|%c%d]", attributed_sensors[i].triggered_time,
@@ -83,7 +83,7 @@ void sensor_printer() {
     cb_to_array(&unattributed_sensors, (void *)unattributed_sensors_arr);
 
     cursor_to_pos(SENSOR_TABLE_ROW_BEGIN + MAX_NUM_TRAINS + 1,
-                  SENSOR_TABLE_COL + 15, LINE_WIDTH);
+                  SENSOR_TABLE_COL + 15, SENSOR_TABLE_WIDTH);
     for (int i = 0; i < unattributed_sensors.count; i++) {
       printf(COM2, "[Time %d|%c%d]", unattributed_sensors_arr[i].triggered_time,
              (char)('A' + ((int)(unattributed_sensors_arr[i].sensor_num) >> 4)),

@@ -132,6 +132,8 @@ int main() {
 
   track_node track[TRACK_MAX];
   init_tracka(track);
+
+  avoid[0] = true;
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR156")]),
   //                    DIR_CURVED);
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR155")]),

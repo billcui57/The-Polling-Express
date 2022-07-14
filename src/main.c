@@ -40,9 +40,12 @@ bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
 }
 
 circular_buffer *debug_cb;
+bool debug_changed;
+int debug_index;
 
 void kmain() {
-
+  debug_changed = false;
+  debug_index = 0;
   debug_cb = NULL;
   circular_buffer cb;
 
