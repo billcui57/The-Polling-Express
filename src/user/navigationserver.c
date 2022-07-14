@@ -184,6 +184,8 @@ void update_path_printer() {
     res.type = NAVIGATIONSERVER_GOOD;
     memcpy(res.data.get_path_display_info.dest_num, dests,
            sizeof(int) * MAX_NUM_TRAINS);
+    memcpy(res.data.get_path_display_info.src_num, srcs,
+           sizeof(int) * MAX_NUM_TRAINS);
     Reply(pathprint_client, (char *)&res, sizeof(navigationserver_response));
     pathprint_client = -1;
   }
@@ -375,17 +377,23 @@ void navigation_server() {
         continue;
       }
 
+      if (srcs[train_num] == -1) {
+        memset(&res, 0, sizeof(navigationserver_response));
+        res.type = NAVIGATIONSERVER_NEED_REGISTER;
+        Reply(client, (char *)&res, sizeof(nameserver_response));
+        continue;
+      }
+
       states[train_num] = PATHFINDING;
       clients[train_num] = client;
 
       pathfind_task_t task;
       task.destination_num = req.data.navigation_request.destination_num;
-      task.source_num = req.data.navigation_request.source_num;
+      task.source_num = srcs[train_num];
       task.train = req.data.navigation_request.train;
       task.is_valid = true;
       task.delay_time = 0;
       train_speeds[train_num] = req.data.navigation_request.speed;
-      srcs[train_num] = task.source_num;
       dests[train_num] = task.destination_num;
       update_path_printer();
       offsets[train_num] = req.data.navigation_request.offset;
@@ -492,7 +500,6 @@ void navigation_server() {
 
       if ((states[train_num] != STRAIGHTPATHING) ||
           cb_is_empty(&(navigation_tasks[train_num]))) {
-        clear_reserved_by_train(train_num);
         continue;
       }
 
@@ -518,6 +525,8 @@ void navigation_server() {
       if (cb_is_empty(&(navigation_tasks[train_num]))) {
         clear_reserved_by_train(train_num);
         states[train_num] = IDLE;
+        srcs[train_num] = dests[train_num];
+        update_path_printer();
       }
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
@@ -548,6 +557,14 @@ void navigation_server() {
     } else if (req.type == GET_PATH_DISPLAY_INFO) {
       debugprint("Got path printer");
       pathprint_client = client;
+    } else if (req.type == REGISTER_LOCATION) {
+      debugprint("Got register location");
+      v_train_num train_num = req.data.register_location.train_num;
+      srcs[train_num] = req.data.register_location.node_num;
+      memset(&res, 0, sizeof(navigationserver_response));
+      res.type = NAVIGATIONSERVER_GOOD;
+      Reply(client, (char *)&res, sizeof(navigationserver_response));
+      update_path_printer();
     }
   }
 }

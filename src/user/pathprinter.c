@@ -15,7 +15,8 @@ void path_printer() {
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
     cursor_to_pos(PATH_TABLE_ROW_BEGIN + 1 + train_num, PATH_TABLE_COL,
                   PATH_TABLE_WIDTH);
-    printf(COM2, "Train %d:", v_p_train_num(train_num));
+    printf(COM2, "Train %d [Registered at ?]: [To ?]",
+           v_p_train_num(train_num));
   }
   done_print();
 
@@ -24,16 +25,24 @@ void path_printer() {
          (char *)&res, sizeof(navigationserver_response));
 
     int *dest_nums = res.data.get_path_display_info.dest_num;
+    int *src_nums = res.data.get_path_display_info.src_num;
     printf(COM2, " ");
 
     for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
       cursor_to_pos(PATH_TABLE_ROW_BEGIN + 1 + train_num, PATH_TABLE_COL,
                     PATH_TABLE_WIDTH);
-      if (dest_nums[train_num] != -1) {
-        printf(COM2, "Train %d: [%s]", v_p_train_num(train_num),
-               track[dest_nums[train_num]].name);
+
+      if (src_nums[train_num] != -1) {
+        printf(COM2, "Train %d [Registered at %s]: ", v_p_train_num(train_num),
+               track[src_nums[train_num]].name);
       } else {
-        printf(COM2, "Train %d:", v_p_train_num(train_num));
+        printf(COM2, "Train %d [Registered at ?]: ", v_p_train_num(train_num));
+      }
+
+      if (dest_nums[train_num] != -1) {
+        printf(COM2, "[To %s]", track[dest_nums[train_num]].name);
+      } else {
+        printf(COM2, "[To ?]");
       }
     }
 

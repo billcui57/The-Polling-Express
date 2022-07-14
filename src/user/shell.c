@@ -7,6 +7,7 @@ typedef enum {
   COMMAND_RV,
   COMMAND_Q,
   COMMAND_PF,
+  COMMAND_REG
 } command_type;
 
 #define TERMINALMAXINPUTSIZE 20
@@ -187,6 +188,7 @@ void shell() {
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
+    print_debug("");
     bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
     if (entered == true) {
@@ -264,9 +266,8 @@ void shell() {
       } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
         train_num = p_v_train_num(atoi(command_tokens[1]));
         speed = atoi(command_tokens[2]);
-        source_num = track_name_to_num(track, command_tokens[3]);
-        dest_num = track_name_to_num(track, command_tokens[4]);
-        offset = atoi(command_tokens[5]);
+        dest_num = track_name_to_num(track, command_tokens[3]);
+        offset = atoi(command_tokens[4]);
 
         if (train_num < 0) {
           print_debug("Please enter a valid train num");
@@ -275,11 +276,6 @@ void shell() {
 
         if ((speed < 0) || (speed > 14)) {
           print_debug("Please enter a valid speed");
-          continue;
-        }
-
-        if (source_num < 0) {
-          print_debug("Please enter a valid source node");
           continue;
         }
 
@@ -294,24 +290,48 @@ void shell() {
         req.type = NAVIGATION_REQUEST;
         req.data.navigation_request.train = train_num;
         req.data.navigation_request.speed = speed;
-        req.data.navigation_request.source_num = source_num;
         req.data.navigation_request.destination_num = dest_num;
         req.data.navigation_request.offset = offset;
 
-        int status = Send(navigation_server, (char *)&req, sizeof(req),
-                          (char *)&res, sizeof(res));
+        Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
+             sizeof(res));
 
         if (res.type == NAVIGATIONSERVER_BUSY) {
-          printf(COM2, "Navigation server busy\r\n");
-          done_print();
+          print_debug("Navigation server busy");
+        } else if (res.type == NAVIGATIONSERVER_NO_PATH) {
+          print_debug("No path");
+        } else if (res.type == NAVIGATIONSERVER_NEED_REGISTER) {
+          print_debug("Need to register train location first");
+        } else {
+          sprintf(debug_buffer, "Path Finding to %s + %d\r\n",
+                  command_tokens[3], offset);
+          print_debug(debug_buffer);
         }
-
-        sprintf(debug_buffer, "Path Finding %s to %s + %d\r\n",
-                command_tokens[3], command_tokens[4], offset);
-        print_debug(debug_buffer);
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {
         KASSERT(0, "DIE!");
+      } else if (strncmp(command_tokens[0], "reg", strlen("reg")) == 0) {
+        train_num = p_v_train_num(atoi(command_tokens[1]));
+        source_num = track_name_to_num(track, command_tokens[2]);
+        if (train_num < 0) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
+        if (source_num < 0) {
+          print_debug("Please enter a valid node");
+          continue;
+        }
+
+        navigationserver_request req;
+        navigationserver_response res;
+        memset(&req, 0, sizeof(navigationserver_request));
+        req.type = REGISTER_LOCATION;
+        req.data.register_location.train_num = train_num;
+        req.data.register_location.node_num = source_num;
+        Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
+             sizeof(res));
+
       } else {
         print_debug("Invalid Command Type");
       }
