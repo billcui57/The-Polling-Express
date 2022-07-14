@@ -144,6 +144,8 @@ void task_straightpathworker() {
     train.state = TRAIN_FROMLOOP;
     next_node = train.next[train.i];
     send_branches(&train, trainctl);
+    send_branches(&train, trainctl);
+
     debugprint("[Straight Path] Send train speed");
     TrainCommand(trainctl, Time(clock) + 5, SPEED, train.train, train.speed);
     while (next_node != -1) {
