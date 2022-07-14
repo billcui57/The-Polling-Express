@@ -154,37 +154,48 @@ void task_straightpathworker() {
     debugprint("[Straight Path] Send train speed");
     TrainCommand(trainctl, Time(clock) + 5, SPEED, train.train, train.speed);
     while (next_node != -1) {
+      int skip_sensor = train.next[train.i+1];
       dis_req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST;
       dis_req.data.subscribe_sensor_list.subscribed_sensors[0] = next_node;
       dis_req.data.subscribe_sensor_list.len = 1;
+      if (train.i + 1 < train.len) {
+        dis_req.data.subscribe_sensor_list.subscribed_sensors[1] = skip_sensor;
+        dis_req.data.subscribe_sensor_list.len = 2;
+      }
       dis_req.data.subscribe_sensor_list.train_num = train.train;
       Send(dispatchserver, (char *)&dis_req, sizeof(dis_req), (char *)&dis_res,
            sizeof(dis_res));
-      train.time[train.i] = dis_res.data.subscribe_sensor_list.time;
-      if (train.i == train.stop_marker) {
-        int time = train.time[train.i] + train.stop_offset;
-        int stop_time = train.n.time_c;
-        debugprint("[Straight Path] Stopping train");
-        TrainCommand(trainctl, time, SPEED, train.train, 0);
-        train.stop_marker = -1;
-        while (train.branches[train.j] != -1)
-          send_branches(&train, trainctl);
-        next_node = -1;
-        DelayUntil(clock, time + stop_time);
-      } else if (train.i + 1 < train.len) {
-        next_node = train.next[train.i + 1];
-        send_branches(&train, trainctl);
+      int trigger_count = 1;
+      if (dis_res.data.subscribe_sensor_list.triggered_sensors[0] == skip_sensor) {
+        trigger_count = 2;
       }
-      /*if (train.i > 0) {
-        int vel = train.distance[train.i] /
-                  (train.time[train.i] - train.time[train.i - 1]);
-        train.vel = (train.vel * 6 + vel * 10) / 16;
-      }*/
-      train.i++;
-      /*if (train.i < train.len && train.vel) {
-        train.next_time[train.i] =
-            train.time[train.i - 1] + (train.distance[train.i] / train.vel);
-      }*/
+      for(int zzz = 0;zzz<trigger_count && next_node!=-1;zzz++){
+        train.time[train.i] = dis_res.data.subscribe_sensor_list.time;
+        if (train.i == train.stop_marker) {
+          int time = train.time[train.i] + train.stop_offset;
+          int stop_time = train.n.time_c;
+          debugprint("[Straight Path] Stopping train");
+          TrainCommand(trainctl, time, SPEED, train.train, 0);
+          train.stop_marker = -1;
+          while (train.branches[train.j] != -1)
+            send_branches(&train, trainctl);
+          next_node = -1;
+          DelayUntil(clock, time + stop_time);
+        } else if (train.i + 1 < train.len) {
+          next_node = train.next[train.i + 1];
+          send_branches(&train, trainctl);
+        }
+        /*if (train.i > 0) {
+          int vel = train.distance[train.i] /
+                    (train.time[train.i] - train.time[train.i - 1]);
+          train.vel = (train.vel * 6 + vel * 10) / 16;
+        }*/
+        train.i++;
+        /*if (train.i < train.len && train.vel) {
+          train.next_time[train.i] =
+              train.time[train.i - 1] + (train.distance[train.i] / train.vel);
+        }*/
+      }
     }
     nav_req.type = STRAIGHTPATH_WORKER_DONE;
     nav_req.data.straightpathworker_done.train_num = train.train;

@@ -112,6 +112,10 @@ void dispatchserver() {
         if (sensor_attribution[train_num].count == 0) {
           continue;
         }
+        for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
+          if (subscribers[i] == train_num) subscribers[i] = -1;
+
+        }
         memset((void *)&res, 0, sizeof(dispatchserver_response));
         res.type = DISPATCHSERVER_GOOD;
         res.data.subscribe_sensor_list.len =
