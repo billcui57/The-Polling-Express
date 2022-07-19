@@ -10,9 +10,12 @@
 #define MAX_DEBUG_STRING_LEN 100
 #define MAX_DEBUG_LINES 30
 
+#define VERBOSENESS CRITICAL
+#define CRITICAL 0
+
 extern circular_buffer *debug_cb;
 extern bool debug_changed;
 extern int debug_index;
 
-void debugprint(char *str);
+void debugprint(char *str, int verboseness);
 void debugprinter();

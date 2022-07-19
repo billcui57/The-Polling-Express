@@ -1,8 +1,18 @@
 #include "debugprinter.h"
 
-void debugprint(char *str) {
+void debugprint(char *str, int verboseness) {
+
+  if (verboseness > VERBOSENESS) {
+    return;
+  }
   char new_str[MAX_DEBUG_STRING_LEN];
-  sprintf(new_str, "[%d]%s", debug_index, str);
+
+  if (verboseness == CRITICAL) {
+    sprintf(new_str, "\033[31m[%d]%s\033[37m", debug_index, str);
+  } else {
+    sprintf(new_str, "[%d]%s", debug_index, str);
+  }
+
   cb_push_back(debug_cb, (void *)new_str, true);
   debug_changed = true;
   debug_index++;
@@ -28,12 +38,12 @@ void debugprinter() {
     done_print();
 
     int row = 0;
-    char debug[MAX_DEBUG_LINES][MAX_DEBUG_STRING_LEN];
-    cb_to_array(debug_cb, debug);
-    for (int i = 0; i < debug_cb->count; i++) {
+    char debug[MAX_DEBUG_LINES * MAX_DEBUG_STRING_LEN];
+    int len = cb_to_array(debug_cb, debug);
+    for (int i = 0; i < len; i++) {
       cursor_to_pos(DEBUG_TABLE_ROW_BEGIN + row + 1, DEBUG_TABLE_COL,
                     LINE_WIDTH);
-      printf(COM2, "%s\r\n", debug[i]);
+      printf(COM2, "%s\r\n", &debug[MAX_DEBUG_STRING_LEN * i]);
       row++;
       done_print();
     }

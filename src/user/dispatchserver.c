@@ -1,11 +1,30 @@
 #include "dispatchserver.h"
 #include "straightpathworker.h"
 
+void inform_subscriber(int subscribe_printer, v_train_num *subscribers) {
+  debugprint("Informing subscribe printer", 10);
+  dispatchserver_response res;
+  memset(&res, 0, sizeof(dispatchserver_response));
+  res.type = DISPATCHSERVER_GOOD;
+  memcpy(res.data.subscription_print.subscriptions, subscribers,
+         sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
+  Reply(subscribe_printer, (char *)&res, sizeof(dispatchserver_response));
+
+  for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
+    if (subscribers[i] != -1) {
+      char debug_buffer[MAX_DEBUG_STRING_LEN];
+      sprintf(debug_buffer, "[AHAHAHA] Train %d subscribed to [%s]",
+              v_p_train_num(subscribers[i]), track[i].name);
+      debugprint(debug_buffer, 5);
+    }
+  }
+}
+
 void dispatchserver() {
 
   RegisterAs("dispatchserver");
 
-  Create(10, sensor_courier);
+  Create(10, "SensorCourier", sensor_courier);
 
   dispatchserver_request req;
   dispatchserver_response res;
@@ -25,6 +44,8 @@ void dispatchserver() {
   for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
     subscribers[i] = -1;
   }
+
+  bool subscription_changed = false;
 
   for (;;) {
     Receive(&client, (char *)&req, sizeof(dispatchserver_request));
@@ -46,20 +67,19 @@ void dispatchserver() {
         KASSERT(subscribers[subscribed_sensors[i]] == -1,
                 "Only one task can subscribe to a sensor at a time");
         subscribers[subscribed_sensors[i]] = train_num;
+
+        char debug_buffer[MAX_DEBUG_STRING_LEN];
+        sprintf(debug_buffer, "[Dispatch Server] Train %d subscribing to [%s]",
+                v_p_train_num(train_num), track[subscribed_sensors[i]].name);
+        debugprint(debug_buffer, 5);
       }
 
-      if (subscribe_printer != -1) {
-        memset(&res, 0, sizeof(dispatchserver_request_type));
-        res.type = DISPATCHSERVER_GOOD;
-        memcpy(res.data.subscription_print.subscriptions, subscribers,
-               sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
-        Reply(subscribe_printer, (char *)&res, sizeof(dispatchserver_response));
-        subscribe_printer = -1;
-      }
+      subscription_changed = true;
 
     } else if (req.type == DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT) {
       sensor_printer = client;
     } else if (req.type == DISPATCHSERVER_SUBSCRIPTION_PRINT) {
+      debugprint("[Dispatch Server] Got subscribe printer", 10);
       subscribe_printer = client;
     } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_INIT) {
       v_train_num train_num = req.data.worker_init.train_num;
@@ -102,20 +122,29 @@ void dispatchserver() {
                     "Attributed sensors len must be <= MAX_SUBSCRIBED_SENSORS");
             sensor_pool[i] = subscribers[i];
           }
-
-          subscribers[i] = -1;
         }
       }
+
+      for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
+        for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
+          if (subscribers[i] == train_num) {
+            subscribers[i] = -1;
+            char debug_buffer[MAX_DEBUG_STRING_LEN];
+            sprintf(debug_buffer,
+                    "[Dispatch Server] Train %d unsubscribing [%s]",
+                    v_p_train_num(train_num), track[i].name);
+            debugprint(debug_buffer, 5);
+          }
+        }
+      }
+      subscription_changed = true;
 
       for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
 
         if (sensor_attribution[train_num].count == 0) {
           continue;
         }
-        for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
-          if (subscribers[i] == train_num) subscribers[i] = -1;
 
-        }
         memset((void *)&res, 0, sizeof(dispatchserver_response));
         res.type = DISPATCHSERVER_GOOD;
         res.data.subscribe_sensor_list.len =
@@ -136,6 +165,12 @@ void dispatchserver() {
         Reply(sensor_printer, (char *)&res, sizeof(dispatchserver_response));
         sensor_printer = -1;
       }
+    }
+
+    if (subscription_changed && subscribe_printer != -1) {
+      inform_subscriber(subscribe_printer, subscribers);
+      subscription_changed = false;
+      subscribe_printer = -1;
     }
   }
 }

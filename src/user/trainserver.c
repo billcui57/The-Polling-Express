@@ -52,7 +52,7 @@ void task_trainserver() {
   memset(&res, 0, sizeof(res));
   task_tid client;
 
-  Create(10, task_train_worker);
+  Create(10, "TrainWorker", task_train_worker);
 
   RegisterAs("trainctl");
   while (true) {
@@ -106,7 +106,7 @@ void task_trainserver() {
           debug_buffer,
           "[Train Server] Got speed command for train %d, speed %d, time %d",
           req.data.task.target, req.data.task.data, req.data.task.time);
-      debugprint(debug_buffer);
+      debugprint(debug_buffer, 10);
 
       heap_add(&h,
                build_task(&free, req.data.task.time, req.data.task.data | 16,
@@ -216,7 +216,7 @@ void task_train_worker() {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(debug_buffer, "[Train Worker] Command working %d %d %d",
               res.data.cmd.a, res.data.cmd.b, res.data.cmd.len);
-      debugprint(debug_buffer);
+      debugprint(debug_buffer, 10);
 #ifndef DUMMY
       Putc(uart1, 0, res.data.cmd.a);
       if (res.data.cmd.len == 2)

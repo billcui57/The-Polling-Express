@@ -20,11 +20,14 @@ typedef enum tcb_state {
 
 typedef int task_tid;
 
+#define MAX_TASK_NAME_LEN 30
+
 typedef struct TCB {
   // TCB is free
   struct TCB *next;
 
   // TCB contains valid task
+  char task_name[MAX_TASK_NAME_LEN];
   int tid;
   int priority;
   tcb_state state;
@@ -39,7 +42,7 @@ typedef struct TCB {
 
 void scheduler_init(size_t cap, TCB *blocks, TCB **ready_queue);
 
-int scheduler_add(int priority, void (*func)(), int parentTid);
+int scheduler_add(int priority, void (*func)(), int parentTid, char *name);
 
 void add_to_ready_queue(TCB *t);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "my_assert.h"
 #include "stdbool.h"
 #include <memory.h>
 
@@ -25,6 +26,7 @@ bool cb_is_full(circular_buffer *cb);
 
 // arr capacity must be same as cb capacity
 // fills arr with contents of cb
-void cb_to_array(circular_buffer *cb, void *arr);
+// hack only works for aggressive
+int cb_to_array(circular_buffer *cb, void *arr);
 
 void cb_clear(circular_buffer *cb);

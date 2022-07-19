@@ -49,10 +49,7 @@ void kmain() {
   debug_cb = NULL;
   circular_buffer cb;
 
-  char debug_backing[MAX_DEBUG_LINES][MAX_DEBUG_STRING_LEN];
-  for (int i = 0; i < MAX_DEBUG_LINES; i++) {
-    memset(debug_backing[i], 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
-  }
+  char debug_backing[MAX_DEBUG_LINES * MAX_DEBUG_STRING_LEN];
   cb_init(&cb, debug_backing, MAX_DEBUG_LINES,
           sizeof(char) * MAX_DEBUG_STRING_LEN);
 
@@ -93,8 +90,8 @@ void kmain() {
 
   int interrupt_tasks = 0;
 
-  scheduler_add(-99, idle, -1);
-  scheduler_add(100, task_k4_init, -1);
+  scheduler_add(-99, idle, -1, "idle");
+  scheduler_add(100, task_k4_init, -1, "k1init");
 
   while (scheduler_length() > 1 || interrupt_tasks != 0) {
     KASSERT(
@@ -116,7 +113,8 @@ void kmain() {
     int data = get_data(&cur->context);
     if (why == SYSCALL_CREATE) {
       create_args *args = (create_args *)data;
-      int ret = scheduler_add(args->priority, args->function, cur->tid);
+      int ret =
+          scheduler_add(args->priority, args->function, cur->tid, args->name);
       // printf(BW_COM2, "[Ret]: %d \t [Func]: %d \r\n", ret,
       // args->function);
       set_return(&cur->context, ret);
@@ -185,9 +183,17 @@ void kmain() {
       if (target->state == ZOMBIE) {
         set_return(&cur->context, EINVALIDTID);
         add_to_ready_queue(cur);
+        char debug_buffer[MAX_DEBUG_STRING_LEN];
+        sprintf(debug_buffer, "[%s] Reply to [%s] EINVALIDTID", cur->task_name,
+                target->task_name);
+        debugprint(debug_buffer, CRITICAL);
       } else if (target->state != REPLY) {
         set_return(&cur->context, ENOTREPLYWAIT);
         add_to_ready_queue(cur);
+        char debug_buffer[MAX_DEBUG_STRING_LEN];
+        sprintf(debug_buffer, "[%s] Reply to [%s] ENOTREPLYWAIT",
+                cur->task_name, target->task_name);
+        debugprint(debug_buffer, CRITICAL);
       } else {
         send_args *s_args = (send_args *)get_data(&target->context);
         target->state = READY;

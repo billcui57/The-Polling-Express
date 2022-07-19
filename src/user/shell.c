@@ -1,6 +1,7 @@
 #include "shell.h"
 
 void shell();
+void fuckitprinter();
 typedef enum {
   COMMAND_TR,
   COMMAND_SW,
@@ -118,16 +119,16 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
-  Create(5, debugprinter);
+  Create(5, "DebugPrinter", debugprinter);
 #ifndef DEBUG_MODE
-  Create(5, timer_printer);
-  Create(5, sensor_printer);
+  Create(5, "TimerPrinter", timer_printer);
+  Create(5, "SensorPrinter", sensor_printer);
 #endif
-  Create(5, path_printer);
-  Create(5, reservation_printer);
-  Create(5, switch_printer);
-  Create(5, subscribe_printer);
-  Create(6, shell);
+  Create(5, "PathPrinter", path_printer);
+  Create(5, "ReservationPrinter", reservation_printer);
+  Create(5, "SwitchPrinter", switch_printer);
+  Create(5, "SubscribePrinter", subscribe_printer);
+  Create(6, "Shell", shell);
 }
 
 void print_art() {
@@ -147,6 +148,13 @@ void print_art() {
     printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
   }
   done_print();
+}
+
+void fuckitprinter() {
+  for (;;) {
+    printf(COM2, "hello\r");
+    done_print();
+  }
 }
 
 void shell() {

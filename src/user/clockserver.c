@@ -19,7 +19,7 @@ void clock_notifier() {
 }
 
 void clockserver() {
-  Create(20, clock_notifier);
+  Create(20, "ClockNotifier", clock_notifier);
   int ticks = 0;
   int client;
   clockserver_request req;

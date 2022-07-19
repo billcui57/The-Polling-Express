@@ -940,7 +940,10 @@ void n_clear(int n) {
 }
 
 void done_print() {
-  KASSERT(_uart > 0, "Can only done print on uart2 no bw");
+  if (_uart < 0) {
+    return;
+  }
+
   ReleaseUartLock(_uart);
 }
 

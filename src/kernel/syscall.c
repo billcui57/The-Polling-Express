@@ -1,14 +1,15 @@
 #include <syscall.h>
-int Create(int priority, void (*function)()) {
+int Create(int priority, char *name, void (*function)()) {
   volatile create_args a;
+  strncpy(a.name, name, MAX_TASK_NAME_LEN);
   a.priority = priority;
   a.function = function;
   int ret;
   __asm__ volatile("mov r0, %[arg] \n\t"
                    "swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_CREATE), [ arg ] "r"(&a)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_CREATE), [arg] "r"(&a)
                    : "r0");
   return ret;
 }
@@ -17,8 +18,8 @@ int MyTid() {
   int ret;
   __asm__ volatile("swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_MYTID)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_MYTID)
                    : "r0");
   return ret;
 }
@@ -26,8 +27,8 @@ int MyParentTid() {
   int ret;
   __asm__ volatile("swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_MYPARENTTID)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_MYPARENTTID)
                    : "r0");
   return ret;
 }
@@ -55,8 +56,8 @@ int Send(int tid, const char *msg, int msglen, char *reply, int rplen) {
   __asm__ volatile("mov r0, %[arg] \n\t"
                    "swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_SEND), [ arg ] "r"(&a)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_SEND), [arg] "r"(&a)
                    : "r0");
   return ret;
 }
@@ -70,8 +71,8 @@ int Receive(int *tid, char *msg, int msglen) {
   __asm__ volatile("mov r0, %[arg] \n\t"
                    "swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_RECEIVE), [ arg ] "r"(&a)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_RECEIVE), [arg] "r"(&a)
                    : "r0");
   return ret;
 }
@@ -85,8 +86,8 @@ int Reply(int tid, const char *reply, int rplen) {
   __asm__ volatile("mov r0, %[arg] \n\t"
                    "swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_REPLY), [ arg ] "r"(&a)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_REPLY), [arg] "r"(&a)
                    : "r0");
   return ret;
 }
@@ -150,8 +151,8 @@ int AwaitEvent(int eventid) {
   __asm__ volatile("mov r0, %[arg] \n\t"
                    "swi %[syscall] \n\t"
                    "mov %[ret], r0"
-                   : [ ret ] "=r"(ret)
-                   : [ syscall ] "i"(SYSCALL_AWAITEVENT), [ arg ] "r"(eventid)
+                   : [ret] "=r"(ret)
+                   : [syscall] "i"(SYSCALL_AWAITEVENT), [arg] "r"(eventid)
                    : "r0");
   return ret;
 }

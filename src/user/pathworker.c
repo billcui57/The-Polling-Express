@@ -21,7 +21,7 @@ void pathfind_worker() {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
   sprintf(debug_buffer, "[Pathworker] Got whoami as train %d",
           v_p_train_num(train));
-  debugprint(debug_buffer);
+  debugprint(debug_buffer, 5);
 
   while (true) {
     memset(&req, 0, sizeof(navigationserver_request));
@@ -33,7 +33,7 @@ void pathfind_worker() {
     if (res.type == PATHFIND_WORKER_HERES_WORK) {
       sprintf(debug_buffer, "[Pathworker] Got work for train %d",
               v_p_train_num(train));
-      debugprint(debug_buffer);
+      debugprint(debug_buffer, 5);
 
       // printf(BW_COM2, "got here\r\n");
 

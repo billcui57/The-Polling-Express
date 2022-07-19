@@ -48,15 +48,15 @@ void task_k4_init() {
     }
   }
 
-  Create(20, nameserver);
-  Create(10, clockserver);
-  Create(10, uart_com2_tx_server);
-  Create(10, uart_com1_server);
-  Create(10, uart_com2_rx_server);
-  Create(10, task_trainserver);
-  Create(10, navigation_server);
-  Create(10, dispatchserver);
-  Create(10, shell_init);
+  Create(20, "Nameserver", nameserver);
+  Create(10, "Clockserver", clockserver);
+  Create(10, "UartCom2TxServer", uart_com2_tx_server);
+  Create(10, "UartCom1Server", uart_com1_server);
+  Create(10, "UartCom2RxServer", uart_com2_rx_server);
+  Create(10, "Trainserver", task_trainserver);
+  Create(10, "NavigationServer", navigation_server);
+  Create(10, "DispatchServer", dispatchserver);
+  Create(10, "ShellInit", shell_init);
 }
 
 #define SENSOR_CB_BACK_CAPACITY 10
