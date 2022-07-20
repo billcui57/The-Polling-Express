@@ -111,7 +111,8 @@ void task_straightpathworker() {
          (char *)&nav_res, sizeof(navigationserver_response));
 
     int path_dist = nav_res.data.straightpathworker.path_dist;
-    int *path = nav_res.data.straightpathworker.path;
+    int path[TRACK_MAX];
+    memcpy(path, nav_res.data.straightpathworker.path, sizeof(int) * TRACK_MAX);
     int path_len = nav_res.data.straightpathworker.path_len;
     int speed = nav_res.data.straightpathworker.speed;
 
@@ -120,7 +121,9 @@ void task_straightpathworker() {
             v_p_train_num(train.train));
     debugprint(debug_buffer, 5);
     memset(debug_buffer, 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
-    sprintf(debug_buffer, "Path Dist: %d Path Len : %d Speed: %d", path_dist,
+    sprintf(debug_buffer,
+            "Path: [%s]->[%s] Path Dist: %d Path Len : %d Speed: %d",
+            track[path[0]].name, track[path[path_len - 1]].name, path_dist,
             path_len, speed);
     debugprint(debug_buffer, 5);
 

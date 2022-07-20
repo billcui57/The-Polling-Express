@@ -172,6 +172,8 @@ void shell() {
 
   task_tid navigation_server = WhoIsBlock("navigationserver");
 
+  task_tid dispatchserver = WhoIsBlock("dispatchserver");
+
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
 
@@ -340,7 +342,31 @@ void shell() {
         Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
              sizeof(res));
 
-      } else {
+      } else if (strncmp(command_tokens[0], "mock", strlen("mock")) == 0) {
+
+        int sensor_num = track_name_to_num(track, command_tokens[1]);
+
+        sprintf(debug_buffer, "Mocking Sensor Trigger [%s] \r\n",
+                track[sensor_num].name);
+        print_debug(debug_buffer);
+
+        int group = sensor_num / SENSORS_PER_GROUP;
+
+        int sensor = sensor_num % SENSORS_PER_GROUP;
+
+        dispatchserver_request req;
+        dispatchserver_response res;
+        memset(&req, 0, sizeof(dispatchserver_request));
+        req.type = DISPATCHSERVER_SENSOR_UPDATE;
+        req.data.sensor_update.time = Time(timer_tid);
+
+        req.data.sensor_update.sensor_readings[group] = 0x80 >> sensor;
+
+        Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
+             (char *)&res, sizeof(dispatchserver_response));
+      }
+
+      else {
         print_debug("Invalid Command Type");
       }
       memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);

@@ -10,9 +10,10 @@
 #define MAX_DEBUG_STRING_LEN 100
 #define MAX_DEBUG_LINES 30
 
-#define VERBOSENESS GIMME_ALL
+#define VERBOSENESS IMPORTANT
 #define CRITICAL 0
 #define GIMME_ALL 1000
+#define IMPORTANT 5
 
 extern circular_buffer *debug_cb;
 extern bool debug_changed;

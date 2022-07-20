@@ -9,15 +9,6 @@ void inform_subscriber(int subscribe_printer, v_train_num *subscribers) {
   memcpy(res.data.subscription_print.subscriptions, subscribers,
          sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
   Reply(subscribe_printer, (char *)&res, sizeof(dispatchserver_response));
-
-  for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
-    if (subscribers[i] != -1) {
-      char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer, "[AHAHAHA] Train %d subscribed to [%s]",
-              v_p_train_num(subscribers[i]), track[i].name);
-      debugprint(debug_buffer, 5);
-    }
-  }
 }
 
 void dispatchserver() {
@@ -85,7 +76,6 @@ void dispatchserver() {
       v_train_num train_num = req.data.worker_init.train_num;
       straightpathworkers[train_num] = client;
     } else if (req.type == DISPATCHSERVER_SENSOR_UPDATE) {
-
       memset((void *)&res, 0, sizeof(dispatchserver_response));
       res.type = DISPATCHSERVER_GOOD;
       Reply(client, (char *)&res, sizeof(dispatchserver_response));
@@ -104,6 +94,9 @@ void dispatchserver() {
 
       v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
 
+      bool triggering_trains[MAX_NUM_TRAINS];
+      memset(triggering_trains, 0, sizeof(bool) * MAX_NUM_TRAINS);
+
       for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
 
         sensor_pool[i] = NOT_TRIGGERED;
@@ -121,25 +114,29 @@ void dispatchserver() {
             KASSERT(status != CB_FULL,
                     "Attributed sensors len must be <= MAX_SUBSCRIBED_SENSORS");
             sensor_pool[i] = subscribers[i];
+
+            v_train_num triggering_train = subscribers[i];
+
+            triggering_trains[triggering_train] = true;
           }
         }
       }
 
       for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-        for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
-          if (subscribers[i] == train_num) {
-            subscribers[i] = -1;
-            char debug_buffer[MAX_DEBUG_STRING_LEN];
-            sprintf(debug_buffer,
-                    "[Dispatch Server] Train %d unsubscribing [%s]",
-                    v_p_train_num(train_num), track[i].name);
-            debugprint(debug_buffer, 5);
+        if (triggering_trains[train_num]) {
+          for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
+            if (subscribers[i] == train_num) {
+              char debug_buffer[MAX_DEBUG_STRING_LEN];
+              sprintf(debug_buffer,
+                      "[Dispatch Server] Train %d unsubscribing [%s]",
+                      v_p_train_num(train_num), track[i].name);
+
+              debugprint(debug_buffer, 5);
+              subscribers[i] = -1;
+              subscription_changed = true;
+            }
           }
         }
-      }
-      subscription_changed = true;
-
-      for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
 
         if (sensor_attribution[train_num].count == 0) {
           continue;

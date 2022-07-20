@@ -110,6 +110,7 @@ typedef struct navigationserver_response {
     struct {
       int src_num[MAX_NUM_TRAINS];
       int dest_num[MAX_NUM_TRAINS];
+      int last_stopped_at[MAX_NUM_TRAINS];
     } get_path_display_info;
   } data;
 

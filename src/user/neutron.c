@@ -30,11 +30,11 @@ void create_neutron(neutron *n, int train, uint32_t distance) {
   const uint32_t *vals;
   int offset = 0;
   n->distance = distance;
-  if (train == 0) {
+  if (v_p_train_num(train) == 1) {
     offset = 0;
-  } else if (train == 3) {
+  } else if (v_p_train_num(train) == 74) {
     offset = 2;
-  } else if (train == 1) {
+  } else if (v_p_train_num(train) == 24) {
     offset = 2;
   } else {
     offset = 2;

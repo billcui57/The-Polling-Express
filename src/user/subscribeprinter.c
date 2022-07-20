@@ -44,15 +44,6 @@ void subscribe_printer() {
         res.data.subscription_print.subscriptions;
 
     for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
-      if (subscription_result[i] != -1) {
-        char debug_buffer[MAX_DEBUG_STRING_LEN];
-        sprintf(debug_buffer, "[GAHAHAHA] Train %d subscribed to [%s]",
-                v_p_train_num(subscription_result[i]), track[i].name);
-        debugprint(debug_buffer, 5);
-      }
-    }
-
-    for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
       if (subscription_result[i] >= 0) {
         cb_push_back(&(subscriptions[subscription_result[i]]), (void *)&i,
                      true);
@@ -60,7 +51,7 @@ void subscribe_printer() {
         sprintf(debug_buffer,
                 "[Subscribe Printer] Got train %d subscription to [%s]",
                 v_p_train_num(subscription_result[i]), track[i].name);
-        debugprint(debug_buffer, 5);
+        debugprint(debug_buffer, 10);
       }
     }
 
