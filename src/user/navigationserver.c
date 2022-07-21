@@ -309,11 +309,11 @@ void navigation_server() {
 
   for (int i = 0; i < TRACK_MAX; i++) {
     reserved_nodes[i] = -1;
-    last_stopped_ats[i] = -1;
   }
 
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
     states[train_num] = IDLE;
+    last_stopped_ats[train_num] = -1;
   }
 
   RegisterAs("navigationserver");
