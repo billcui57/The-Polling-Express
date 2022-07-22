@@ -117,11 +117,6 @@ void task_trainserver() {
                build_task(&free, req.data.task.time, req.data.task.data | 16,
                           req.data.task.target, 2));
 
-      int z  = sprintf( debug_buffer, "[Heap] Len %d: ", h.len);
-      for(int i=0;i<h.len;i++) {
-        z+= sprintf( debug_buffer + z, "%d: %d, ", heap_backing[i]->reqid, heap_backing[i]->time);
-      }
-      debugprint(debug_buffer, 10);
       Reply(client, (char *)&res, 0);
     } else if (req.type == REVERSE) {
       req.data.task.target = v_p_train_num(req.data.task.target);
