@@ -64,7 +64,7 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
 
 void send_branches(train_record *t, int time, task_tid trainctl) {
   debugprint("[Straight Path] Send branches", 5);
-  if (t->j >=0 && t->branches[t->j] == -1)
+  if (t->j >= 0 && t->branches[t->j] == -1)
     return;
   t->j++;
   for (; t->branches[t->j] > 0; t->j++) {
@@ -102,7 +102,7 @@ void task_straightpathworker() {
     Send(navigationserver, (char *)&nav_req, sizeof(navigationserver_request),
          (char *)&nav_res, sizeof(navigationserver_response));
 
-    int path_dist = nav_res.data.straightpathworker.path_dist + 50;
+    int path_dist = nav_res.data.straightpathworker.path_dist;
     int path[TRACK_MAX];
     memcpy(path, nav_res.data.straightpathworker.path, sizeof(int) * TRACK_MAX);
     int path_len = nav_res.data.straightpathworker.path_len;
@@ -150,25 +150,29 @@ void task_straightpathworker() {
     int start_time = Time(clock) + 30;
     TrainCommand(trainctl, start_time, SPEED, train.train, train.speed);
     int marker_time = start_time;
-    if (train.stop_marker != -1){
+    if (train.stop_marker != -1) {
       bool skip = false;
-      for(int i=0;i<=train.stop_marker;i++){
-        if (!skip){
+      for (int i = 0; i <= train.stop_marker; i++) {
+        if (!skip) {
           dis_req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST;
-          dis_req.data.subscribe_sensor_list.subscribed_sensors[0] = train.next[i];
+          dis_req.data.subscribe_sensor_list.subscribed_sensors[0] =
+              train.next[i];
           dis_req.data.subscribe_sensor_list.len = 1;
-          if (i+1 < train.len) {
-            dis_req.data.subscribe_sensor_list.subscribed_sensors[1] = train.next[i+1];
+          if (i + 1 < train.len) {
+            dis_req.data.subscribe_sensor_list.subscribed_sensors[1] =
+                train.next[i + 1];
             dis_req.data.subscribe_sensor_list.len = 2;
           }
           dis_req.data.subscribe_sensor_list.train_num = train.train;
-          Send(dispatchserver, (char *)&dis_req, sizeof(dis_req), (char *)&dis_res,
-              sizeof(dis_res));
+          Send(dispatchserver, (char *)&dis_req, sizeof(dis_req),
+               (char *)&dis_res, sizeof(dis_res));
         } else {
           skip = false;
         }
         train.time[i] = dis_res.data.subscribe_sensor_list.time;
-        if (i+1 < train.len && dis_res.data.subscribe_sensor_list.triggered_sensors[0] == train.next[i+1]) {
+        if (i + 1 < train.len &&
+            dis_res.data.subscribe_sensor_list.triggered_sensors[0] ==
+                train.next[i + 1]) {
           skip = true;
         }
         send_branches(&train, Time(clock), trainctl);

@@ -122,8 +122,13 @@ void add_buffer_nodes(circular_buffer *segment, int switch_node_num,
       cb_push_back(segment, (void *)&(buffer_nodes[switch_index][i]), false);
     }
   } else {
+
     for (int i = num_buffer_nodes; i > 0; i--) {
-      cb_push_back(segment, (void *)&(buffer_nodes[switch_index][i]), false);
+
+      int flipped_first_node_num =
+          (track[buffer_nodes[switch_index][i]].reverse) - track;
+
+      cb_push_back(segment, (void *)&flipped_first_node_num, false);
     }
   }
 }
@@ -162,7 +167,7 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
           add_buffer_nodes(&segment, merge_node_num, true);
           came_from_reverse = true;
           add_navigation_task(navigation_tasks, &segment, train_speed,
-                              train_num, 0);
+                              train_num, TRAIN_LEN);
         }
 
         cb_clear(&segment);
