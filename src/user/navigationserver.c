@@ -177,14 +177,14 @@ void reserve_node(int node_num, v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
   sprintf(debug_buffer, "[Reservation] Reserved [%s] for train %d",
           track[node_num].name, v_p_train_num(train_num));
-  debugprint(debug_buffer, 1);
+  //debugprint(debug_buffer, 1);
   reserved_nodes[node_num] = train_num;
 
   int reverse_node_num = track[node_num].reverse - track;
 
   sprintf(debug_buffer, "[Reservation] Reserved [%s] for train %d",
           track[reverse_node_num].name, v_p_train_num(train_num));
-  debugprint(debug_buffer, 1);
+  //debugprint(debug_buffer, 1);
 
   reserved_nodes[reverse_node_num] = train_num;
   reservation_dirty = true;
@@ -217,7 +217,7 @@ void clear_reserved_by_train(v_train_num train_num) {
       reserved_nodes[i] = -1;
       sprintf(debug_buffer, "[Reservation] Freed [%s] from train %d",
               track[i].name, v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      //debugprint(debug_buffer, 1);
     }
   }
 }
@@ -568,13 +568,13 @@ void navigation_server() {
         KASSERT(0, "Invalid worker");
       }
     } else if (req.type == GET_RESERVATIONS) {
-      debugprint("Got reservation printer", 1);
+      //debugprint("Got reservation printer", 1);
       reservation_client = client;
     } else if (req.type == GET_PATH_DISPLAY_INFO) {
-      debugprint("Got path printer", 1);
+      //debugprint("Got path printer", 1);
       pathprint_client = client;
     } else if (req.type == REGISTER_LOCATION) {
-      debugprint("Got register location", 1);
+      //debugprint("Got register location", 1);
       v_train_num train_num = req.data.register_location.train_num;
       int node_num = req.data.register_location.node_num;
       reserve_node(node_num, train_num);
@@ -588,7 +588,7 @@ void navigation_server() {
 
     if ((reservation_client != -1) && (reservation_dirty)) {
       navigationserver_response res;
-      debugprint("Reply to reservation printer", 10);
+      //debugprint("Reply to reservation printer", 10);
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
       memcpy(res.data.get_reservations.reservations, reserved_nodes,
@@ -601,7 +601,7 @@ void navigation_server() {
 
     if ((pathprint_client != -1) && (path_dirty)) {
       navigationserver_response res;
-      debugprint("Reply to path printer", 10);
+      //debugprint("Reply to path printer", 10);
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
       memcpy(res.data.get_path_display_info.dest_num, dests,
