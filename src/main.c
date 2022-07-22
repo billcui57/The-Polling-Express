@@ -9,6 +9,8 @@
 #include <timer.h>
 #include <user.h>
 
+extern char __bss_start, __bss_end; // defined in linker script
+
 int msg_copy(const char *src, int srclen, char *dest, int destlen) {
   int n = srclen < destlen ? srclen : destlen;
   for (int i = 0; i < n; i++)
@@ -44,6 +46,30 @@ bool debug_changed;
 int debug_index;
 
 void kmain() {
+  memset(&__bss_start, 0, &__bss_end - &__bss_start);
+  while (uart_can_read(COM1))
+    uart_get_char(COM1);
+  (*(volatile int *)(get_base_addr(COM1) + UART_RSR_OFFSET)) = 0;
+
+  int org_exc_stack, org_swi_vec, org_irq_vec;
+  __asm__ volatile("MRS R0, CPSR\n\t"
+                  "BIC R0, R0, #0x1F\n\t"
+                  "ORR R0, R0, #0x12\n\r"
+                  "MSR CPSR_c, R0\n\r"
+                  "MOV %[org_exc_stack], SP\n\r"
+                  "MOV SP, %[irq_stack]\n\r"
+                  "ORR R0, R0, #1\n\r"
+                  "MSR CPSR_c, R0\n\r"
+                  :[org_exc_stack] "=r" (org_exc_stack)
+                  :[irq_stack] "r"(&irq_stack[15])
+                  : "r0");
+
+  org_swi_vec = *(volatile int *)0x28;
+  org_irq_vec = *(volatile int *)0x38;
+  *((void (**)())0x28) = &return_swi;
+  *((void (**)())0x38) = &return_irq;
+
+
   debug_changed = false;
   debug_index = 0;
   debug_cb = NULL;
@@ -75,18 +101,6 @@ void kmain() {
   TCB backing[MAX_NUM_TASKS];
   TCB *heap[MAX_NUM_TASKS];
   scheduler_init(MAX_NUM_TASKS, backing, heap);
-
-  __asm__ volatile("MRS R0, CPSR\n\t"
-                   "BIC R0, R0, #0x1F\n\t"
-                   "ORR R0, R0, #0x12\n\r"
-                   "MSR CPSR_c, R0\n\r"
-                   "MOV SP, %[irq_stack]\n\r"
-                   "ORR R0, R0, #1\n\r"
-                   "MSR CPSR_c, R0\n\r" ::[irq_stack] "r"(&irq_stack[15])
-                   : "r0");
-
-  *((void (**)())0x28) = &return_swi;
-  *((void (**)())0x38) = &return_irq;
 
   int interrupt_tasks = 0;
 
@@ -300,4 +314,20 @@ void kmain() {
       KASSERT(0, "Unknown Syscall\r\n");
     }
   }
+  disable_irq();
+  disable_cache();
+
+  __asm__ volatile("MRS R0, CPSR\n\t"
+                  "BIC R0, R0, #0x1F\n\t"
+                  "ORR R0, R0, #0x12\n\r"
+                  "MSR CPSR_c, R0\n\r"
+                  "MOV SP, %[org_exc_stack]\n\r"
+                  "ORR R0, R0, #1\n\r"
+                  "MSR CPSR_c, R0\n\r"
+                  ::[org_exc_stack] "r"(org_exc_stack)
+                  : "r0");
+
+  *(volatile int *)0x28 = org_swi_vec;
+  *(volatile int *)0x38 = org_irq_vec;
+
 }

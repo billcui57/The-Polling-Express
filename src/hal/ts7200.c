@@ -82,6 +82,14 @@ void enable_cache() {
   __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
 }
 
+
+void disable_cache() {
+  int reg;
+  __asm__ volatile("MRC p15,0,%[reg],c1,c0,0" : [reg] "=r"(reg));
+  reg = reg & ~(1 << 12 | 1 << 2);
+  __asm__ volatile("MCR p15,0,%[reg],c1,c0,0" ::[reg] "r"(reg));
+}
+
 void enable_interrupt(int interrupt_type) {
   int *uart2_ctrl = get_base_addr(COM2) + UART_CTLR_OFFSET;
   switch (interrupt_type) {
@@ -194,14 +202,19 @@ void disable_vic_interrupt(int interrupt_type) {
 
 void enable_irq() {
 
-  *(int *)(VIC1_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
-  *(int *)(VIC2_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
+  *(volatile int *)(VIC1_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
+  *(volatile int *)(VIC2_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
 
   enable_vic_interrupt(TC1);
   enable_vic_interrupt(UART2INTR);
-  enable_vic_interrupt(UART1RXINTR);
+  // enable_vic_interrupt(UART1RXINTR);
   // enable_vic_interrupt(UART2TXINTR);
   disable_interrupt(UART2RXINTR);
   disable_interrupt(UART2TXINTR);
   disable_interrupt(UART2RTIEINTR);
+}
+
+void disable_irq() {
+  *(volatile int *)(VIC1_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
+  *(volatile int *)(VIC2_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
 }
