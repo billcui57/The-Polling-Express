@@ -13,7 +13,6 @@ extern char status[];
 
 int reqid = 0;
 
-
 train_task *build_task(train_task **free, int time, unsigned char a,
                        unsigned char b, char len) {
   KASSERT(*free, "No Free Train Task");
@@ -108,8 +107,7 @@ void task_trainserver() {
       req.data.task.target = v_p_train_num(req.data.task.target);
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(
-          debug_buffer,
-          "[Train Server] train %d, speed %d, time %d, req %d",
+          debug_buffer, "[Train Server] train %d, speed %d, time %d, req %d",
           req.data.task.target, req.data.task.data, req.data.task.time, reqid);
       debugprint(debug_buffer, 10);
 
@@ -221,7 +219,8 @@ void task_train_worker() {
     if (res.type == WORKER_CMD) {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(debug_buffer, "[Train Worker] Sending %d %d %d @ %d for %d",
-              res.data.cmd.a, res.data.cmd.b, res.data.cmd.len, req.data.task.time, res.data.cmd.reqid);
+              res.data.cmd.a, res.data.cmd.b, res.data.cmd.len,
+              req.data.task.time, res.data.cmd.reqid);
       debugprint(debug_buffer, 10);
 #ifndef DUMMY
       Putc(uart1, 0, res.data.cmd.a);
