@@ -103,6 +103,7 @@ void task_straightpathworker() {
          (char *)&nav_res, sizeof(navigationserver_response));
 
     int path_dist = nav_res.data.straightpathworker.path_dist;
+    KASSERT(path_dist > 0, "Negative Distance");
     int path[TRACK_MAX];
     memcpy(path, nav_res.data.straightpathworker.path, sizeof(int) * TRACK_MAX);
     int path_len = nav_res.data.straightpathworker.path_len;
