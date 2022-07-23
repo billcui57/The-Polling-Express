@@ -39,8 +39,8 @@ void pathfind_worker() {
 
       track_node *prev[TRACK_MAX];
 
-      track_node *src = &(track[res.data.pathfindworker.src]);
-      track_node *dest = &(track[res.data.pathfindworker.dest]);
+      track_node *src = &(track[res.data.pathfindworker.src_num]);
+      track_node *dest = &(track[res.data.pathfindworker.dest_num]);
 
       int delay_time = res.data.pathfindworker.delay_time;
 

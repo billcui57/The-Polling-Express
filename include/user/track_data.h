@@ -14,7 +14,7 @@
 // The track initialization functions expect an array of this size.
 #define TRACK_MAX 144
 
-#define INF 100000
+#define INF 100000000
 
 extern track_node track[TRACK_MAX];
 extern char which_track;

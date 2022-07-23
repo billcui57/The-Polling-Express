@@ -14,8 +14,8 @@ void heap_add(heap *h, void *item) {
   int i = h->len;
   h->len++;
   while (i) {
-    unsigned int a = *(int *)h->items[i];
-    unsigned int b = *(int *)h->items[parent(i)];
+    int a = *(int *)h->items[i];
+    int b = *(int *)h->items[parent(i)];
     if (a < b) {
       void *tmp = h->items[i];
       h->items[i] = h->items[parent(i)];
@@ -41,10 +41,10 @@ void heap_pop(heap *h) {
   h->len--;
   int i = 0;
   while (i < h->len) {
-    unsigned int a = left(i) < h->len ? *(int *)h->items[left(i)] : 0xFFFFFFFF;
-    unsigned int b =
-        right(i) < h->len ? *(int *)h->items[right(i)] : 0xFFFFFFFF;
-    unsigned int c = *(int *)h->items[i];
+    int a = left(i) < h->len ? *(int *)h->items[left(i)] : 0x00FFFFFF;
+    int b =
+        right(i) < h->len ? *(int *)h->items[right(i)] : 0x00FFFFFF;
+    int c = *(int *)h->items[i];
     if (c < a && c < b) {
       break;
     }

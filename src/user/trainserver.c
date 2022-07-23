@@ -11,6 +11,9 @@
 
 extern char status[];
 
+int reqid = 0;
+
+
 train_task *build_task(train_task **free, int time, unsigned char a,
                        unsigned char b, char len) {
   KASSERT(*free, "No Free Train Task");
@@ -21,6 +24,7 @@ train_task *build_task(train_task **free, int time, unsigned char a,
   cur->b = b;
   cur->len = len;
   cur->branch = -1;
+  cur->reqid = reqid++;
   return cur;
 }
 
@@ -65,6 +69,7 @@ void task_trainserver() {
         res.data.cmd.a = top->a;
         res.data.cmd.b = top->b;
         res.data.cmd.len = top->len;
+        res.data.cmd.reqid = top->reqid;
         if (top->branch != -1) {
           if (top->branch < 20) {
             event.branch_a[top->branch] = top->branch_state;
@@ -104,13 +109,14 @@ void task_trainserver() {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(
           debug_buffer,
-          "[Train Server] Got speed command for train %d, speed %d, time %d",
-          req.data.task.target, req.data.task.data, req.data.task.time);
+          "[Train Server] train %d, speed %d, time %d, req %d",
+          req.data.task.target, req.data.task.data, req.data.task.time, reqid);
       debugprint(debug_buffer, 10);
 
       heap_add(&h,
                build_task(&free, req.data.task.time, req.data.task.data | 16,
                           req.data.task.target, 2));
+
       Reply(client, (char *)&res, 0);
     } else if (req.type == REVERSE) {
       req.data.task.target = v_p_train_num(req.data.task.target);
@@ -214,8 +220,8 @@ void task_train_worker() {
     // debugprint("Got work");
     if (res.type == WORKER_CMD) {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer, "[Train Worker] Command working %d %d %d",
-              res.data.cmd.a, res.data.cmd.b, res.data.cmd.len);
+      sprintf(debug_buffer, "[Train Worker] Sending %d %d %d @ %d for %d",
+              res.data.cmd.a, res.data.cmd.b, res.data.cmd.len, req.data.task.time, res.data.cmd.reqid);
       debugprint(debug_buffer, 10);
 #ifndef DUMMY
       Putc(uart1, 0, res.data.cmd.a);

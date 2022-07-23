@@ -62,18 +62,16 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
   t->branches[k] = -1;
 }
 
-void send_branches(train_record *t, task_tid trainctl) {
+void send_branches(train_record *t, int time, task_tid trainctl) {
   debugprint("[Straight Path] Send branches", 5);
-  if (t->branches[t->j] == -1)
+  if (t->j >= 0 && t->branches[t->j] == -1)
     return;
   t->j++;
   for (; t->branches[t->j] > 0; t->j++) {
-    TrainCommand(trainctl, 1, SWITCH, t->branches[t->j] & 0xff,
+    TrainCommand(trainctl, time, SWITCH, t->branches[t->j] & 0xff,
                  t->branches[t->j] >> 8);
   }
 }
-
-int get_stopping_time() { return 200; }
 
 void task_straightpathworker() {
   task_tid navigationserver = MyParentTid();
@@ -82,7 +80,6 @@ void task_straightpathworker() {
   task_tid trainctl = WhoIsBlock("trainctl");
 
   train_record train;
-  int next_node = -1;
 
   dispatchserver_request dis_req;
   dispatchserver_response dis_res;
@@ -100,11 +97,6 @@ void task_straightpathworker() {
   train.train = nav_res.data.whoami.train;
 
   while (true) {
-
-    navigationserver_request nav_req;
-    navigationserver_response nav_res;
-    memset(&nav_req, 0, sizeof(navigationserver_request));
-
     nav_req.type = STRAIGHTPATH_WORKER;
     nav_req.data.straightpathworker.train_num = train.train;
     Send(navigationserver, (char *)&nav_req, sizeof(navigationserver_request),
@@ -114,29 +106,26 @@ void task_straightpathworker() {
     int path[TRACK_MAX];
     memcpy(path, nav_res.data.straightpathworker.path, sizeof(int) * TRACK_MAX);
     int path_len = nav_res.data.straightpathworker.path_len;
-    int speed = nav_res.data.straightpathworker.speed;
 
     char debug_buffer[MAX_DEBUG_STRING_LEN];
     sprintf(debug_buffer, "[Straightpathworker] Got work for train %d",
             v_p_train_num(train.train));
     debugprint(debug_buffer, 5);
     memset(debug_buffer, 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
-    sprintf(debug_buffer,
-            "Path: [%s]->[%s] Path Dist: %d Path Len : %d Speed: %d",
+    sprintf(debug_buffer, "Path: [%s]->[%s] Path Dist: %d Path Len : %d",
             track[path[0]].name, track[path[path_len - 1]].name, path_dist,
-            path_len, speed);
+            path_len);
     debugprint(debug_buffer, 5);
 
     memset(train.time, 0, sizeof(int) * 160);
     memset(train.next_time, 0, sizeof(int) * 160);
     process_path(&train, path, path_len, trainctl, 0);
-    train.i = 0;
     train.j = -1;
     train.dist = path_dist * 1000;
     create_neutron(&train.n, train.train, train.dist);
     train.speed = train.n.speed;
     int dist = 0;
-    train.stop_marker = 0;
+    train.stop_marker = -1;
     for (int i = 0; i < train.len; i++) {
       if (dist + train.distance[i] < train.n.dist_a + train.n.dist_b) {
         dist += train.distance[i];
@@ -151,58 +140,52 @@ void task_straightpathworker() {
             train.n.dist_a, train.n.time_b, train.n.dist_b, train.n.time_c,
             train.stop_marker, train.stop_offset);
     debugprint(debug_buffer, 5);
-    train.state = TRAIN_FROMLOOP;
-    next_node = train.next[train.i];
-    send_branches(&train, trainctl);
-    send_branches(&train, trainctl);
+
+    send_branches(&train, Time(clock), trainctl); // to first sensor
+    send_branches(&train, Time(clock), trainctl); // 1 sensor margin
 
     debugprint("[Straight Path] Send train speed", 5);
-    TrainCommand(trainctl, Time(clock) + 5, SPEED, train.train, train.speed);
-    while (next_node != -1) {
-      int skip_sensor = train.next[train.i + 1];
-      dis_req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST;
-      dis_req.data.subscribe_sensor_list.subscribed_sensors[0] = next_node;
-      dis_req.data.subscribe_sensor_list.len = 1;
-      if (train.i + 1 < train.len) {
-        dis_req.data.subscribe_sensor_list.subscribed_sensors[1] = skip_sensor;
-        dis_req.data.subscribe_sensor_list.len = 2;
-      }
-      dis_req.data.subscribe_sensor_list.train_num = train.train;
-      Send(dispatchserver, (char *)&dis_req, sizeof(dis_req), (char *)&dis_res,
-           sizeof(dis_res));
-      int trigger_count = 1;
-      if (dis_res.data.subscribe_sensor_list.triggered_sensors[0] ==
-          skip_sensor) {
-        trigger_count = 2;
-      }
-      for (int zzz = 0; zzz < trigger_count && next_node != -1; zzz++) {
-        train.time[train.i] = dis_res.data.subscribe_sensor_list.time;
-        if (train.i == train.stop_marker) {
-          int time = train.time[train.i] + train.stop_offset;
-          int stop_time = train.n.time_c;
-          debugprint("[Straight Path] Stopping train", 5);
-          TrainCommand(trainctl, time, SPEED, train.train, 0);
-          train.stop_marker = -1;
-          while (train.branches[train.j] != -1)
-            send_branches(&train, trainctl);
-          next_node = -1;
-          DelayUntil(clock, time + stop_time);
-        } else if (train.i + 1 < train.len) {
-          next_node = train.next[train.i + 1];
-          send_branches(&train, trainctl);
+    int start_time = Time(clock) + 30;
+    TrainCommand(trainctl, start_time, SPEED, train.train, train.speed);
+    int marker_time = start_time;
+    if (train.stop_marker != -1) {
+      bool skip = false;
+      for (int i = 0; i <= train.stop_marker; i++) {
+        if (!skip) {
+          dis_req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST;
+          dis_req.data.subscribe_sensor_list.subscribed_sensors[0] =
+              train.next[i];
+          dis_req.data.subscribe_sensor_list.len = 1;
+          if (i + 1 < train.len) {
+            dis_req.data.subscribe_sensor_list.subscribed_sensors[1] =
+                train.next[i + 1];
+            dis_req.data.subscribe_sensor_list.len = 2;
+          }
+          dis_req.data.subscribe_sensor_list.train_num = train.train;
+          Send(dispatchserver, (char *)&dis_req, sizeof(dis_req),
+               (char *)&dis_res, sizeof(dis_res));
+        } else {
+          skip = false;
         }
-        /*if (train.i > 0) {
-          int vel = train.distance[train.i] /
-                    (train.time[train.i] - train.time[train.i - 1]);
-          train.vel = (train.vel * 6 + vel * 10) / 16;
-        }*/
-        train.i++;
-        /*if (train.i < train.len && train.vel) {
-          train.next_time[train.i] =
-              train.time[train.i - 1] + (train.distance[train.i] / train.vel);
-        }*/
+        train.time[i] = dis_res.data.subscribe_sensor_list.time;
+        if (i + 1 < train.len &&
+            dis_res.data.subscribe_sensor_list.triggered_sensors[0] ==
+                train.next[i + 1]) {
+          skip = true;
+        }
+        send_branches(&train, Time(clock), trainctl);
       }
+      marker_time = train.time[train.stop_marker];
     }
+
+    int time = marker_time + train.stop_offset;
+    int stop_time = train.n.time_c;
+    debugprint("[Straight Path] Stopping train", 5);
+    TrainCommand(trainctl, time, SPEED, train.train, 0);
+    train.stop_marker = -1;
+    while (train.branches[train.j] != -1)
+      send_branches(&train, Time(clock), trainctl);
+    DelayUntil(clock, time + stop_time);
     nav_req.type = STRAIGHTPATH_WORKER_DONE;
     nav_req.data.straightpathworker_done.train_num = train.train;
     debugprint("[Straight Path] Done", 5);

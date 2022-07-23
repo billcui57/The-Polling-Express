@@ -116,7 +116,7 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
 
     track_edge mock_reverse_edge;
     mock_reverse_edge.dest = u->reverse;
-    mock_reverse_edge.dist = 0;
+    mock_reverse_edge.dist = 900;
     mock_reverse_edge.reverse = NULL;
     mock_reverse_edge.src = u;
     v = mock_reverse_edge.dest;

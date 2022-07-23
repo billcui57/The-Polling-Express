@@ -275,17 +275,11 @@ void shell() {
 
       } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
         train_num = p_v_train_num(atoi(command_tokens[1]));
-        speed = atoi(command_tokens[2]);
-        dest_num = track_name_to_num(track, command_tokens[3]);
-        offset = atoi(command_tokens[4]);
+        dest_num = track_name_to_num(track, command_tokens[2]);
+        offset = atoi(command_tokens[3]);
 
         if (train_num < 0) {
           print_debug("Please enter a valid train num");
-          continue;
-        }
-
-        if ((speed < 0) || (speed > 14)) {
-          print_debug("Please enter a valid speed");
           continue;
         }
 
@@ -299,7 +293,6 @@ void shell() {
         memset(&req, 0, sizeof(navigationserver_request));
         req.type = NAVIGATION_REQUEST;
         req.data.navigation_request.train = train_num;
-        req.data.navigation_request.speed = speed;
         req.data.navigation_request.destination_num = dest_num;
         req.data.navigation_request.offset = offset;
 
@@ -314,7 +307,7 @@ void shell() {
           print_debug("Need to register train location first");
         } else {
           sprintf(debug_buffer, "Path Finding to %s + %d\r\n",
-                  command_tokens[3], offset);
+                  command_tokens[2], offset);
           print_debug(debug_buffer);
         }
 

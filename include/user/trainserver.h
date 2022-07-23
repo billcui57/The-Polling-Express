@@ -28,6 +28,7 @@ typedef struct {
     } sensor;
     struct {
       unsigned char a, b, len;
+      int reqid;
     } cmd;
   } data;
 } train_msg;
@@ -42,7 +43,7 @@ typedef struct {
 typedef struct train_task {
   int time;
   unsigned char a, b, len;
-  int branch, branch_state;
+  int branch, branch_state, reqid;
   struct train_task *next;
 } train_task;
 
