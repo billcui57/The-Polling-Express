@@ -7,7 +7,7 @@ void sensor_printer() {
   dispatchserver_request req;
   memset(&req, 0, sizeof(dispatchserver_request));
 
-  req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT;
+  req.type = DISPATCHSERVER_ATTRIBUTION_PRINT;
 
   dispatchserver_response res;
 

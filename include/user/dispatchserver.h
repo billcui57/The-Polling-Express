@@ -1,5 +1,6 @@
 #pragma once
 
+#include "attributioncourier.h"
 #include "sensorcourier.h"
 #include "syscall.h"
 #include "track_node.h"
@@ -8,7 +9,8 @@
 typedef enum {
   DISPATCHSERVER_SENSOR_UPDATE,
   DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST,
-  DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT,
+  DISPATCHSERVER_ATTRIBUTION_PRINT,
+  DISPATCHSERVER_ATTRIBUTION_COURIER,
   DISPATCHSERVER_SUBSCRIPTION_PRINT,
   DISPATCHSERVER_STRAIGHTPATHWORKER_INIT
 } dispatchserver_request_type;
@@ -37,6 +39,11 @@ typedef struct dispatchserver_response {
       v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
       unsigned int time;
     } subscribe_sensor_print;
+
+    struct {
+      v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+      unsigned int time;
+    } attribution_courier;
 
     struct {
       v_train_num subscriptions[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "attributioncourier.h"
 #include "clockserver.h"
 #include "nameserver.h"
 #include "pathworker.h"
@@ -20,6 +21,7 @@ typedef enum {
   STRAIGHTPATH_WORKER_DONE,
   PATHFIND_WORKER,
   PATHFIND_WORKER_DONE,
+  NAVIGATIONSERVER_ATTRIBUTION_COURIER,
   WHOAMI,
   GET_RESERVATIONS,
   GET_PATH_DISPLAY_INFO,
@@ -75,6 +77,11 @@ typedef struct navigationserver_request {
       int node_num;
     } register_location;
 
+    struct {
+      v_train_num sensor_pool[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
+      unsigned int time;
+    } attribution_courier;
+
   } data;
 } navigationserver_request;
 
@@ -108,7 +115,7 @@ typedef struct navigationserver_response {
     struct {
       int src_num[MAX_NUM_TRAINS];
       int dest_num[MAX_NUM_TRAINS];
-      int last_stopped_at[MAX_NUM_TRAINS];
+      int will_stop_at[MAX_NUM_TRAINS];
     } get_path_display_info;
   } data;
 
