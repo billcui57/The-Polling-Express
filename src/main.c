@@ -60,7 +60,7 @@ void kmain() {
                   "MOV SP, %[irq_stack]\n\r"
                   "ORR R0, R0, #1\n\r"
                   "MSR CPSR_c, R0\n\r"
-                  :[org_exc_stack] "=r" (org_exc_stack)
+                  :[org_exc_stack] "=&r" (org_exc_stack)
                   :[irq_stack] "r"(&irq_stack[15])
                   : "r0");
 
