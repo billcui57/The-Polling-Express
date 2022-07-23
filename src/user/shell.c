@@ -293,7 +293,6 @@ void shell() {
         memset(&req, 0, sizeof(navigationserver_request));
         req.type = NAVIGATION_REQUEST;
         req.data.navigation_request.train = train_num;
-        req.data.navigation_request.speed = 0;
         req.data.navigation_request.destination_num = dest_num;
         req.data.navigation_request.offset = offset;
 

@@ -15,10 +15,10 @@ bool path_dirty;
 int dests[MAX_NUM_TRAINS];
 int srcs[MAX_NUM_TRAINS];
 int last_stopped_ats[MAX_NUM_TRAINS];
+int reversed[MAX_NUM_TRAINS];
 
 typedef struct straightpath_task_t {
   v_train_num train;
-  int speed;
   int path[TRACK_MAX / 5];
   int path_len;
   int path_dist;
@@ -34,16 +34,15 @@ typedef struct navigation_task_t {
 typedef struct pathfind_task_t {
   bool is_valid;
   v_train_num train;
-  char source_num;
-  char destination_num;
+  int source_num;
+  int destination_num;
   int delay_time;
 } pathfind_task_t;
 
 #define MAX_NAVIGATION_TASKS 10
 
 void add_navigation_task(circular_buffer *navigation_tasks,
-                         circular_buffer *segment, int train_speed,
-                         int train_num, int offset) {
+                         circular_buffer *segment, int train_num, int offset) {
   navigation_task_t task;
 
   int segment_path[segment->count];
@@ -60,7 +59,6 @@ void add_navigation_task(circular_buffer *navigation_tasks,
          sizeof(int) * segment->count);
   task.type = NAVIGATION_STRAIGHT;
   task.data.straightpath_task.path_len = segment->count;
-  task.data.straightpath_task.speed = train_speed;
   task.data.straightpath_task.train = train_num;
   task.data.straightpath_task.path_dist =
       get_path_dist(track, segment_path, segment->count) + offset;
@@ -135,8 +133,7 @@ void add_buffer_nodes(circular_buffer *segment, int switch_node_num,
 
 void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
                                     circular_buffer *navigation_tasks,
-                                    int train_speed, v_train_num train_num,
-                                    int offset) {
+                                    v_train_num train_num, int offset) {
 
   int segment_backing[TRACK_MAX];
   circular_buffer segment;
@@ -158,16 +155,15 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
         cb_push_back(&segment, (void *)&(path[i]), false);
         if (i == path_len - 2) {
           // debugprint("terminate");
-          add_navigation_task(navigation_tasks, &segment, train_speed,
-                              train_num, offset * -1);
+          add_navigation_task(navigation_tasks, &segment, train_num,
+                              offset * -1);
           terminate = true;
         } else {
           // debugprint("reverse");
           merge_node_num = path[i];
           add_buffer_nodes(&segment, merge_node_num, true);
           came_from_reverse = true;
-          add_navigation_task(navigation_tasks, &segment, train_speed,
-                              train_num, TRAIN_LEN);
+          add_navigation_task(navigation_tasks, &segment, train_num, TRAIN_LEN);
         }
 
         cb_clear(&segment);
@@ -195,8 +191,7 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
       }
       cb_push_back(&segment, (void *)&(path[i]), false);
       if (i == path_len - 1) {
-        add_navigation_task(navigation_tasks, &segment, train_speed, train_num,
-                            offset);
+        add_navigation_task(navigation_tasks, &segment, train_num, offset);
         cb_clear(&segment);
         // debugprint("end");
         break;
@@ -209,8 +204,8 @@ void give_pathfinder_work(task_tid pathfind_worker, pathfind_task_t *task) {
   navigationserver_response res;
   memset(&res, 0, sizeof(navigationserver_response));
   res.type = PATHFIND_WORKER_HERES_WORK;
-  res.data.pathfindworker.dest = task->destination_num;
-  res.data.pathfindworker.src = task->source_num;
+  res.data.pathfindworker.dest_num = task->destination_num;
+  res.data.pathfindworker.src_num = task->source_num;
   res.data.pathfindworker.train = task->train;
   res.data.pathfindworker.delay_time = task->delay_time;
 
@@ -231,8 +226,26 @@ void give_straightpath_work(task_tid straightpath_worker,
   memcpy(res.data.straightpathworker.path, task->path,
          sizeof(int) * task->path_len);
   res.data.straightpathworker.path_len = task->path_len;
-  res.data.straightpathworker.speed = task->speed;
   res.data.straightpathworker.path_dist = task->path_dist;
+
+  if (track[(task->path)[0]].type == NODE_ENTER) {
+    char debug_buffer[MAX_DEBUG_STRING_LEN];
+    sprintf(debug_buffer,
+            "[NavigationServer] Train [%d] Added train len offset bc enter",
+            task->train);
+    debugprint(debug_buffer, 5);
+    res.data.straightpathworker.path_dist -= TRAIN_LEN;
+  }
+
+  if (reversed[task->train] == 1) {
+    char debug_buffer[MAX_DEBUG_STRING_LEN];
+    sprintf(debug_buffer,
+            "[NavigationServer] Train [%d] Added train len offset bc reverse",
+            task->train);
+    debugprint(debug_buffer, 5);
+    res.data.straightpathworker.path_dist -= TRAIN_LEN;
+  }
+
   res.type = STRAIGHTPATH_WORKER_HERES_WORK;
   Reply(straightpath_worker, (char *)&res, sizeof(navigationserver_response));
 }
@@ -345,6 +358,7 @@ bool process_next_task(circular_buffer *navigation_tasks,
     debugprint("[Navigation] Reversing", 1);
 
     HardReverse(trainserver_tid, train_num, Time(timer_tid));
+    reversed[train_num] *= -1;
 
     if (!cb_is_empty(navigation_tasks)) {
       cb_pop_front(navigation_tasks, (void *)&task);
@@ -387,8 +401,9 @@ void navigation_server() {
   }
 
   for (v_train_num train_num = 0; train_num < MAX_NUM_TRAINS; train_num++) {
-    states[train_num] = IDLE;
     last_stopped_ats[train_num] = -1;
+    states[train_num] = IDLE;
+    reversed[train_num] = 1;
   }
 
   RegisterAs("navigationserver");
@@ -428,8 +443,6 @@ void navigation_server() {
     pathfind_tasks[train_num].is_valid = false;
   }
 
-  int train_speeds[MAX_NUM_TRAINS];
-  memset(train_speeds, 0, sizeof(int) * MAX_NUM_TRAINS);
   int offsets[MAX_NUM_TRAINS];
   memset(offsets, 0, sizeof(int) * MAX_NUM_TRAINS);
 
@@ -487,7 +500,6 @@ void navigation_server() {
       task.train = req.data.navigation_request.train;
       task.is_valid = true;
       task.delay_time = 0;
-      train_speeds[train_num] = req.data.navigation_request.speed;
       dests[train_num] = task.destination_num;
       path_dirty = true;
       offsets[train_num] = req.data.navigation_request.offset;
@@ -554,6 +566,7 @@ void navigation_server() {
       if (clients[train_num] != -1) {
         memset(&res, 0, sizeof(navigationserver_response));
         if (found_path == NO_PATH_AT_ALL) {
+          states[train_num] = IDLE;
           res.type = NAVIGATIONSERVER_NO_PATH;
           Reply(clients[train_num], (char *)&res,
                 sizeof(navigationserver_response));
@@ -572,9 +585,9 @@ void navigation_server() {
         continue;
       }
 
-      segments_fill_navigation_tasks(
-          track, path, path_len, &(navigation_tasks[train_num]),
-          train_speeds[train_num], train_num, offsets[train_num]);
+      segments_fill_navigation_tasks(track, path, path_len,
+                                     &(navigation_tasks[train_num]), train_num,
+                                     offsets[train_num]);
 
       if (straightpath_workers_parking[train_num] != -1) {
         process_next_task(&(navigation_tasks[train_num]), trainserver_tid,
@@ -652,6 +665,9 @@ void navigation_server() {
       // debugprint("Got register location", 1);
       v_train_num train_num = req.data.register_location.train_num;
       int node_num = req.data.register_location.node_num;
+
+      last_stopped_ats[train_num] = -1;
+      clear_reserved_by_train(train_num);
       reserve_node(node_num, train_num);
       srcs[train_num] = node_num;
       last_stopped_ats[train_num] = node_num;
