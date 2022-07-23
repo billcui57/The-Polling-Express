@@ -2,7 +2,7 @@
 #include "straightpathworker.h"
 
 void inform_subscriber(int subscribe_printer, v_train_num *subscribers) {
-  debugprint("Informing subscribe printer", 10);
+  //debugprint("Informing subscribe printer", 10);
   dispatchserver_response res;
   memset(&res, 0, sizeof(dispatchserver_response));
   res.type = DISPATCHSERVER_GOOD;
@@ -62,7 +62,7 @@ void dispatchserver() {
         char debug_buffer[MAX_DEBUG_STRING_LEN];
         sprintf(debug_buffer, "[Dispatch Server] Train %d subscribing to [%s]",
                 v_p_train_num(train_num), track[subscribed_sensors[i]].name);
-        debugprint(debug_buffer, 5);
+        //debugprint(debug_buffer, 5);
       }
 
       subscription_changed = true;
@@ -70,7 +70,7 @@ void dispatchserver() {
     } else if (req.type == DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT) {
       sensor_printer = client;
     } else if (req.type == DISPATCHSERVER_SUBSCRIPTION_PRINT) {
-      debugprint("[Dispatch Server] Got subscribe printer", 10);
+      //debugprint("[Dispatch Server] Got subscribe printer", 10);
       subscribe_printer = client;
     } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_INIT) {
       v_train_num train_num = req.data.worker_init.train_num;
@@ -131,7 +131,7 @@ void dispatchserver() {
                       "[Dispatch Server] Train %d unsubscribing [%s]",
                       v_p_train_num(train_num), track[i].name);
 
-              debugprint(debug_buffer, 5);
+              //debugprint(debug_buffer, 5);
               subscribers[i] = -1;
               subscription_changed = true;
             }
