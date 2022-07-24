@@ -2,6 +2,7 @@
 #include <heap.h>
 #include <syscall.h>
 #include <trainserver.h>
+#include <track_data.h>
 #include <virtual.h>
 // have a heap of scheduled tasks
 // run tasks once time
@@ -82,7 +83,7 @@ void task_trainserver() {
         heap_pop(&h);
         top->next = free;
         free = top;
-      } else if (!top || (top && time + 7 < top->time)) {
+      } else if ((!top || (top && time + 7 < top->time)) && which_track != '?') {
         res.type = WORKER_SENSOR;
       } else {
         res.type = WORKER;

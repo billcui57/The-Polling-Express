@@ -69,6 +69,12 @@ void kmain() {
   *((void (**)())0x28) = &return_swi;
   *((void (**)())0x38) = &return_irq;
 
+  which_track = '?';
+  if (org_exc_stack) { // not emulator
+    unsigned int mac = *(unsigned int *)0x80010054;
+    char c = ((mac == 0x0e6d) ? 'a' : ((mac == 0xc5da) ? 'b' : '?'));
+      which_track = c;
+  }
 
   debug_changed = false;
   debug_index = 0;

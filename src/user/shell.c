@@ -222,11 +222,14 @@ void shell() {
 
   char debug_buffer[100];
 
+  char empty = '\0';
+
   print_input(input, &input_length);
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
     print_debug("");
+    for(int i=0;i<MAX_COMMAND_TOKENS;i++)command_tokens[i]=&empty;
     bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
     if (entered == true) {
@@ -430,8 +433,8 @@ void shell() {
           } else if (command.type == COMMAND_RV) {
             command_train_num = command.data.rv.train_num;
 
-            TrainCommand(trainserver_tid, Time(timer_tid), REVERSE,
-                         command_train_num, prev_speed[command_train_num]);
+            TrainCommand(trainserver_tid, Time(timer_tid), SPEED,
+                         command_train_num, 15);
           } else if (command.type == COMMAND_Q) {
 
             Shutdown();
