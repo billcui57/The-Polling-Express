@@ -41,10 +41,6 @@ bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
   return false;
 }
 
-circular_buffer *debug_cb;
-bool debug_changed;
-int debug_index;
-
 void kmain() {
   memset(&__bss_start, 0, &__bss_end - &__bss_start);
   while (uart_can_read(COM1))
@@ -75,17 +71,6 @@ void kmain() {
     char c = ((mac == 0x0e6d) ? 'a' : ((mac == 0xc5da) ? 'b' : '?'));
     which_track = c;
   }
-
-  debug_changed = false;
-  debug_index = 0;
-  debug_cb = NULL;
-  circular_buffer cb;
-
-  char debug_backing[MAX_DEBUG_LINES * MAX_DEBUG_STRING_LEN];
-  cb_init(&cb, debug_backing, MAX_DEBUG_LINES,
-          sizeof(char) * MAX_DEBUG_STRING_LEN);
-
-  debug_cb = &cb;
 
   uart_init(COM2);
 

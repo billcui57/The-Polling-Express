@@ -221,7 +221,7 @@ void task_train_worker() {
       sprintf(debug_buffer, "Sending %d %d %d @ %d for %d", res.data.cmd.a,
               res.data.cmd.b, res.data.cmd.len, req.data.task.time,
               res.data.cmd.reqid);
-      debugprint(debug_buffer, 10);
+      debugprint(debug_buffer, TRAIN_SERVER_DEBUG);
 #ifndef DUMMY
       Putc(uart1, 0, res.data.cmd.a);
       if (res.data.cmd.len == 2)

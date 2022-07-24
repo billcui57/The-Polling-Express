@@ -17,14 +17,10 @@
 #define STRAIGHT_PATH_WORKER_DEBUG 0b00010000
 #define TRAIN_SERVER_DEBUG 0b00100000
 
-#define FILTER                                                                 \
-  PATH_WORKER_DEBUG | DISPATCH_SERVER_DEBUG | CRITICAL_DEBUG |                 \
-      NAVIGATION_SERVER_DEBUG | STRAIGHT_PATH_WORKER_DEBUG |                   \
-      TRAIN_SERVER_DEBUG
+#define FILTER CRITICAL_DEBUG | NAVIGATION_SERVER_DEBUG
 
 extern circular_buffer *debug_cb;
 extern bool debug_changed;
 extern int debug_index;
 
 void debugprint(char *str, int verboseness);
-void debugprinter();

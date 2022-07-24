@@ -110,7 +110,13 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
-  Create(5, "DebugPrinter", debugprinter);
+  clear_screen(COM2);
+  printf(COM2, "\033[%d;%dr", DEBUG_TABLE_ROW_BEGIN + 1,
+         DEBUG_TABLE_ROW_BEGIN + DEBUG_TABLE_HEIGHT); // for scrolling debug
+  cursor_to_pos(DEBUG_TABLE_ROW_BEGIN, DEBUG_TABLE_COL, DEBUG_TABLE_WIDTH);
+  printf(COM2, "[ Debug Prints ]\r\n");
+  done_print();
+
 #ifndef DEBUG_MODE
   Create(5, "TimerPrinter", timer_printer);
   Create(5, "SensorPrinter", sensor_printer);
@@ -134,6 +140,7 @@ void print_art() {
   printf(COM2, "\r\n");
 
   printf(COM2, "|  The Polling Express (Track %c)  |\r\n", which_track);
+  printf(COM2, "|       By Edwin Z, Bill C        |\r\n");
 
   for (unsigned int i = 0; i < 35; i++) {
     printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
@@ -187,7 +194,6 @@ typedef struct command_t {
 } command_t;
 
 void shell() {
-  clear_screen(COM2);
 
   hide_cursor();
 
@@ -229,7 +235,8 @@ void shell() {
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
     print_debug("");
-    for(int i=0;i<MAX_COMMAND_TOKENS;i++)command_tokens[i]=&empty;
+    for (int i = 0; i < MAX_COMMAND_TOKENS; i++)
+      command_tokens[i] = &empty;
     bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
     if (entered == true) {

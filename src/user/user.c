@@ -34,8 +34,6 @@ void task_k4_init() {
                          DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
-
-      // TOOD: mark that one sensor broken and provide UI for it
       break;
     } else {
       printf(BW_COM2, "Please enter a valid track\r\n");
