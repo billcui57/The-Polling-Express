@@ -3,7 +3,7 @@
 #include <memory.h>
 #include <stdint.h>
 
-#define STACK_SIZE 4096
+#define STACK_SIZE 8192
 
 typedef struct registers {
   uint32_t r0;
