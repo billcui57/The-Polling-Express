@@ -1,8 +1,8 @@
 #include "dispatchserver.h"
 #include "straightpathworker.h"
 
-void inform_subscriber(int subscribe_printer, v_train_num *subscribers) {
-  //debugprint("Informing subscribe printer", 10);
+void inform_subscriber(task_tid subscribe_printer, v_train_num *subscribers) {
+  // debugprint("Informing subscribe printer", 10);
   dispatchserver_response res;
   memset(&res, 0, sizeof(dispatchserver_response));
   res.type = DISPATCHSERVER_GOOD;
@@ -11,11 +11,23 @@ void inform_subscriber(int subscribe_printer, v_train_num *subscribers) {
   Reply(subscribe_printer, (char *)&res, sizeof(dispatchserver_response));
 }
 
+void inform_attribution_courier(task_tid attribution_courier,
+                                v_train_num *attribution_courier_buffer) {
+  dispatchserver_response res;
+  memset((void *)&res, 0, sizeof(dispatchserver_response));
+  res.type = DISPATCHSERVER_GOOD;
+  memcpy((void *)res.data.attribution_courier.sensor_pool,
+         (void *)attribution_courier_buffer,
+         sizeof(task_tid) * NUM_SENSOR_GROUPS * SENSORS_PER_GROUP);
+  Reply(attribution_courier, (char *)&res, sizeof(dispatchserver_response));
+}
+
 void dispatchserver() {
 
   RegisterAs("dispatchserver");
 
   Create(10, "SensorCourier", sensor_courier);
+  Create(10, "AttributionCourier", attribution_courier);
 
   dispatchserver_request req;
   dispatchserver_response res;
@@ -30,6 +42,9 @@ void dispatchserver() {
 
   task_tid sensor_printer = -1;
   task_tid subscribe_printer = -1;
+  task_tid attribution_courier = -1;
+  bool attribution_courier_buffer_valid = false;
+  task_tid attribution_courier_buffer[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
 
   v_train_num subscribers[NUM_SENSOR_GROUPS * SENSORS_PER_GROUP];
   for (int i = 0; i < NUM_SENSOR_GROUPS * SENSORS_PER_GROUP; i++) {
@@ -62,16 +77,27 @@ void dispatchserver() {
         char debug_buffer[MAX_DEBUG_STRING_LEN];
         sprintf(debug_buffer, "[Dispatch Server] Train %d subscribing to [%s]",
                 v_p_train_num(train_num), track[subscribed_sensors[i]].name);
-        //debugprint(debug_buffer, 5);
+        // debugprint(debug_buffer, 5);
       }
 
       subscription_changed = true;
 
-    } else if (req.type == DISPATCHSERVER_SUBSCRIBE_SENSOR_PRINT) {
+    } else if (req.type == DISPATCHSERVER_ATTRIBUTION_PRINT) {
       sensor_printer = client;
     } else if (req.type == DISPATCHSERVER_SUBSCRIPTION_PRINT) {
-      //debugprint("[Dispatch Server] Got subscribe printer", 10);
+      // debugprint("[Dispatch Server] Got subscribe printer", 10);
       subscribe_printer = client;
+    } else if (req.type == DISPATCHSERVER_ATTRIBUTION_COURIER) {
+      debugprint("[Dispatchserver] Got attribution courier", 1);
+      attribution_courier = client;
+
+      if (attribution_courier_buffer_valid) {
+        inform_attribution_courier(attribution_courier,
+                                   attribution_courier_buffer);
+        attribution_courier_buffer_valid = false;
+        attribution_courier = -1;
+      }
+
     } else if (req.type == DISPATCHSERVER_STRAIGHTPATHWORKER_INIT) {
       v_train_num train_num = req.data.worker_init.train_num;
       straightpathworkers[train_num] = client;
@@ -131,7 +157,7 @@ void dispatchserver() {
                       "[Dispatch Server] Train %d unsubscribing [%s]",
                       v_p_train_num(train_num), track[i].name);
 
-              //debugprint(debug_buffer, 5);
+              // debugprint(debug_buffer, 5);
               subscribers[i] = -1;
               subscription_changed = true;
             }
@@ -161,6 +187,20 @@ void dispatchserver() {
                sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
         Reply(sensor_printer, (char *)&res, sizeof(dispatchserver_response));
         sensor_printer = -1;
+      }
+
+      if (attribution_courier_buffer_valid) {
+        debugprint("[Dispatchserver] Attribution courier couldn't keep up!",
+                   CRITICAL);
+      } else {
+        if (attribution_courier != -1) {
+          inform_attribution_courier(attribution_courier, sensor_pool);
+          attribution_courier = -1;
+        } else {
+          attribution_courier_buffer_valid = true;
+          memcpy((void *)attribution_courier_buffer, (void *)sensor_pool,
+                 sizeof(v_train_num) * (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP));
+        }
       }
     }
 

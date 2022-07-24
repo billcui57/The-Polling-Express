@@ -48,6 +48,7 @@ add_executable(kernel
   src/user/reservationprinter.c
   src/user/neutron.c
   src/user/pathprinter.c
+  src/user/attributioncourier.c
 )
 target_link_libraries(kernel -static gcc)
 
