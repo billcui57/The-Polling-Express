@@ -51,10 +51,9 @@ void add_navigation_task(circular_buffer *navigation_tasks,
   cb_to_array(segment, (void *)segment_path);
 
   char debug_buffer[MAX_DEBUG_STRING_LEN];
-  sprintf(debug_buffer, "[Segmenting] [%s] -> [%s]",
-          track[segment_path[0]].name,
+  sprintf(debug_buffer, "Segmenting [%s] -> [%s]", track[segment_path[0]].name,
           track[segment_path[segment->count - 1]].name);
-  debugprint(debug_buffer, 1);
+  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
   memset(&task, 0, sizeof(navigation_task_t));
   memcpy(task.data.straightpath_task.path, segment_path,
@@ -146,22 +145,15 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
 
   for (int i = 0; i < path_len; i++) {
 
-    // char debug_buffer[MAX_DEBUG_STRING_LEN];
-    // sprintf(debug_buffer, "%s", track[path[i]].name);
-    // debugprint(debug_buffer);
-
     if (track[path[i]].reverse == &(track[path[i + 1]])) {
-      // debugprint("found reverse");
       bool terminate = false;
       if (segment.count >= 1) {
         cb_push_back(&segment, (void *)&(path[i]), false);
         if (i == path_len - 2) {
-          // debugprint("terminate");
           add_navigation_task(navigation_tasks, &segment, train_num,
                               offset * -1);
           terminate = true;
         } else {
-          // debugprint("reverse");
           merge_node_num = path[i];
           add_buffer_nodes(&segment, merge_node_num, true);
           came_from_reverse = true;
@@ -185,7 +177,6 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
       }
 
     } else {
-      // debugprint("straight");
       if (came_from_reverse) {
         // augment
         add_buffer_nodes(&segment, merge_node_num, false);
@@ -195,7 +186,6 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
       if (i == path_len - 1) {
         add_navigation_task(navigation_tasks, &segment, train_num, offset);
         cb_clear(&segment);
-        // debugprint("end");
         break;
       }
     }
@@ -232,19 +222,17 @@ void give_straightpath_work(task_tid straightpath_worker,
 
   if (track[(task->path)[0]].type == NODE_ENTER) {
     char debug_buffer[MAX_DEBUG_STRING_LEN];
-    sprintf(debug_buffer,
-            "[NavigationServer] Train [%d] Added train len offset bc enter",
+    sprintf(debug_buffer, "Train [%d] Added train len offset bc enter",
             task->train);
-    debugprint(debug_buffer, 5);
+    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
     res.data.straightpathworker.path_dist -= TRAIN_LEN;
   }
 
   if (reversed[task->train] == 1) {
     char debug_buffer[MAX_DEBUG_STRING_LEN];
-    sprintf(debug_buffer,
-            "[NavigationServer] Train [%d] Added train len offset bc reverse",
+    sprintf(debug_buffer, "Train [%d] Added train len offset bc reverse",
             task->train);
-    debugprint(debug_buffer, 5);
+    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
     res.data.straightpathworker.path_dist -= TRAIN_LEN;
   }
 
@@ -265,16 +253,16 @@ bool can_reserve_segment(int *path, int path_len, v_train_num train_num) {
 
 void reserve_node(int node_num, v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
-  sprintf(debug_buffer, "[Reservation] Reserved [%s] for train %d",
-          track[node_num].name, v_p_train_num(train_num));
-  // debugprint(debug_buffer, 1);
+  sprintf(debug_buffer, "Reserved [%s] for train %d", track[node_num].name,
+          v_p_train_num(train_num));
+  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
   reserved_nodes[node_num] = train_num;
 
   int reverse_node_num = track[node_num].reverse - track;
 
-  sprintf(debug_buffer, "[Reservation] Reserved [%s] for train %d",
+  sprintf(debug_buffer, "Reserved [%s] for train %d",
           track[reverse_node_num].name, v_p_train_num(train_num));
-  // debugprint(debug_buffer, 1);
+  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
   reserved_nodes[reverse_node_num] = train_num;
   reservation_dirty = true;
@@ -283,9 +271,9 @@ void reserve_node(int node_num, v_train_num train_num) {
 void reserve_path(int *path, int path_len, v_train_num train_num) {
 
   char debug_buffer[MAX_DEBUG_STRING_LEN];
-  sprintf(debug_buffer, "[Navigation] Reserving track for train %d",
+  sprintf(debug_buffer, "Reserving track for train %d",
           v_p_train_num(train_num));
-  debugprint(debug_buffer, 1);
+  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
   for (int i = 0; i < path_len; i++) {
     reserve_node(path[i], train_num);
@@ -303,14 +291,14 @@ void unreserve_node(int node_num, v_train_num train_num) {
       (reverse_node_num != last_at_node_num)) {
     reservation_dirty = true;
     reserved_nodes[node_num] = -1;
-    sprintf(debug_buffer, "[Reservation] Freed [%s] from train %d",
-            track[node_num].name, v_p_train_num(train_num));
-    debugprint(debug_buffer, 1);
+    sprintf(debug_buffer, "Freed [%s] from train %d", track[node_num].name,
+            v_p_train_num(train_num));
+    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
     reserved_nodes[reverse_node_num] = -1;
-    sprintf(debug_buffer, "[Reservation] Freed [%s] from train %d",
+    sprintf(debug_buffer, "Freed [%s] from train %d",
             track[reverse_node_num].name, v_p_train_num(train_num));
 
-    debugprint(debug_buffer, 1);
+    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
   }
 }
 
@@ -330,9 +318,9 @@ void unreserve_path_src_up_to_node(int node_num, v_train_num train_num) {
 
 void clear_reserved_by_train(v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
-  sprintf(debug_buffer, "[Navigation] Freeing reservations for train %d",
+  sprintf(debug_buffer, "Freeing reservations for train %d",
           v_p_train_num(train_num));
-  debugprint(debug_buffer, 1);
+  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
   for (int i = 0; i < TRACK_MAX; i++) {
     unreserve_node(i, train_num);
@@ -351,17 +339,16 @@ bool process_straightpath_task(v_train_num train_num,
   if (can_reserve_segment(task->path, task->path_len, train_num)) {
     reserve_path(task->path, task->path_len, train_num);
     char debug_buffer[MAX_DEBUG_STRING_LEN];
-    sprintf(debug_buffer,
-            "[Navigation] Sending next straight path command for train %d",
+    sprintf(debug_buffer, "Sending next straight path command for train %d",
             v_p_train_num(train_num));
-    debugprint(debug_buffer, 1);
+    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
     give_straightpath_work(straightpath_workers_parking[train_num], task);
     straightpath_workers_parking[train_num] = -1;
   } else {
     char debug_buffer[MAX_DEBUG_STRING_LEN];
-    sprintf(debug_buffer, "[Reservation] Cannot reserve for train %d yet",
+    sprintf(debug_buffer, "Cannot reserve for train %d yet",
             v_p_train_num(train_num));
-    debugprint(debug_buffer, 1);
+    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
     return true;
   }
   return false;
@@ -387,7 +374,7 @@ bool process_next_task(circular_buffer *navigation_tasks,
   bool should_restart = false;
 
   if (task.type == NAVIGATION_REVERSE) {
-    debugprint("[Navigation] Reversing", 1);
+    debugprint("Reversing", NAVIGATION_SERVER_DEBUG);
 
     HardReverse(trainserver_tid, train_num, Time(timer_tid));
     reversed[train_num] *= -1;
@@ -412,9 +399,9 @@ bool process_next_task(circular_buffer *navigation_tasks,
 void restart_pathfind(circular_buffer *navigation_tasks,
                       pathfind_task_t *pathfind_task, v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
-  sprintf(debug_buffer, "[Pathfind] Restarting pathfind for train %d",
+  sprintf(debug_buffer, "Restarting pathfind for train %d",
           v_p_train_num(train_num));
-  debugprint(debug_buffer, 1);
+  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
   states[train_num] = PATHFINDING;
   cb_clear(navigation_tasks);
   pathfind_task->destination_num = dests[train_num];
@@ -506,10 +493,9 @@ void navigation_server() {
       v_train_num train_num = req.data.navigation_request.train;
 
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer,
-              "[Navigation Server] Got navigation request from train %d",
+      sprintf(debug_buffer, "Got navigation request from train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
       if (states[train_num] != IDLE) {
         memset(&res, 0, sizeof(navigationserver_response));
@@ -539,11 +525,9 @@ void navigation_server() {
       offsets[train_num] = req.data.navigation_request.offset;
 
       if (pathfind_workers_parking[train_num] != -1) {
-        sprintf(
-            debug_buffer,
-            "[Navigation Server] Giving work to pathfind worker for train %d",
-            v_p_train_num(train_num));
-        debugprint(debug_buffer, 1);
+        sprintf(debug_buffer, "Giving work to pathfind worker for train %d",
+                v_p_train_num(train_num));
+        debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
         give_pathfinder_work(pathfind_workers_parking[train_num], &task);
         pathfind_workers_parking[train_num] = -1;
       } else {
@@ -555,10 +539,9 @@ void navigation_server() {
       v_train_num train_num = req.data.pathfindworker.train_num;
 
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer,
-              "[Navigation Server] Got pathfind worker for train %d",
+      sprintf(debug_buffer, "Got pathfind worker for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
       pathfind_workers_parking[train_num] = client;
 
@@ -567,10 +550,9 @@ void navigation_server() {
         continue;
       }
 
-      sprintf(debug_buffer,
-              "[Navigation Server] Giving work to pathfind worker for train %d",
+      sprintf(debug_buffer, "Giving work to pathfind worker for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
       give_pathfinder_work(pathfind_workers_parking[train_num],
                            &(pathfind_tasks[train_num]));
       pathfind_workers_parking[train_num] = -1;
@@ -585,10 +567,9 @@ void navigation_server() {
       v_train_num train_num = req.data.pathfindworker_done.train_num;
 
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer,
-              "[Navigation Server] Pathfind worker done for train %d",
+      sprintf(debug_buffer, "Pathfind worker done for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
       states[train_num] = STRAIGHTPATHING;
 
@@ -632,10 +613,9 @@ void navigation_server() {
       v_train_num train_num = req.data.straightpathworker.train_num;
 
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer,
-              "[Navigation Server] Got straightpath worker for train %d",
+      sprintf(debug_buffer, "Got straightpath worker for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
       straightpath_workers_parking[train_num] = client;
 
@@ -658,10 +638,9 @@ void navigation_server() {
       v_train_num train_num = req.data.straightpathworker_done.train_num;
 
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer,
-              "[Navigation Server] Got straightpath worker done for train %d",
+      sprintf(debug_buffer, "Got straightpath worker done for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, 1);
+      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
 
       if (cb_is_empty(&(navigation_tasks[train_num]))) {
         done_navigation(train_num);
@@ -690,13 +669,13 @@ void navigation_server() {
         KASSERT(0, "Invalid worker");
       }
     } else if (req.type == GET_RESERVATIONS) {
-      // debugprint("Got reservation printer", 1);
+      debugprint("Got reservation printer", NAVIGATION_SERVER_DEBUG);
       reservation_client = client;
     } else if (req.type == GET_PATH_DISPLAY_INFO) {
-      // debugprint("Got path printer", 1);
+      debugprint("Got path printer", NAVIGATION_SERVER_DEBUG);
       pathprint_client = client;
     } else if (req.type == REGISTER_LOCATION) {
-      // debugprint("Got register location", 1);
+      debugprint("Got register location", NAVIGATION_SERVER_DEBUG);
       v_train_num train_num = req.data.register_location.train_num;
       int node_num = req.data.register_location.node_num;
 
@@ -710,7 +689,7 @@ void navigation_server() {
       Reply(client, (char *)&res, sizeof(navigationserver_response));
       path_dirty = true;
     } else if (req.type == NAVIGATIONSERVER_ATTRIBUTION_COURIER) {
-      debugprint("[NavigationServer] Got attribution courier", 1);
+      debugprint("Got attribution courier", NAVIGATION_SERVER_DEBUG);
       v_train_num *sensor_attributions =
           req.data.attribution_courier.sensor_pool;
 
@@ -729,7 +708,6 @@ void navigation_server() {
 
     if ((reservation_client != -1) && (reservation_dirty)) {
       navigationserver_response res;
-      // debugprint("Reply to reservation printer", 10);
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
       memcpy(res.data.get_reservations.reservations, reserved_nodes,
@@ -742,7 +720,6 @@ void navigation_server() {
 
     if ((pathprint_client != -1) && (path_dirty)) {
       navigationserver_response res;
-      // debugprint("Reply to path printer", 10);
       memset(&res, 0, sizeof(navigationserver_response));
       res.type = NAVIGATIONSERVER_GOOD;
       memcpy(res.data.get_path_display_info.dest_num, dests,

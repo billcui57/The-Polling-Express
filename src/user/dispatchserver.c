@@ -2,7 +2,6 @@
 #include "straightpathworker.h"
 
 void inform_subscriber(task_tid subscribe_printer, v_train_num *subscribers) {
-  // debugprint("Informing subscribe printer", 10);
   dispatchserver_response res;
   memset(&res, 0, sizeof(dispatchserver_response));
   res.type = DISPATCHSERVER_GOOD;
@@ -73,11 +72,6 @@ void dispatchserver() {
         KASSERT(subscribers[subscribed_sensors[i]] == -1,
                 "Only one task can subscribe to a sensor at a time");
         subscribers[subscribed_sensors[i]] = train_num;
-
-        char debug_buffer[MAX_DEBUG_STRING_LEN];
-        sprintf(debug_buffer, "[Dispatch Server] Train %d subscribing to [%s]",
-                v_p_train_num(train_num), track[subscribed_sensors[i]].name);
-        // debugprint(debug_buffer, 5);
       }
 
       subscription_changed = true;
@@ -85,10 +79,9 @@ void dispatchserver() {
     } else if (req.type == DISPATCHSERVER_ATTRIBUTION_PRINT) {
       sensor_printer = client;
     } else if (req.type == DISPATCHSERVER_SUBSCRIPTION_PRINT) {
-      // debugprint("[Dispatch Server] Got subscribe printer", 10);
       subscribe_printer = client;
     } else if (req.type == DISPATCHSERVER_ATTRIBUTION_COURIER) {
-      debugprint("[Dispatchserver] Got attribution courier", 1);
+      debugprint("Got attribution courier", DISPATCH_SERVER_DEBUG);
       attribution_courier = client;
 
       if (attribution_courier_buffer_valid) {
@@ -152,12 +145,6 @@ void dispatchserver() {
         if (triggering_trains[train_num]) {
           for (int i = 0; i < (NUM_SENSOR_GROUPS * SENSORS_PER_GROUP); i++) {
             if (subscribers[i] == train_num) {
-              char debug_buffer[MAX_DEBUG_STRING_LEN];
-              sprintf(debug_buffer,
-                      "[Dispatch Server] Train %d unsubscribing [%s]",
-                      v_p_train_num(train_num), track[i].name);
-
-              // debugprint(debug_buffer, 5);
               subscribers[i] = -1;
               subscription_changed = true;
             }
@@ -190,8 +177,7 @@ void dispatchserver() {
       }
 
       if (attribution_courier_buffer_valid) {
-        debugprint("[Dispatchserver] Attribution courier couldn't keep up!",
-                   CRITICAL);
+        debugprint("Attribution courier couldn't keep up!", CRITICAL_DEBUG);
       } else {
         if (attribution_courier != -1) {
           inform_attribution_courier(attribution_courier, sensor_pool);

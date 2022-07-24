@@ -1,16 +1,33 @@
 #include "debugprinter.h"
 
-void debugprint(char *str, int verboseness) {
+void debugprint(char *str, int type) {
 
-  if (verboseness > VERBOSENESS) {
+  if ((type & FILTER) == 0) {
     return;
   }
+
   char new_str[MAX_DEBUG_STRING_LEN];
 
-  if (verboseness == CRITICAL) {
-    sprintf(new_str, "\033[31m[%d]%s\033[37m", debug_index, str);
+  if (type == CRITICAL_DEBUG) {
+    sprintf(new_str, "\033[31m[%d] %s\033[37m", debug_index, str);
   } else {
-    sprintf(new_str, "[%d]%s", debug_index, str);
+
+    int MAX_DEBUG_NAME_LEN = 20;
+    char name_str[MAX_DEBUG_NAME_LEN];
+
+    if (type == PATH_WORKER_DEBUG) {
+      strncpy(name_str, "Path Worker", strlen(MAX_DEBUG_NAME_LEN));
+    } else if (type == DISPATCH_SERVER_DEBUG) {
+      strncpy(name_str, "Dispatch Server", strlen(MAX_DEBUG_NAME_LEN));
+    } else if (type == NAVIGATION_SERVER_DEBUG) {
+      strncpy(name_str, "Navigation Server", strlen(MAX_DEBUG_NAME_LEN));
+    } else if (type == STRAIGHT_PATH_WORKER_DEBUG) {
+      strncpy(name_str, "Straightpath Worker", strlen(MAX_DEBUG_NAME_LEN));
+    } else if (type == TRAIN_SERVER_DEBUG) {
+      strncpy(name_str, "Train Server", strlen(MAX_DEBUG_NAME_LEN));
+    }
+
+    sprintf(new_str, "[%d][%s] %s", debug_index, name_str, str);
   }
 
   cb_push_back(debug_cb, (void *)new_str, true);

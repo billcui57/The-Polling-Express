@@ -38,8 +38,6 @@ void subscribe_printer() {
     Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
          (char *)&res, sizeof(dispatchserver_response));
 
-    //debugprint("[Subscribe Printer] Got updates from dispatch server", 10);
-
     v_train_num *subscription_result =
         res.data.subscription_print.subscriptions;
 
@@ -47,11 +45,6 @@ void subscribe_printer() {
       if (subscription_result[i] >= 0) {
         cb_push_back(&(subscriptions[subscription_result[i]]), (void *)&i,
                      true);
-        char debug_buffer[MAX_DEBUG_STRING_LEN];
-        sprintf(debug_buffer,
-                "[Subscribe Printer] Got train %d subscription to [%s]",
-                v_p_train_num(subscription_result[i]), track[i].name);
-        //debugprint(debug_buffer, 10);
       }
     }
 

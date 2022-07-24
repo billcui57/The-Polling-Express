@@ -63,7 +63,7 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
 }
 
 void send_branches(train_record *t, int time, task_tid trainctl) {
-  debugprint("[Straight Path] Send branches", 5);
+  debugprint("Send branches", STRAIGHT_PATH_WORKER_DEBUG);
   if (t->j >= 0 && t->branches[t->j] == -1)
     return;
   t->j++;
@@ -109,14 +109,13 @@ void task_straightpathworker() {
     int path_len = nav_res.data.straightpathworker.path_len;
 
     char debug_buffer[MAX_DEBUG_STRING_LEN];
-    sprintf(debug_buffer, "[Straightpathworker] Got work for train %d",
-            v_p_train_num(train.train));
-    debugprint(debug_buffer, 5);
+    sprintf(debug_buffer, "Got work for train %d", v_p_train_num(train.train));
+    debugprint(debug_buffer, STRAIGHT_PATH_WORKER_DEBUG);
     memset(debug_buffer, 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
     sprintf(debug_buffer, "Path: [%s]->[%s] Path Dist: %d Path Len : %d",
             track[path[0]].name, track[path[path_len - 1]].name, path_dist,
             path_len);
-    debugprint(debug_buffer, 5);
+    debugprint(debug_buffer, STRAIGHT_PATH_WORKER_DEBUG);
 
     memset(train.time, 0, sizeof(int) * 160);
     memset(train.next_time, 0, sizeof(int) * 160);
@@ -140,12 +139,12 @@ void task_straightpathworker() {
     sprintf(debug_buffer, "Neutron: %d(%d) %d(%d) %d | %d + %d", train.n.time_a,
             train.n.dist_a, train.n.time_b, train.n.dist_b, train.n.time_c,
             train.stop_marker, train.stop_offset);
-    debugprint(debug_buffer, 5);
+    debugprint(debug_buffer, STRAIGHT_PATH_WORKER_DEBUG);
 
     send_branches(&train, Time(clock), trainctl); // to first sensor
     send_branches(&train, Time(clock), trainctl); // 1 sensor margin
 
-    debugprint("[Straight Path] Send train speed", 5);
+    debugprint("Send train speed", STRAIGHT_PATH_WORKER_DEBUG);
     int start_time = Time(clock) + 30;
     TrainCommand(trainctl, start_time, SPEED, train.train, train.speed);
     int marker_time = start_time;
@@ -181,7 +180,7 @@ void task_straightpathworker() {
 
     int time = marker_time + train.stop_offset;
     int stop_time = train.n.time_c;
-    debugprint("[Straight Path] Stopping train", 5);
+    debugprint("Stopping train", STRAIGHT_PATH_WORKER_DEBUG);
     TrainCommand(trainctl, time, SPEED, train.train, 0);
     train.stop_marker = -1;
     while (train.branches[train.j] != -1)
@@ -189,7 +188,7 @@ void task_straightpathworker() {
     DelayUntil(clock, time + stop_time);
     nav_req.type = STRAIGHTPATH_WORKER_DONE;
     nav_req.data.straightpathworker_done.train_num = train.train;
-    debugprint("[Straight Path] Done", 5);
+    debugprint("Done", STRAIGHT_PATH_WORKER_DEBUG);
     Send(navigationserver, (char *)&nav_req, sizeof(navigationserver_request),
          (char *)&nav_res, sizeof(navigationserver_response));
   }
