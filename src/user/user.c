@@ -20,12 +20,7 @@ void sensor_reader();
 void task_k4_init() {
   clear_screen(BW_COM2);
   while (true) {
-
-    printf(BW_COM2, "Which track am I on (a,b)?\r\n");
-    char c = bw_uart_get_char(COM2);
-    which_track = c;
-
-    if (c == 'a') {
+    if (which_track == 'a' || which_track == '?') {
       init_tracka(track);
       mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR155"),
@@ -33,7 +28,7 @@ void task_k4_init() {
       mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR3"), DIR_CURVED);
       break;
-    } else if (c == 'b') {
+    } else if (which_track == 'b') {
       init_trackb(track);
       mark_switch_broken(track, track_name_to_num(track, "BR156"),
                          DIR_STRAIGHT);
