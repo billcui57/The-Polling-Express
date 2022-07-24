@@ -433,8 +433,8 @@ void shell() {
           } else if (command.type == COMMAND_RV) {
             command_train_num = command.data.rv.train_num;
 
-            TrainCommand(trainserver_tid, Time(timer_tid), REVERSE,
-                         command_train_num, prev_speed[command_train_num]);
+            TrainCommand(trainserver_tid, Time(timer_tid), SPEED,
+                         command_train_num, 15);
           } else if (command.type == COMMAND_Q) {
 
             Shutdown();
