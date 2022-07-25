@@ -19,6 +19,7 @@ typedef struct straightpath_task_t {
   int path[TRACK_MAX / 5];
   int path_len;
   int path_dist;
+  bool is_startup_task;
 } straightpath_task_t;
 
 typedef struct navigation_task_t {
@@ -41,7 +42,8 @@ typedef struct pathfind_task_t {
 #define MAX_NAVIGATION_TASKS 10
 
 void add_navigation_task(circular_buffer *navigation_tasks,
-                         circular_buffer *segment, int train_num, int offset) {
+                         circular_buffer *segment, int train_num, int offset,
+                         bool is_first_task) {
   navigation_task_t task;
 
   int segment_path[segment->count];
@@ -60,6 +62,7 @@ void add_navigation_task(circular_buffer *navigation_tasks,
   task.data.straightpath_task.train = train_num;
   task.data.straightpath_task.path_dist =
       get_path_dist(track, segment_path, segment->count) + offset;
+  task.data.straightpath_task.is_startup_task = is_first_task;
   cb_push_back(navigation_tasks, (void *)&task, false);
 }
 
@@ -139,6 +142,7 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
 
   bool came_from_reverse = false;
   int merge_node_num = -1;
+  bool had_first_task = false;
 
   for (int i = 0; i < path_len; i++) {
 
@@ -148,13 +152,17 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
         cb_push_back(&segment, (void *)&(path[i]), false);
         if (i == path_len - 2) {
           add_navigation_task(navigation_tasks, &segment, train_num,
-                              train_states[train_num].dest_offset * -1);
+                              train_states[train_num].dest_offset * -1,
+                              !had_first_task);
+          had_first_task = true;
           terminate = true;
         } else {
           merge_node_num = path[i];
           add_buffer_nodes(&segment, merge_node_num, true);
           came_from_reverse = true;
-          add_navigation_task(navigation_tasks, &segment, train_num, 0);
+          add_navigation_task(navigation_tasks, &segment, train_num, 0,
+                              !had_first_task);
+          had_first_task = true;
         }
 
         cb_clear(&segment);
@@ -182,7 +190,9 @@ void segments_fill_navigation_tasks(track_node *track, int *path, int path_len,
       cb_push_back(&segment, (void *)&(path[i]), false);
       if (i == path_len - 1) {
         add_navigation_task(navigation_tasks, &segment, train_num,
-                            train_states[train_num].dest_offset);
+                            train_states[train_num].dest_offset,
+                            !had_first_task);
+        had_first_task = true;
         cb_clear(&segment);
         break;
       }
@@ -218,7 +228,7 @@ void give_straightpath_work(task_tid straightpath_worker,
   res.data.straightpathworker.path_len = task->path_len;
   res.data.straightpathworker.path_dist =
       task->path_dist - train_states[task->train].reged_at_offset;
-
+  res.data.straightpathworker.delay_time = task->is_startup_task ? 0 : 30;
   res.type = STRAIGHTPATH_WORKER_HERES_WORK;
   Reply(straightpath_worker, (char *)&res, sizeof(navigationserver_response));
 }
@@ -482,7 +492,7 @@ void navigation_server() {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(debug_buffer, "Got navigation request from train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+      debugprint(debug_buffer, VERBOSE_DEBUG);
 
       if (states[train_num] != IDLE) {
         memset(&res, 0, sizeof(navigationserver_response));
@@ -528,7 +538,7 @@ void navigation_server() {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(debug_buffer, "Got pathfind worker for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+      debugprint(debug_buffer, VERBOSE_DEBUG);
 
       pathfind_workers_parking[train_num] = client;
 
@@ -539,7 +549,7 @@ void navigation_server() {
 
       sprintf(debug_buffer, "Giving work to pathfind worker for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+      debugprint(debug_buffer, VERBOSE_DEBUG);
       give_pathfinder_work(pathfind_workers_parking[train_num],
                            &(pathfind_tasks[train_num]));
       pathfind_workers_parking[train_num] = -1;
@@ -601,7 +611,7 @@ void navigation_server() {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(debug_buffer, "Got straightpath worker for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+      debugprint(debug_buffer, VERBOSE_DEBUG);
 
       straightpath_workers_parking[train_num] = client;
 
@@ -626,7 +636,7 @@ void navigation_server() {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
       sprintf(debug_buffer, "Got straightpath worker done for train %d",
               v_p_train_num(train_num));
-      debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+      debugprint(debug_buffer, VERBOSE_DEBUG);
 
       if (cb_is_empty(&(navigation_tasks[train_num]))) {
         done_navigation(train_num);
@@ -655,13 +665,13 @@ void navigation_server() {
         KASSERT(0, "Invalid worker");
       }
     } else if (req.type == GET_RESERVATIONS) {
-      debugprint("Got reservation printer", NAVIGATION_SERVER_DEBUG);
+      debugprint("Got reservation printer", VERBOSE_DEBUG);
       reservation_client = client;
     } else if (req.type == GET_TRAIN_STATE) {
-      debugprint("Got trainstate printer", NAVIGATION_SERVER_DEBUG);
+      debugprint("Got trainstate printer", VERBOSE_DEBUG);
       trainstate_print_client = client;
     } else if (req.type == REGISTER_LOCATION) {
-      debugprint("Got register location", NAVIGATION_SERVER_DEBUG);
+      debugprint("Got register location", VERBOSE_DEBUG);
       v_train_num train_num = req.data.register_location.train_num;
       int node_num = req.data.register_location.node_num;
 
@@ -681,7 +691,7 @@ void navigation_server() {
       Reply(client, (char *)&res, sizeof(navigationserver_response));
       train_states_dirty = true;
     } else if (req.type == NAVIGATIONSERVER_ATTRIBUTION_COURIER) {
-      debugprint("Got attribution courier", NAVIGATION_SERVER_DEBUG);
+      debugprint("Got attribution courier", VERBOSE_DEBUG);
       v_train_num *sensor_attributions =
           req.data.attribution_courier.sensor_pool;
 

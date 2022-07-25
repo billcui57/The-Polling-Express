@@ -102,6 +102,7 @@ typedef struct navigationserver_response {
       int path[TRACK_MAX];
       int path_len;
       int path_dist;
+      int delay_time;
     } straightpathworker;
 
     struct {

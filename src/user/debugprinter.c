@@ -25,6 +25,8 @@ void debugprint(char *str, int type) {
       strncpy(name_str, "Straightpath Worker", MAX_DEBUG_NAME_LEN);
     } else if (type == TRAIN_SERVER_DEBUG) {
       strncpy(name_str, "Train Server", MAX_DEBUG_NAME_LEN);
+    } else if (type == VERBOSE_DEBUG) {
+      strncpy(name_str, "Verbose", MAX_DEBUG_NAME_LEN);
     }
 
     sprintf(new_str, "[%s] %s", name_str, str);

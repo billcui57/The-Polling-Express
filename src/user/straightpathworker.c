@@ -107,8 +107,14 @@ void task_straightpathworker() {
     int path[TRACK_MAX];
     memcpy(path, nav_res.data.straightpathworker.path, sizeof(int) * TRACK_MAX);
     int path_len = nav_res.data.straightpathworker.path_len;
+    int delay_time = nav_res.data.straightpathworker.delay_time;
 
     char debug_buffer[MAX_DEBUG_STRING_LEN];
+
+    sprintf(debug_buffer, "Delaying for %d ticks before start", delay_time);
+    debugprint(debug_buffer, STRAIGHT_PATH_WORKER_DEBUG);
+    Delay(clock, delay_time);
+
     sprintf(debug_buffer, "Got work for train %d", v_p_train_num(train.train));
     debugprint(debug_buffer, STRAIGHT_PATH_WORKER_DEBUG);
     memset(debug_buffer, 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
