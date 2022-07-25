@@ -145,7 +145,7 @@ void task_straightpathworker() {
     send_branches(&train, Time(clock), trainctl); // 1 sensor margin
 
     debugprint("Send train speed", STRAIGHT_PATH_WORKER_DEBUG);
-    int start_time = Time(clock) + 30;
+    int start_time = Time(clock);
     TrainCommand(trainctl, start_time, SPEED, train.train, train.speed);
     int marker_time = start_time;
     if (train.stop_marker != -1) {

@@ -16,15 +16,15 @@ void debugprint(char *str, int type) {
     char name_str[MAX_DEBUG_NAME_LEN];
 
     if (type == PATH_WORKER_DEBUG) {
-      strncpy(name_str, "Path Worker", strlen(MAX_DEBUG_NAME_LEN));
+      strncpy(name_str, "Path Worker", MAX_DEBUG_NAME_LEN);
     } else if (type == DISPATCH_SERVER_DEBUG) {
-      strncpy(name_str, "Dispatch Server", strlen(MAX_DEBUG_NAME_LEN));
+      strncpy(name_str, "Dispatch Server", MAX_DEBUG_NAME_LEN);
     } else if (type == NAVIGATION_SERVER_DEBUG) {
-      strncpy(name_str, "Navigation Server", strlen(MAX_DEBUG_NAME_LEN));
+      strncpy(name_str, "Navigation Server", MAX_DEBUG_NAME_LEN);
     } else if (type == STRAIGHT_PATH_WORKER_DEBUG) {
-      strncpy(name_str, "Straightpath Worker", strlen(MAX_DEBUG_NAME_LEN));
+      strncpy(name_str, "Straightpath Worker", MAX_DEBUG_NAME_LEN);
     } else if (type == TRAIN_SERVER_DEBUG) {
-      strncpy(name_str, "Train Server", strlen(MAX_DEBUG_NAME_LEN));
+      strncpy(name_str, "Train Server", MAX_DEBUG_NAME_LEN);
     }
 
     sprintf(new_str, "[%s] %s", name_str, str);

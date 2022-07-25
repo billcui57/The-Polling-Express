@@ -33,6 +33,7 @@
     "pathworker.h": "c",
     "idle.h": "c",
     "debugprinter.h": "c",
-    "circularbuffer.h": "c"
+    "circularbuffer.h": "c",
+    "clockserver.h": "c"
   }
 }

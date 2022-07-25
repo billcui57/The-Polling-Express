@@ -6,7 +6,6 @@
 #include "layout.h"
 #include "nameserver.h"
 #include "navigationserver.h"
-#include "pathprinter.h"
 #include "reservationprinter.h"
 #include "sensorprinter.h"
 #include "subscribeprinter.h"
@@ -16,5 +15,6 @@
 #include "timerprinter.h"
 #include "track_data.h"
 #include "trainserver.h"
+#include "trainstateprinter.h"
 #include "virtual.h"
 void shell_init();

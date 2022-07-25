@@ -17,7 +17,7 @@
 #define STRAIGHT_PATH_WORKER_DEBUG 0b00010000
 #define TRAIN_SERVER_DEBUG 0b00100000
 
-#define FILTER CRITICAL_DEBUG | NAVIGATION_SERVER_DEBUG
+#define FILTER (CRITICAL_DEBUG | NAVIGATION_SERVER_DEBUG)
 
 extern circular_buffer *debug_cb;
 extern bool debug_changed;

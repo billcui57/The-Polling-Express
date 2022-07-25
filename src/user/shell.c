@@ -121,7 +121,7 @@ void shell_init() {
   Create(5, "TimerPrinter", timer_printer);
   Create(5, "SensorPrinter", sensor_printer);
 #endif
-  Create(5, "PathPrinter", path_printer);
+  Create(5, "TrainstatePrinter", trainstate_printer);
   Create(5, "ReservationPrinter", reservation_printer);
   Create(5, "SwitchPrinter", switch_printer);
   Create(5, "SubscribePrinter", subscribe_printer);

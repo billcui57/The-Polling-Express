@@ -24,7 +24,7 @@ typedef enum {
   NAVIGATIONSERVER_ATTRIBUTION_COURIER,
   WHOAMI,
   GET_RESERVATIONS,
-  GET_PATH_DISPLAY_INFO,
+  GET_TRAIN_STATE,
   REGISTER_LOCATION
 } navigationserver_request_type;
 
@@ -36,6 +36,15 @@ typedef enum {
   PATHFIND_WORKER_HERES_WORK,
   NAVIGATIONSERVER_BUSY,
 } navigationserver_response_type;
+
+typedef struct train_state_t {
+  v_train_num train_num;
+  int reged_at_num;
+  int dest_num;
+  bool reversed;
+  int reged_at_offset;
+  int dest_offset;
+} train_state_t;
 
 typedef enum { PATHFIND, STRAIGHTPATH } navigationserver_worker_type;
 typedef struct navigationserver_request {
@@ -113,10 +122,8 @@ typedef struct navigationserver_response {
     } whoami;
 
     struct {
-      int src_num[MAX_NUM_TRAINS];
-      int dest_num[MAX_NUM_TRAINS];
-      int will_stop_at[MAX_NUM_TRAINS];
-    } get_path_display_info;
+      train_state_t train_states[MAX_NUM_TRAINS];
+    } get_train_state;
   } data;
 
 } navigationserver_response;
