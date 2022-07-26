@@ -50,11 +50,12 @@ void process_path(train_record *t, int *path, int path_len, task_tid trainctl,
         dir = 1;
       t->branches[k] = dir << 8 | cur->num;
       k++;
-    } else if (cur->type == NODE_MERGE && i > 0 && false) {
+    } else if (cur->type == NODE_MERGE && i > 0) {
       int rdir = 0;
       if (cur->reverse->edge[DIR_CURVED].dest == track[path[i - 1]].reverse)
         rdir = 1;
-      TrainCommand(trainctl, 0, SWITCH, cur->num, rdir);
+      t->branches[k] = rdir << 8 | cur->num;
+      k++;
     }
     dist += cur->edge[dir].dist;
   }
