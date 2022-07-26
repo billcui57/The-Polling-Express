@@ -20,8 +20,7 @@
 #define RESERVATION_DEBUG 0b10000000
 
 #define FILTER                                                                 \
-  (CRITICAL_DEBUG | NAVIGATION_SERVER_DEBUG | STRAIGHT_PATH_WORKER_DEBUG |     \
-   TRAIN_SERVER_DEBUG)
+  (CRITICAL_DEBUG | NAVIGATION_SERVER_DEBUG | STRAIGHT_PATH_WORKER_DEBUG)
 
 extern circular_buffer *debug_cb;
 extern bool debug_changed;

@@ -56,6 +56,7 @@ typedef struct navigationserver_request {
       v_train_num train;
       int destination_num;
       int offset;
+      bool should_hang;
     } navigation_request;
 
     struct {

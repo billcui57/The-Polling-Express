@@ -49,6 +49,7 @@ add_executable(kernel
   src/user/neutron.c
   src/user/trainstateprinter.c
   src/user/attributioncourier.c
+  src/user/randomgoto.c
 )
 target_link_libraries(kernel -static gcc)
 

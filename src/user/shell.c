@@ -156,7 +156,8 @@ typedef enum {
   COMMAND_GT,
   COMMAND_DIE,
   COMMAND_REG,
-  COMMAND_MOCK
+  COMMAND_MOCK,
+  COMMAND_RANDOM
 } command_type_t;
 
 typedef struct command_t {
@@ -406,6 +407,12 @@ void shell() {
         command.data.mock.sensor_num = sensor_num;
         cb_push_back(&command_cb, (void *)&command, false);
 
+      } else if (strncmp(command_tokens[0], "random", strlen("random")) == 0) {
+
+        print_debug("Starting random pathfinding, fingers crossed! \r\n");
+        command.type = COMMAND_RANDOM;
+        cb_push_back(&command_cb, (void *)&command, false);
+
       } else {
         print_debug("Invalid Command Type");
       }
@@ -457,6 +464,7 @@ void shell() {
             req.data.navigation_request.train = command_train_num;
             req.data.navigation_request.destination_num = command_dest_num;
             req.data.navigation_request.offset = command_offset;
+            req.data.navigation_request.should_hang = false;
 
             Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
                  sizeof(res));
@@ -504,6 +512,9 @@ void shell() {
 
             Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
                  (char *)&res, sizeof(dispatchserver_response));
+          } else if (command.type == COMMAND_RANDOM) {
+            Create(5, "random", random_goto1);
+            Create(5, "random", random_goto2);
           }
         }
       }

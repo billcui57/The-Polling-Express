@@ -12,6 +12,8 @@ task_tid reservation_client;
 task_tid trainstate_print_client;
 bool reservation_dirty;
 bool train_states_dirty;
+task_tid clients[MAX_NUM_TRAINS];
+bool should_hang[MAX_NUM_TRAINS];
 train_state_t train_states[MAX_NUM_TRAINS];
 
 typedef struct straightpath_task_t {
@@ -365,6 +367,15 @@ bool process_straightpath_task(v_train_num train_num,
 void done_navigation(v_train_num train_num) {
   clear_reserved_by_train(train_num);
   states[train_num] = IDLE;
+
+  if (should_hang[train_num]) {
+    navigationserver_response res;
+    memset(&res, 0, sizeof(navigationserver_response));
+    res.type = NAVIGATIONSERVER_GOOD;
+    Reply(clients[train_num], (char *)&res, sizeof(navigationserver_response));
+    clients[train_num] = -1;
+    should_hang[train_num] = false;
+  }
 }
 
 // assumes there is a task
@@ -386,9 +397,9 @@ bool process_next_task(circular_buffer *navigation_tasks,
     train_states[train_num].reversed = !train_states[train_num].reversed;
 
     train_states[train_num].reged_at_num =
-        track[train_states->reged_at_num].reverse - track;
+        track[train_states[train_num].reged_at_num].reverse - track;
     // train_states[train_num].reged_at_offset = TRAIN_LEN;
-    train_states[train_num].reged_at_offset = 0; // TODO: Should be TRAIN_LEN
+    train_states[train_num].reged_at_offset = -100; // TODO: Should be TRAIN_LEN
     train_states_dirty = true;
 
     if (!cb_is_empty(navigation_tasks)) {
@@ -490,8 +501,9 @@ void navigation_server() {
 
   task_tid client;
 
-  task_tid clients[MAX_NUM_TRAINS];
   memset(clients, -1, sizeof(task_tid) * MAX_NUM_TRAINS);
+
+  memset(should_hang, 0, sizeof(bool) * MAX_NUM_TRAINS);
 
   reservation_client = -1;
   trainstate_print_client = -1;
@@ -525,6 +537,7 @@ void navigation_server() {
 
       states[train_num] = PATHFINDING;
       clients[train_num] = client;
+      should_hang[train_num] = req.data.navigation_request.should_hang;
 
       pathfind_task_t task;
       task.destination_num = req.data.navigation_request.destination_num;
@@ -599,11 +612,13 @@ void navigation_server() {
                 sizeof(navigationserver_response));
           continue;
         } else {
-          res.type = NAVIGATIONSERVER_GOOD;
-          Reply(clients[train_num], (char *)&res,
-                sizeof(navigationserver_response));
+          if (!should_hang[train_num]) {
+            res.type = NAVIGATIONSERVER_GOOD;
+            Reply(clients[train_num], (char *)&res,
+                  sizeof(navigationserver_response));
+            clients[train_num] = -1;
+          }
         }
-        clients[train_num] = -1;
       }
 
       if (found_path == NO_PATH_WITH_RESERVE) {
@@ -616,8 +631,14 @@ void navigation_server() {
                                      &(navigation_tasks[train_num]), train_num);
 
       if (straightpath_workers_parking[train_num] != -1) {
-        process_next_task(&(navigation_tasks[train_num]), trainserver_tid,
-                          timer_tid, train_num, straightpath_workers_parking);
+        bool should_restart_pathfind = process_next_task(
+            &(navigation_tasks[train_num]), trainserver_tid, timer_tid,
+            train_num, straightpath_workers_parking);
+        if (should_restart_pathfind) {
+          restart_pathfind(&(navigation_tasks[train_num]),
+                           &(pathfind_tasks[train_num]), train_num);
+          continue;
+        }
       }
 
     } else if (req.type == STRAIGHTPATH_WORKER) {
