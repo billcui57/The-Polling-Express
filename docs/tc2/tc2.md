@@ -49,14 +49,23 @@ To run the program, issue the following:
 ### (NEW TC2) Demo Notes
 
 
-Track a
+Track b
 
-reg 1 A5
-reg 74 A10
-gt 1 10 A3 0
-gt 74 10 D10 0
+24 at A13
+74 at A1
 
+### (NEW TC2) Reservations
 
+Navigation server reserves nodes in a branch by branch basis. It determines which nodes to free based on triggered attributed sensors passed via the attribution courier from the dispatchserver. It determines which nodes to reserve based on which segment the train is in, which is inferred by navigation server from the triggered attributed sensors. For higher
+speeds the reservations is more generous by reserving longer segments.
+### (NEW TC2) Attribution Courier
+
+Attribution Courier passes triggered attributed sensors between dispatchserver and navigationserver.
+
+### (NEW TC2) Trainstateprinter
+
+Train state printer reflects the current state of each train - where it is registered at, where the destination is, and whether or not it is reversed. It obtains this state
+from navigationserver and is notified whenever the state changes.
 
 ### (NEW TC2) Straightpathworker
 
@@ -70,11 +79,7 @@ Navigation server provides a multistep algorithm for trains to efficiently go fr
 
 ### (NEW TC2) Debugprinter
 
-Debug printer uses a circular buffer to hold debug messages from various tasks to make debugging easier.
-
-### (NEW TC2) Pathprinter
-
-Pathprinter is a client of navigation server to obtain the source and destination nodes of each train.
+Debug printer prints debug messages from various tasks to make debugging easier. The printing is done by setting a portion of the screen to be scrollable and continuously printing there.
 
 ### (NEW TC2) Pathworker
 
