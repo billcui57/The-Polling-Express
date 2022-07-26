@@ -91,8 +91,18 @@ void disable_cache() {
 }
 
 void enable_interrupt(int interrupt_type) {
+  int *uart1_ctrl = get_base_addr(COM1) + UART_CTLR_OFFSET;
   int *uart2_ctrl = get_base_addr(COM2) + UART_CTLR_OFFSET;
   switch (interrupt_type) {
+  case UART1CTSINTR:
+    *uart1_ctrl = *uart1_ctrl | MSIEN_MASK;
+    break;
+  case UART1TXINTR:
+    *uart1_ctrl = *uart1_ctrl | TIEN_MASK;
+    break;
+  case UART1RXINTR:
+    *uart1_ctrl = *uart1_ctrl | RIEN_MASK;
+    break;
   case UART2RXINTR:
 
     *uart2_ctrl = *uart2_ctrl | RIEN_MASK;
@@ -111,8 +121,18 @@ void enable_interrupt(int interrupt_type) {
 }
 
 void disable_interrupt(int interrupt_type) {
+  int *uart1_ctrl = get_base_addr(COM1) + UART_CTLR_OFFSET;
   int *uart2_ctrl = get_base_addr(COM2) + UART_CTLR_OFFSET;
   switch (interrupt_type) {
+  case UART1CTSINTR:
+    *uart1_ctrl = *uart1_ctrl & ~MSIEN_MASK;
+    break;
+  case UART1TXINTR:
+    *uart1_ctrl = *uart1_ctrl & ~TIEN_MASK;
+    break;
+  case UART1RXINTR:
+    *uart1_ctrl = *uart1_ctrl & ~RIEN_MASK;
+    break;
   case UART2RXINTR:;
     *uart2_ctrl = *uart2_ctrl & ~RIEN_MASK;
     break;
@@ -206,9 +226,13 @@ void enable_irq() {
   *(volatile int *)(VIC2_BASE + INT_DISABLE_OFFSET) = 0xFFFFFFFF;
 
   enable_vic_interrupt(TC1);
+  enable_vic_interrupt(UART1INTR);
   enable_vic_interrupt(UART2INTR);
   // enable_vic_interrupt(UART1RXINTR);
   // enable_vic_interrupt(UART2TXINTR);
+  disable_interrupt(UART1RXINTR);
+  disable_interrupt(UART1TXINTR);
+  disable_interrupt(UART1CTSINTR);
   disable_interrupt(UART2RXINTR);
   disable_interrupt(UART2TXINTR);
   disable_interrupt(UART2RTIEINTR);
