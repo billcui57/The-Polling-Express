@@ -27,10 +27,11 @@
 
 typedef struct {
   int priority;
+  char name[MAX_TASK_NAME_LEN];
   void (*function)();
 } create_args;
 
-int Create(int priority, void (*function)());
+int Create(int priority, char *name, void (*function)());
 int MyTid();
 int MyParentTid();
 void Yield();

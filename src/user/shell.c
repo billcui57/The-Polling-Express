@@ -1,18 +1,10 @@
 #include "shell.h"
 
 void shell();
-typedef enum {
-  COMMAND_TR,
-  COMMAND_SW,
-  COMMAND_RV,
-  COMMAND_Q,
-  COMMAND_PF,
-  COMMAND_REG
-} command_type;
 
 #define TERMINALMAXINPUTSIZE 20
 #define MAX_COMMAND_TOKENS 6
-
+#define MAX_PLANNED_COMMANDS 10
 #define NUM_SWITCHES 256
 
 bool is_num(char c) { return ('0' <= c) && (c <= '9'); }
@@ -118,16 +110,22 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
-  Create(5, debugprinter);
+  clear_screen(COM2);
+  printf(COM2, "\033[%d;%dr", DEBUG_TABLE_ROW_BEGIN + 1,
+         DEBUG_TABLE_ROW_BEGIN + DEBUG_TABLE_HEIGHT); // for scrolling debug
+  cursor_to_pos(DEBUG_TABLE_ROW_BEGIN, DEBUG_TABLE_COL, DEBUG_TABLE_WIDTH);
+  printf(COM2, "[ Debug Prints ]\r\n");
+  done_print();
+
 #ifndef DEBUG_MODE
-  Create(5, timer_printer);
-  Create(5, sensor_printer);
+  Create(5, "TimerPrinter", timer_printer);
+  Create(5, "SensorPrinter", sensor_printer);
 #endif
-  Create(5, path_printer);
-  Create(5, reservation_printer);
-  Create(5, switch_printer);
-  Create(5, subscribe_printer);
-  Create(6, shell);
+  Create(5, "TrainstatePrinter", trainstate_printer);
+  Create(5, "ReservationPrinter", reservation_printer);
+  Create(5, "SwitchPrinter", switch_printer);
+  Create(5, "SubscribePrinter", subscribe_printer);
+  Create(6, "Shell", shell);
 }
 
 void print_art() {
@@ -142,6 +140,7 @@ void print_art() {
   printf(COM2, "\r\n");
 
   printf(COM2, "|  The Polling Express (Track %c)  |\r\n", which_track);
+  printf(COM2, "|       By Edwin Z, Bill C        |\r\n");
 
   for (unsigned int i = 0; i < 35; i++) {
     printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
@@ -149,8 +148,58 @@ void print_art() {
   done_print();
 }
 
+typedef enum {
+  COMMAND_TR,
+  COMMAND_SW,
+  COMMAND_RV,
+  COMMAND_Q,
+  COMMAND_GT,
+  COMMAND_DIE,
+  COMMAND_REG,
+  COMMAND_MOCK,
+  COMMAND_RANDOM
+} command_type_t;
+
+typedef struct command_t {
+  command_type_t type;
+  union {
+    struct {
+      v_train_num train_num;
+      int speed;
+    } tr;
+
+    struct {
+      int switch_num;
+      char switch_orientation;
+    } sw;
+
+    struct {
+      v_train_num train_num;
+    } rv;
+
+    struct {
+      v_train_num train_num;
+      int dest_num;
+      int offset;
+    } gt;
+
+    struct {
+      v_train_num train_num;
+      int source_num;
+    } reg;
+
+    struct {
+      int sensor_num;
+    } mock;
+
+    struct {
+      v_train_num train_num;
+      int type;
+    } random;
+  } data;
+} command_t;
+
 void shell() {
-  clear_screen(COM2);
 
   hide_cursor();
 
@@ -164,6 +213,8 @@ void shell() {
 
   task_tid navigation_server = WhoIsBlock("navigationserver");
 
+  task_tid dispatchserver = WhoIsBlock("dispatchserver");
+
   char input[TERMINALMAXINPUTSIZE];
   memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
 
@@ -172,31 +223,57 @@ void shell() {
   int prev_speed[MAX_NUM_TRAINS];
   memset(prev_speed, 0, sizeof(int) * MAX_NUM_TRAINS);
 
-  v_train_num train_num;
-  int speed;
-  int switch_num;
-  int switch_orientation;
-  int dest_num;
-  int source_num;
-  int offset;
+  circular_buffer command_cb;
+  command_t command_backing[MAX_PLANNED_COMMANDS];
+  cb_init(&command_cb, (void *)command_backing, MAX_PLANNED_COMMANDS,
+          sizeof(command_t));
+
+  bool is_planning_mode = false;
 
   int input_length = 0;
 
   char debug_buffer[100];
+
+  char empty = '\0';
 
   print_input(input, &input_length);
 
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
     print_debug("");
+    for (int i = 0; i < MAX_COMMAND_TOKENS; i++)
+      command_tokens[i] = &empty;
     bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
     if (entered == true) {
 
-      if (strncmp(command_tokens[0], "tr", strlen("tr")) == 0) {
-        train_num = p_v_train_num(atoi(command_tokens[1]));
+      command_t command;
+      memset((void *)&command, 0, sizeof(command_t));
 
-        speed = atoi(command_tokens[2]);
+      if (strncmp(command_tokens[0], "plan", strlen("plan")) == 0) {
+
+        if (!is_planning_mode) {
+          print_debug("In planning mode");
+          is_planning_mode = true;
+        } else {
+          print_debug("Already in planning mode");
+        }
+        continue;
+
+      } else if (strncmp(command_tokens[0], "doneplan", strlen("doneplan")) ==
+                 0) {
+
+        if (is_planning_mode) {
+          print_debug("Exiting planning mode, flushing planned commands");
+          is_planning_mode = false;
+        } else {
+          print_debug("Not in planning mode");
+          continue;
+        }
+      } else if (strncmp(command_tokens[0], "tr", strlen("tr")) == 0) {
+        v_train_num train_num = p_v_train_num(atoi(command_tokens[1]));
+
+        int speed = atoi(command_tokens[2]);
 
         if ((speed < 0) || (speed > 14)) {
           print_debug("Please enter a valid speed");
@@ -208,15 +285,18 @@ void shell() {
           continue;
         }
 
-        sprintf(debug_buffer, "SPEED %d %d\r\n", atoi(command_tokens[1]),
+        sprintf(debug_buffer, "SPEED %d %d\r\n", v_p_train_num(train_num),
                 speed);
         print_debug(debug_buffer);
 
-        TrainCommand(trainserver_tid, Time(timer_tid), SPEED, train_num, speed);
-        prev_speed[train_num] = speed;
+        command.type = COMMAND_TR;
+        command.data.tr.train_num = train_num;
+        command.data.tr.speed = speed;
+        cb_push_back(&command_cb, (void *)&command, false);
+
       } else if (strncmp(command_tokens[0], "sw", strlen("sw")) == 0) {
-        switch_num = atoi(command_tokens[1]);
-        switch_orientation = command_tokens[2][0];
+        int switch_num = atoi(command_tokens[1]);
+        char switch_orientation = command_tokens[2][0];
 
         if ((switch_num < 1) || (switch_num > NUM_SWITCHES)) {
           print_debug("Please enter a valid switch num");
@@ -242,40 +322,39 @@ void shell() {
                 switch_orientation);
         print_debug(debug_buffer);
 
-        TrainCommand(trainserver_tid, Time(timer_tid), SWITCH, switch_num,
-                     switch_orientation == 'c' ? 1 : 0);
+        command.type = COMMAND_SW;
+        command.data.sw.switch_num = switch_num;
+        command.data.sw.switch_orientation = switch_orientation;
+        cb_push_back(&command_cb, (void *)&command, false);
+
       } else if (strncmp(command_tokens[0], "rv", strlen("rv")) == 0) {
-        train_num = p_v_train_num(atoi(command_tokens[1]));
+        v_train_num train_num = p_v_train_num(atoi(command_tokens[1]));
 
         if (train_num < 0) {
           print_debug("Please enter a valid train num");
           continue;
         }
 
-        sprintf(debug_buffer, "REVERSE %d, back to speed %d\r\n", train_num,
-                prev_speed[train_num]);
+        sprintf(debug_buffer, "REVERSE %d\r\n", v_p_train_num(train_num));
         print_debug(debug_buffer);
 
-        TrainCommand(trainserver_tid, Time(timer_tid), REVERSE, train_num,
-                     prev_speed[train_num]);
+        command.type = COMMAND_RV;
+        command.data.rv.train_num = train_num;
+        cb_push_back(&command_cb, (void *)&command, false);
+
       } else if (strncmp(command_tokens[0], "q", strlen("q")) == 0) {
 
         print_debug("QUIT");
-        Shutdown();
+        command.type = COMMAND_Q;
+        cb_push_back(&command_cb, (void *)&command, false);
 
       } else if (strncmp(command_tokens[0], "gt", strlen("gt")) == 0) {
-        train_num = p_v_train_num(atoi(command_tokens[1]));
-        speed = atoi(command_tokens[2]);
-        dest_num = track_name_to_num(track, command_tokens[3]);
-        offset = atoi(command_tokens[4]);
+        v_train_num train_num = p_v_train_num(atoi(command_tokens[1]));
+        int dest_num = track_name_to_num(track, command_tokens[2]);
+        int offset = atoi(command_tokens[3]);
 
         if (train_num < 0) {
           print_debug("Please enter a valid train num");
-          continue;
-        }
-
-        if ((speed < 0) || (speed > 14)) {
-          print_debug("Please enter a valid speed");
           continue;
         }
 
@@ -284,35 +363,24 @@ void shell() {
           continue;
         }
 
-        navigationserver_request req;
-        navigationserver_response res;
-        memset(&req, 0, sizeof(navigationserver_request));
-        req.type = NAVIGATION_REQUEST;
-        req.data.navigation_request.train = train_num;
-        req.data.navigation_request.speed = speed;
-        req.data.navigation_request.destination_num = dest_num;
-        req.data.navigation_request.offset = offset;
+        sprintf(debug_buffer, "Train %d go to %s + %d\r\n",
+                v_p_train_num(train_num), track[dest_num].name, offset);
+        print_debug(debug_buffer);
 
-        Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
-             sizeof(res));
-
-        if (res.type == NAVIGATIONSERVER_BUSY) {
-          print_debug("Navigation server busy");
-        } else if (res.type == NAVIGATIONSERVER_NO_PATH) {
-          print_debug("No path");
-        } else if (res.type == NAVIGATIONSERVER_NEED_REGISTER) {
-          print_debug("Need to register train location first");
-        } else {
-          sprintf(debug_buffer, "Path Finding to %s + %d\r\n",
-                  command_tokens[3], offset);
-          print_debug(debug_buffer);
-        }
+        command.type = COMMAND_GT;
+        command.data.gt.train_num = train_num;
+        command.data.gt.dest_num = dest_num;
+        command.data.gt.offset = offset;
+        cb_push_back(&command_cb, (void *)&command, false);
 
       } else if (strncmp(command_tokens[0], "die", strlen("die")) == 0) {
-        KASSERT(0, "DIE!");
+
+        command.type = COMMAND_DIE;
+        cb_push_back(&command_cb, (void *)&command, false);
+
       } else if (strncmp(command_tokens[0], "reg", strlen("reg")) == 0) {
-        train_num = p_v_train_num(atoi(command_tokens[1]));
-        source_num = track_name_to_num(track, command_tokens[2]);
+        v_train_num train_num = p_v_train_num(atoi(command_tokens[1]));
+        int source_num = track_name_to_num(track, command_tokens[2]);
         if (train_num < 0) {
           print_debug("Please enter a valid train num");
           continue;
@@ -323,18 +391,166 @@ void shell() {
           continue;
         }
 
-        navigationserver_request req;
-        navigationserver_response res;
-        memset(&req, 0, sizeof(navigationserver_request));
-        req.type = REGISTER_LOCATION;
-        req.data.register_location.train_num = train_num;
-        req.data.register_location.node_num = source_num;
-        Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
-             sizeof(res));
+        sprintf(debug_buffer, "Reg train %d at %s \r\n",
+                v_p_train_num(train_num), track[source_num].name);
+        print_debug(debug_buffer);
+
+        command.type = COMMAND_REG;
+        command.data.reg.source_num = source_num;
+        command.data.reg.train_num = train_num;
+        cb_push_back(&command_cb, (void *)&command, false);
+
+      } else if (strncmp(command_tokens[0], "mock", strlen("mock")) == 0) {
+
+        int sensor_num = track_name_to_num(track, command_tokens[1]);
+
+        sprintf(debug_buffer, "Mocking Sensor Trigger [%s] \r\n",
+                track[sensor_num].name);
+        print_debug(debug_buffer);
+
+        command.type = COMMAND_MOCK;
+        command.data.mock.sensor_num = sensor_num;
+        cb_push_back(&command_cb, (void *)&command, false);
+
+      } else if (strncmp(command_tokens[0], "random", strlen("random")) == 0) {
+        int rand_type = atoi(command_tokens[1]);
+        v_train_num train_num = p_v_train_num(atoi(command_tokens[2]));
+
+        if ((rand_type < 1) || (rand_type > 3)) {
+          print_debug("Please enter a valid random");
+          continue;
+        }
+
+        if (train_num < 0) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
+        sprintf(debug_buffer, "Starting random pathfinding %d with %d, fingers crossed\r\n",
+                rand_type, train_num);
+        print_debug(debug_buffer);
+        command.type = COMMAND_RANDOM;
+        command.data.random.type = rand_type;
+        command.data.random.train_num = train_num;
+
+        cb_push_back(&command_cb, (void *)&command, false);
 
       } else {
         print_debug("Invalid Command Type");
       }
+
+      if (!is_planning_mode) {
+        v_train_num command_train_num;
+        int command_speed;
+        int command_switch_num;
+        char command_switch_orientation;
+        int command_offset;
+        int command_dest_num;
+        int command_src_num;
+        int command_sensor_num;
+        while (command_cb.count > 0) {
+          command_t command;
+          cb_pop_front(&command_cb, (void *)&command);
+
+          if (command.type == COMMAND_TR) {
+            command_train_num = command.data.tr.train_num;
+            command_speed = command.data.tr.speed;
+
+            TrainCommand(trainserver_tid, Time(timer_tid), SPEED,
+                         command_train_num, command_speed);
+            prev_speed[command_train_num] = command_speed;
+          } else if (command.type == COMMAND_SW) {
+            command_switch_num = command.data.sw.switch_num;
+            command_switch_orientation = command.data.sw.switch_orientation;
+
+            TrainCommand(trainserver_tid, Time(timer_tid), SWITCH,
+                         command_switch_num,
+                         command_switch_orientation == 'c' ? 1 : 0);
+          } else if (command.type == COMMAND_RV) {
+            command_train_num = command.data.rv.train_num;
+
+            TrainCommand(trainserver_tid, Time(timer_tid), SPEED,
+                         command_train_num, 15);
+          } else if (command.type == COMMAND_Q) {
+
+            Shutdown();
+          } else if (command.type == COMMAND_GT) {
+            command_train_num = command.data.gt.train_num;
+            command_dest_num = command.data.gt.dest_num;
+            command_offset = command.data.gt.offset;
+
+            navigationserver_request req;
+            navigationserver_response res;
+            memset(&req, 0, sizeof(navigationserver_request));
+            req.type = NAVIGATION_REQUEST;
+            req.data.navigation_request.train = command_train_num;
+            req.data.navigation_request.destination_num = command_dest_num;
+            req.data.navigation_request.offset = command_offset;
+            req.data.navigation_request.should_hang = false;
+
+            Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
+                 sizeof(res));
+
+            if (res.type == NAVIGATIONSERVER_BUSY) {
+              print_debug("Navigation server busy");
+            } else if (res.type == NAVIGATIONSERVER_NO_PATH) {
+              print_debug("No path");
+            } else if (res.type == NAVIGATIONSERVER_NEED_REGISTER) {
+              print_debug("Need to register train location first");
+            } else {
+              sprintf(debug_buffer, "Train %d go to %s + %d\r\n",
+                      v_p_train_num(command_train_num),
+                      track[command_dest_num].name, command_offset);
+              print_debug(debug_buffer);
+            }
+          } else if (command.type == COMMAND_DIE) {
+            KASSERT(0, "DIE!");
+          } else if (command.type == COMMAND_REG) {
+            command_train_num = command.data.reg.train_num;
+            command_src_num = command.data.reg.source_num;
+
+            navigationserver_request req;
+            navigationserver_response res;
+            memset(&req, 0, sizeof(navigationserver_request));
+            req.type = REGISTER_LOCATION;
+            req.data.register_location.train_num = command_train_num;
+            req.data.register_location.node_num = command_src_num;
+            Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
+                 sizeof(res));
+          } else if (command.type == COMMAND_MOCK) {
+            command_sensor_num = command.data.mock.sensor_num;
+
+            int group = command_sensor_num / SENSORS_PER_GROUP;
+
+            int sensor = command_sensor_num % SENSORS_PER_GROUP;
+
+            dispatchserver_request req;
+            dispatchserver_response res;
+            memset(&req, 0, sizeof(dispatchserver_request));
+            req.type = DISPATCHSERVER_SENSOR_UPDATE;
+            req.data.sensor_update.time = Time(timer_tid);
+
+            req.data.sensor_update.sensor_readings[group] = 0x80 >> sensor;
+
+            Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
+                 (char *)&res, sizeof(dispatchserver_response));
+          } else if (command.type == COMMAND_RANDOM) {
+            task_tid rand_worker;
+            if (command.data.random.type == 1) {
+              rand_worker = Create(5, "random", random_goto1);
+            } else if (command.data.random.type == 2) {
+              rand_worker = Create(5, "random", random_goto2);
+            } else {
+              rand_worker = Create(5, "random", random_goto3);;
+            }
+
+            int junk;
+            Send(rand_worker, (char *)&command.data.random.train_num, sizeof(v_train_num), (char*)&junk, 0);
+
+          }
+        }
+      }
+
       memset(input, '\0', sizeof(char) * TERMINALMAXINPUTSIZE);
     }
   }

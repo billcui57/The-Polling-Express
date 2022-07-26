@@ -1,6 +1,7 @@
 #include <clockserver.h>
 #include <heap.h>
 #include <syscall.h>
+#include <track_data.h>
 #include <trainserver.h>
 #include <virtual.h>
 // have a heap of scheduled tasks
@@ -10,6 +11,8 @@
 #define MAX_TRAIN_CMDS 100
 
 extern char status[];
+
+int reqid = 0;
 
 train_task *build_task(train_task **free, int time, unsigned char a,
                        unsigned char b, char len) {
@@ -21,6 +24,7 @@ train_task *build_task(train_task **free, int time, unsigned char a,
   cur->b = b;
   cur->len = len;
   cur->branch = -1;
+  cur->reqid = reqid++;
   return cur;
 }
 
@@ -52,7 +56,7 @@ void task_trainserver() {
   memset(&res, 0, sizeof(res));
   task_tid client;
 
-  Create(10, task_train_worker);
+  Create(10, "TrainWorker", task_train_worker);
 
   RegisterAs("trainctl");
   while (true) {
@@ -65,6 +69,7 @@ void task_trainserver() {
         res.data.cmd.a = top->a;
         res.data.cmd.b = top->b;
         res.data.cmd.len = top->len;
+        res.data.cmd.reqid = top->reqid;
         if (top->branch != -1) {
           if (top->branch < 20) {
             event.branch_a[top->branch] = top->branch_state;
@@ -78,14 +83,15 @@ void task_trainserver() {
         heap_pop(&h);
         top->next = free;
         free = top;
-      } else if (!top || (top && time + 7 < top->time)) {
+      } else if ((!top || (top && time + 7 < top->time)) &&
+                 which_track != '?') {
         res.type = WORKER_SENSOR;
       } else {
         res.type = WORKER;
       }
       Reply(client, (char *)&res, sizeof(res));
     } else if (req.type == WORKER_SENSOR) {
-      // debugprint("Got worker sensor");
+      debugprint("Got worker sensor", TRAIN_SERVER_DEBUG);
       char *sensor_res = req.data.sensor.sensors;
       for (int i = 0; i < 10; i++) {
         event.sensors[i] |= sensor_res[i] & ~sensors[i];
@@ -93,7 +99,7 @@ void task_trainserver() {
         sensors[i] = sensor_res[i];
       }
       event.time = req.data.sensor.time;
-      // debugprint("Replying to worker sensor");
+      debugprint("Replying to worker sensor", TRAIN_SERVER_DEBUG);
       Reply(client, (char *)&res, 0);
     } else if (req.type == SENSOR_EVENT) {
       sensor_waiting = client;
@@ -102,15 +108,15 @@ void task_trainserver() {
     } else if (req.type == SPEED) {
       req.data.task.target = v_p_train_num(req.data.task.target);
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(
-          debug_buffer,
-          "[Train Server] Got speed command for train %d, speed %d, time %d",
-          req.data.task.target, req.data.task.data, req.data.task.time);
-      debugprint(debug_buffer);
+      sprintf(debug_buffer, "Train %d, speed %d, time %d, req %d",
+              req.data.task.target, req.data.task.data, req.data.task.time,
+              reqid);
+      debugprint(debug_buffer, TRAIN_SERVER_DEBUG);
 
       heap_add(&h,
                build_task(&free, req.data.task.time, req.data.task.data | 16,
                           req.data.task.target, 2));
+
       Reply(client, (char *)&res, 0);
     } else if (req.type == REVERSE) {
       req.data.task.target = v_p_train_num(req.data.task.target);
@@ -209,33 +215,28 @@ void task_train_worker() {
   while (true) {
     req.type = WORKER;
     req.data.task.time = Time(clock);
-    // debugprint("Back here");
     Send(parent, (char *)&req, sizeof(req), (char *)&res, sizeof(res));
-    // debugprint("Got work");
     if (res.type == WORKER_CMD) {
       char debug_buffer[MAX_DEBUG_STRING_LEN];
-      sprintf(debug_buffer, "[Train Worker] Command working %d %d %d",
-              res.data.cmd.a, res.data.cmd.b, res.data.cmd.len);
-      debugprint(debug_buffer);
+      sprintf(debug_buffer, "Sending %d %d %d @ %d for %d", res.data.cmd.a,
+              res.data.cmd.b, res.data.cmd.len, req.data.task.time,
+              res.data.cmd.reqid);
+      debugprint(debug_buffer, TRAIN_SERVER_DEBUG);
 #ifndef DUMMY
       Putc(uart1, 0, res.data.cmd.a);
       if (res.data.cmd.len == 2)
         Putc(uart1, 0, res.data.cmd.b);
 #endif
     } else if (res.type == WORKER_SENSOR) {
-      // debugprint("Before putc");
       status[0] = 'A' + (i % 26);
       i++;
       req.type = WORKER_SENSOR;
 #ifndef DUMMY
       Putc(uart1, 0, '\x85');
-      // debugprint("Before polling sensors");
       for (int i = 0; i < 10; i++)
         req.data.sensor.sensors[i] = Getc(uart1, 0);
-      // debugprint("After polling sensors");
       status[0] = '+';
       req.data.sensor.time = Time(clock);
-      // debugprint("After time");
       status[0] = '-';
 #else
       int z = i;
@@ -244,7 +245,6 @@ void task_train_worker() {
       req.data.sensor.time = Delay(clock, 5);
 #endif
       Send(parent, (char *)&req, sizeof(req), (char *)&res, 0);
-      // debugprint("After send");
     } else if (res.type == WORKER) {
       Delay(clock, 1);
     } else {

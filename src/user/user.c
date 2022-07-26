@@ -20,43 +20,43 @@ void sensor_reader();
 void task_k4_init() {
   clear_screen(BW_COM2);
   while (true) {
-
-    printf(BW_COM2, "Which track am I on (a,b)?\r\n");
-    char c = bw_uart_get_char(COM2);
-    which_track = c;
-
-    if (c == 'a') {
+    if (which_track == 'a' || which_track == '?') {
       init_tracka(track);
+      // BR3 - c, 7 - c, 156 , 155, 16 -c
+
+      mark_switch_broken(track, track_name_to_num(track, "BR7"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR156"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR155"),
                          DIR_STRAIGHT);
-      mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_CURVED);
+      mark_switch_broken(track, track_name_to_num(track, "BR16"), DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR3"), DIR_CURVED);
+      mark_switch_broken(track, track_name_to_num(track, "BR15"), DIR_STRAIGHT);
       break;
-    } else if (c == 'b') {
+    } else if (which_track == 'b') {
       init_trackb(track);
+
+      // 4 -s
       mark_switch_broken(track, track_name_to_num(track, "BR156"),
                          DIR_STRAIGHT);
       mark_switch_broken(track, track_name_to_num(track, "BR155"), DIR_CURVED);
       mark_switch_broken(track, track_name_to_num(track, "BR5"), DIR_CURVED);
-      mark_sensor_broken(track, track_name_to_num(track, "C13"));
-
-      // TOOD: mark that one sensor broken and provide UI for it
+      mark_switch_broken(track, track_name_to_num(track, "BR4"), DIR_STRAIGHT);
       break;
     } else {
       printf(BW_COM2, "Please enter a valid track\r\n");
     }
   }
+  generate_buffer_nodes(track);
 
-  Create(20, nameserver);
-  Create(10, clockserver);
-  Create(10, uart_com2_tx_server);
-  Create(10, uart_com1_server);
-  Create(10, uart_com2_rx_server);
-  Create(10, task_trainserver);
-  Create(10, navigation_server);
-  Create(10, dispatchserver);
-  Create(10, shell_init);
+  Create(20, "Nameserver", nameserver);
+  Create(10, "Clockserver", clockserver);
+  Create(10, "UartCom2TxServer", uart_com2_tx_server);
+  Create(10, "UartCom1Server", uart_com1_server);
+  Create(10, "UartCom2RxServer", uart_com2_rx_server);
+  Create(10, "Trainserver", task_trainserver);
+  Create(10, "NavigationServer", navigation_server);
+  Create(10, "DispatchServer", dispatchserver);
+  Create(10, "ShellInit", shell_init);
 }
 
 #define SENSOR_CB_BACK_CAPACITY 10

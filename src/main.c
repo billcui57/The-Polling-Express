@@ -9,6 +9,8 @@
 #include <timer.h>
 #include <user.h>
 
+extern char __bss_start, __bss_end; // defined in linker script
+
 int msg_copy(const char *src, int srclen, char *dest, int destlen) {
   int n = srclen < destlen ? srclen : destlen;
   for (int i = 0; i < n; i++)
@@ -39,24 +41,36 @@ bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
   return false;
 }
 
-circular_buffer *debug_cb;
-bool debug_changed;
-int debug_index;
-
 void kmain() {
-  debug_changed = false;
-  debug_index = 0;
-  debug_cb = NULL;
-  circular_buffer cb;
+  memset(&__bss_start, 0, &__bss_end - &__bss_start);
+  while (uart_can_read(COM1))
+    uart_get_char(COM1);
+  (*(volatile int *)(get_base_addr(COM1) + UART_RSR_OFFSET)) = 0;
 
-  char debug_backing[MAX_DEBUG_LINES][MAX_DEBUG_STRING_LEN];
-  for (int i = 0; i < MAX_DEBUG_LINES; i++) {
-    memset(debug_backing[i], 0, sizeof(char) * MAX_DEBUG_STRING_LEN);
+  int org_exc_stack, org_swi_vec, org_irq_vec;
+  __asm__ volatile("MRS R0, CPSR\n\t"
+                   "BIC R0, R0, #0x1F\n\t"
+                   "ORR R0, R0, #0x12\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   "MOV %[org_exc_stack], SP\n\r"
+                   "MOV SP, %[irq_stack]\n\r"
+                   "ORR R0, R0, #1\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   : [org_exc_stack] "=&r"(org_exc_stack)
+                   : [irq_stack] "r"(&irq_stack[15])
+                   : "r0");
+
+  org_swi_vec = *(volatile int *)0x28;
+  org_irq_vec = *(volatile int *)0x38;
+  *((void (**)())0x28) = &return_swi;
+  *((void (**)())0x38) = &return_irq;
+
+  which_track = '?';
+  if (org_exc_stack) { // not emulator
+    unsigned int mac = *(unsigned int *)0x80010054;
+    char c = ((mac == 0x0e6d) ? 'a' : ((mac == 0xc5da) ? 'b' : '?'));
+    which_track = c;
   }
-  cb_init(&cb, debug_backing, MAX_DEBUG_LINES,
-          sizeof(char) * MAX_DEBUG_STRING_LEN);
-
-  debug_cb = &cb;
 
   uart_init(COM2);
 
@@ -67,6 +81,7 @@ void kmain() {
     event_mapping[i] = NULL;
   }
 
+  int uart1_tx_flag = 0;
   enable_irq();
 
   timer_init(TIMER1); // for ticks, interrupt enabled
@@ -79,22 +94,10 @@ void kmain() {
   TCB *heap[MAX_NUM_TASKS];
   scheduler_init(MAX_NUM_TASKS, backing, heap);
 
-  __asm__ volatile("MRS R0, CPSR\n\t"
-                   "BIC R0, R0, #0x1F\n\t"
-                   "ORR R0, R0, #0x12\n\r"
-                   "MSR CPSR_c, R0\n\r"
-                   "MOV SP, %[irq_stack]\n\r"
-                   "ORR R0, R0, #1\n\r"
-                   "MSR CPSR_c, R0\n\r" ::[irq_stack] "r"(&irq_stack[15])
-                   : "r0");
-
-  *((void (**)())0x28) = &return_swi;
-  *((void (**)())0x38) = &return_irq;
-
   int interrupt_tasks = 0;
 
-  scheduler_add(-99, idle, -1);
-  scheduler_add(100, task_k4_init, -1);
+  scheduler_add(-99, idle, -1, "idle");
+  scheduler_add(100, task_k4_init, -1, "k1init");
 
   while (scheduler_length() > 1 || interrupt_tasks != 0) {
     KASSERT(
@@ -116,7 +119,8 @@ void kmain() {
     int data = get_data(&cur->context);
     if (why == SYSCALL_CREATE) {
       create_args *args = (create_args *)data;
-      int ret = scheduler_add(args->priority, args->function, cur->tid);
+      int ret =
+          scheduler_add(args->priority, args->function, cur->tid, args->name);
       // printf(BW_COM2, "[Ret]: %d \t [Func]: %d \r\n", ret,
       // args->function);
       set_return(&cur->context, ret);
@@ -185,9 +189,17 @@ void kmain() {
       if (target->state == ZOMBIE) {
         set_return(&cur->context, EINVALIDTID);
         add_to_ready_queue(cur);
+        char debug_buffer[MAX_DEBUG_STRING_LEN];
+        sprintf(debug_buffer, "[%s] Reply to [%s] EINVALIDTID", cur->task_name,
+                target->task_name);
+        debugprint(debug_buffer, CRITICAL_DEBUG);
       } else if (target->state != REPLY) {
         set_return(&cur->context, ENOTREPLYWAIT);
         add_to_ready_queue(cur);
+        char debug_buffer[MAX_DEBUG_STRING_LEN];
+        sprintf(debug_buffer, "[%s] Reply to [%s] ENOTREPLYWAIT",
+                cur->task_name, target->task_name);
+        debugprint(debug_buffer, CRITICAL_DEBUG);
       } else {
         send_args *s_args = (send_args *)get_data(&target->context);
         target->state = READY;
@@ -213,12 +225,16 @@ void kmain() {
         read_timer(TIMER3, &end_time);
         set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
-      } else if (event == UART1_INTR) {
-        enable_vic_interrupt(UART1INTR);
+      } else if (event == UART1_TX_INTR) {
+        volatile int *uart1_mdmsts = (int *)(get_base_addr(COM1) + UART_MDMSTS_OFFSET);
+        *uart1_mdmsts;
+        enable_interrupt(UART1TXINTR);
+        enable_interrupt(UART1CTSINTR);
         event_mapping[event] = cur;
+        uart1_tx_flag = 0;
         interrupt_tasks++;
       } else if (event == UART1_RX_INTR) {
-        enable_vic_interrupt(UART1RXINTR);
+        enable_interrupt(UART1RXINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
       } else if (event == UART2_TX_HALF_EMPTY) {
@@ -272,20 +288,34 @@ void kmain() {
         }
       }
 
-      int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
-      volatile int *uart1_intr =
-          (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
-
-      if (vic1_irq_status & VIC_UART1RXINTR_MASK) {
-        if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
-          disable_vic_interrupt(UART1RXINTR);
-          *uart1_ctrl = *uart1_ctrl & ~RIEN_MASK;
+      if (vic2_irq_status & VIC_INT_UART1_MASK) {
+        volatile int *uart1_intr = (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
+        volatile int *uart1_mdmsts = (int *)(get_base_addr(COM1) + UART_MDMSTS_OFFSET);
+        if (*uart1_intr & RIS_MASK) {
+          if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
+            disable_interrupt(UART1RXINTR);
+          } else {
+            KASSERT(0, "Nobody home");
+          }
         }
-      }
+        if (*uart1_intr & TIS_MASK) {
+          uart1_tx_flag |= 1;
+          disable_interrupt(UART1TXINTR);
+        }
+        if (*uart1_intr & MIS_MASK) {
+          *uart1_intr = 0;
+          if ((*uart1_mdmsts & MSR_DCTS) && (*uart1_mdmsts & MSR_CTS)){
+            uart1_tx_flag |= 2;
+            disable_interrupt(UART1CTSINTR);
+          }
+        }
 
-      if ((vic2_irq_status & VIC_INT_UART1_MASK) && (*uart1_intr & ~RIS_MASK)) {
-        if (wake_up(UART1_INTR, event_mapping, &interrupt_tasks)) {
-          disable_vic_interrupt(UART1INTR);
+        if (uart1_tx_flag == 3){
+           if (wake_up(UART1_TX_INTR, event_mapping, &interrupt_tasks)) {
+            uart1_tx_flag = 0;
+          } else {
+            KASSERT(0, "Nobody home");
+          }
         }
       }
 
@@ -294,4 +324,18 @@ void kmain() {
       KASSERT(0, "Unknown Syscall\r\n");
     }
   }
+  disable_irq();
+  disable_cache();
+
+  __asm__ volatile("MRS R0, CPSR\n\t"
+                   "BIC R0, R0, #0x1F\n\t"
+                   "ORR R0, R0, #0x12\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   "MOV SP, %[org_exc_stack]\n\r"
+                   "ORR R0, R0, #1\n\r"
+                   "MSR CPSR_c, R0\n\r" ::[org_exc_stack] "r"(org_exc_stack)
+                   : "r0");
+
+  *(volatile int *)0x28 = org_swi_vec;
+  *(volatile int *)0x38 = org_irq_vec;
 }

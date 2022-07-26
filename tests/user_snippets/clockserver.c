@@ -20,8 +20,8 @@ void task_test() {
 }
 
 void task_k3init() {
-  Create(10, nameserver);
-  Create(20, clockserver);
+  Create(10, "Nameserver", nameserver);
+  Create(20, "Clockserver", clockserver);
 
   // Create(5, task_test);
   // return;

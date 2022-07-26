@@ -133,12 +133,15 @@ int main() {
   track_node track[TRACK_MAX];
   init_tracka(track);
 
-  avoid[0] = true;
+  // avoid[0] = true;
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR156")]),
   //                    DIR_CURVED);
   // mark_switch_broken(track, &(track[track_name_to_num(track, "BR155")]),
   //                    DIR_STRAIGHT);
-  dijkstra_test(track, "A1", "A7", avoid);
+  // dijkstra_test(track, "E2", "C2", avoid);
+
+  int path[6] = {33, 117, 119, 122, 120, 49};
+  path_dist_test(track, path, 6);
 
   //  track_name_to_num(track, "B16"),   track_name_to_num(track, "BR15"),
   //     track_name_to_num(track, "C10"),   track_name_to_num(track, "BR16"),

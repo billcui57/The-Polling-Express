@@ -55,7 +55,7 @@ void top_down_heapify(unsigned int i) {
   }
 }
 
-int scheduler_add(int priority, void (*func)(), int parentTid) {
+int scheduler_add(int priority, void (*func)(), int parentTid, char *name) {
   if (!free_tcb)
     return ENOTASKDESCRIPTORS;
   TCB *ret = free_tcb;
@@ -64,6 +64,7 @@ int scheduler_add(int priority, void (*func)(), int parentTid) {
   ret->parentTid = parentTid;
   ret->priority = priority;
   ret->state = READY;
+  strncpy(ret->task_name, name, MAX_TASK_NAME_LEN);
 
   init_user_task(&ret->context, func);
   add_to_ready_queue(ret);
