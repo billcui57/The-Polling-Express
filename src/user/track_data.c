@@ -5,6 +5,73 @@
 track_node track[TRACK_MAX];
 char which_track;
 
+int buffer_nodes[22][6];
+
+void generate_buffer_node(track_node *track, int merge_node_num) {
+  int switch_index;
+  if (track[merge_node_num].num < 153) {
+    switch_index = track[merge_node_num].num - 1;
+  } else {
+    switch_index = track[merge_node_num].num - 153 + 18;
+  }
+
+  track_node *cur = &(track[merge_node_num]);
+  int len = 0;
+
+  while (cur->type != NODE_SENSOR) {
+    int go_dir = -1;
+
+    if (cur->type == NODE_MERGE) {
+      go_dir = DIR_AHEAD;
+    } else if (cur->type == NODE_BRANCH) {
+      if ((cur->edge[DIR_STRAIGHT].dist != INF) &&
+          (cur->edge[DIR_STRAIGHT].dest->type != NODE_EXIT)) {
+        go_dir = DIR_STRAIGHT;
+      } else if ((cur->edge[DIR_CURVED].dist != INF) &&
+                 (cur->edge[DIR_CURVED].dest->type != NODE_EXIT)) {
+        go_dir = DIR_CURVED;
+      } else {
+        char debug_buffer[100];
+        sprintf(debug_buffer, "Cannot generate buffer node for %s",
+                track[merge_node_num].name);
+        KASSERT(0, debug_buffer);
+      }
+    }
+
+    track_node *next = cur->edge[go_dir].dest;
+
+    buffer_nodes[switch_index][len + 1] = next - track;
+    len++;
+
+    cur = next;
+  }
+  buffer_nodes[switch_index][0] = len;
+}
+void generate_buffer_nodes(track_node *track) {
+  generate_buffer_node(track, track_name_to_num(track, "MR1"));
+  generate_buffer_node(track, track_name_to_num(track, "MR2"));
+  generate_buffer_node(track, track_name_to_num(track, "MR3"));
+  generate_buffer_node(track, track_name_to_num(track, "MR4"));
+  generate_buffer_node(track, track_name_to_num(track, "MR5"));
+  generate_buffer_node(track, track_name_to_num(track, "MR6"));
+  generate_buffer_node(track, track_name_to_num(track, "MR7"));
+  generate_buffer_node(track, track_name_to_num(track, "MR8"));
+  generate_buffer_node(track, track_name_to_num(track, "MR9"));
+  generate_buffer_node(track, track_name_to_num(track, "MR10"));
+  generate_buffer_node(track, track_name_to_num(track, "MR11"));
+  generate_buffer_node(track, track_name_to_num(track, "MR12"));
+  generate_buffer_node(track, track_name_to_num(track, "MR13"));
+  generate_buffer_node(track, track_name_to_num(track, "MR14"));
+  generate_buffer_node(track, track_name_to_num(track, "MR15"));
+  generate_buffer_node(track, track_name_to_num(track, "MR16"));
+  generate_buffer_node(track, track_name_to_num(track, "MR17"));
+  generate_buffer_node(track, track_name_to_num(track, "MR18"));
+  generate_buffer_node(track, track_name_to_num(track, "MR153"));
+  generate_buffer_node(track, track_name_to_num(track, "MR154"));
+  generate_buffer_node(track, track_name_to_num(track, "MR155"));
+  generate_buffer_node(track, track_name_to_num(track, "MR156"));
+}
+
 int track_name_to_num(track_node *track, char *name) {
   for (unsigned int i = 0; i < TRACK_MAX; i++) {
     if (strncmp(name, track[i].name, strlen(name)) == 0) {

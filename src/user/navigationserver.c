@@ -87,33 +87,47 @@ void add_navigation_task(circular_buffer *navigation_tasks,
 //   {C9},//MR16
 //   {E14}, //MR17
 //   {BR5,C3},//MR18
-
+//   {MR154,BR156,E2}, //MR153
+//   {BR156,BR155,D2}, //MR154
+//   {MR156,BR154,B14}, //MR155
+//   {BR154,BR153,C1}, //MR156
 // }
 
-int buffer_nodes[18][4] = {
-    {3, 83, 85, 38},   // MR1
-    {2, 85, 38, -1},   // MR2
-    {1, 38, -1, -1},   // MR3
-    {3, 103, 101, 44}, // MR4
-    {2, 114, 39, -1},  // MR5
-    {1, 37, -1, -1},   // MR6
-    {1, 74, -1, -1},   // MR7
-    {2, 96, 55, -1},   // MR8
-    {2, 94, 56, -1},   // MR9
-    {1, 68, -1, -1},   // MR10
-    {1, 44, -1, -1},   // MR11
-    {2, 101, 44, -1},  // MR12
-    {1, 43, -1, -1},   // MR13
-    {1, 3, -1, -1},    // MR14
-    {1, 30, -1, -1},   // MR15
-    {1, 40, -1, -1},   // MR16
-    {1, 77, -1, -1},   // MR17
-    {2, 88, 34, -1},   // MR18
-};
+// int buffer_nodes[22][4] = {
+//     {3, 83, 85, 38},   // MR1
+//     {2, 85, 38, -1},   // MR2
+//     {1, 38, -1, -1},   // MR3
+//     {3, 103, 101, 44}, // MR4
+//     {2, 114, 39, -1},  // MR5
+//     {1, 37, -1, -1},   // MR6
+//     {1, 74, -1, -1},   // MR7
+//     {2, 96, 55, -1},   // MR8
+//     {2, 94, 56, -1},   // MR9
+//     {1, 68, -1, -1},   // MR10
+//     {1, 44, -1, -1},   // MR11
+//     {2, 101, 44, -1},  // MR12
+//     {1, 43, -1, -1},   // MR13
+//     {1, 3, -1, -1},    // MR14
+//     {1, 30, -1, -1},   // MR15
+//     {1, 40, -1, -1},   // MR16
+//     {1, 77, -1, -1},   // MR17
+//     {2, 88, 34, -1},   // MR18
+//     {3, 119, 122, 65}, // MR153
+//     {3, 122, 120, 49}, // MR154
+//     {3, 123, 118, 29}, // MR155
+//     {3, 118, 116, 32}, // MR156
+// };
 
 void add_buffer_nodes(circular_buffer *segment, int switch_node_num,
                       bool forward) {
-  int switch_index = track[switch_node_num].num - 1;
+  int switch_index;
+
+  if (track[switch_node_num].num < 153) {
+    switch_index = track[switch_node_num].num - 1;
+  } else {
+    switch_index = track[switch_node_num].num - 153 + 18;
+  }
+
   int num_buffer_nodes = buffer_nodes[switch_index][0];
 
   if (forward) {
@@ -248,14 +262,14 @@ void reserve_node(int node_num, v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
   sprintf(debug_buffer, "Reserved [%s] for train %d", track[node_num].name,
           v_p_train_num(train_num));
-  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+  debugprint(debug_buffer, RESERVATION_DEBUG);
   reserved_nodes[node_num] = train_num;
 
   int reverse_node_num = track[node_num].reverse - track;
 
   sprintf(debug_buffer, "Reserved [%s] for train %d",
           track[reverse_node_num].name, v_p_train_num(train_num));
-  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+  debugprint(debug_buffer, RESERVATION_DEBUG);
 
   reserved_nodes[reverse_node_num] = train_num;
   reservation_dirty = true;
@@ -266,7 +280,7 @@ void reserve_path(int *path, int path_len, v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
   sprintf(debug_buffer, "Reserving track for train %d",
           v_p_train_num(train_num));
-  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+  debugprint(debug_buffer, RESERVATION_DEBUG);
 
   for (int i = 0; i < path_len; i++) {
     reserve_node(path[i], train_num);
@@ -286,12 +300,12 @@ void unreserve_node(int node_num, v_train_num train_num) {
     reserved_nodes[node_num] = -1;
     sprintf(debug_buffer, "Freed [%s] from train %d", track[node_num].name,
             v_p_train_num(train_num));
-    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+    debugprint(debug_buffer, RESERVATION_DEBUG);
     reserved_nodes[reverse_node_num] = -1;
     sprintf(debug_buffer, "Freed [%s] from train %d",
             track[reverse_node_num].name, v_p_train_num(train_num));
 
-    debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+    debugprint(debug_buffer, RESERVATION_DEBUG);
   }
 }
 
@@ -313,7 +327,7 @@ void clear_reserved_by_train(v_train_num train_num) {
   char debug_buffer[MAX_DEBUG_STRING_LEN];
   sprintf(debug_buffer, "Freeing reservations for train %d",
           v_p_train_num(train_num));
-  debugprint(debug_buffer, NAVIGATION_SERVER_DEBUG);
+  debugprint(debug_buffer, RESERVATION_DEBUG);
 
   for (int i = 0; i < TRACK_MAX; i++) {
     unreserve_node(i, train_num);
@@ -373,7 +387,8 @@ bool process_next_task(circular_buffer *navigation_tasks,
 
     train_states[train_num].reged_at_num =
         track[train_states->reged_at_num].reverse - track;
-    train_states[train_num].reged_at_offset = TRAIN_LEN;
+    // train_states[train_num].reged_at_offset = TRAIN_LEN;
+    train_states[train_num].reged_at_offset = 0; // TODO: Should be TRAIN_LEN
     train_states_dirty = true;
 
     if (!cb_is_empty(navigation_tasks)) {

@@ -1,10 +1,8 @@
 #include "algorithms.h"
-#include "stdio.h"
 
 int get_path_dist(track_node *track, int *path, int path_len) {
   int dist = 0;
   for (int i = 0; i < path_len - 1; i++) {
-
     if (track[path[i]].type == NODE_BRANCH) {
       if (track[path[i]].edge[DIR_CURVED].dest == &(track[path[i + 1]])) {
         dist += track[path[i]].edge[DIR_CURVED].dist;
@@ -116,7 +114,7 @@ int dijkstra(track_node *track, track_node *src, track_node *dest,
 
     track_edge mock_reverse_edge;
     mock_reverse_edge.dest = u->reverse;
-    mock_reverse_edge.dist = 900;
+    mock_reverse_edge.dist = 300;
     mock_reverse_edge.reverse = NULL;
     mock_reverse_edge.src = u;
     v = mock_reverse_edge.dest;
