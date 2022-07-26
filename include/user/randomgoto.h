@@ -6,3 +6,4 @@
 
 void random_goto1();
 void random_goto2();
+void random_goto3();

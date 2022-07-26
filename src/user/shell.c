@@ -191,6 +191,11 @@ typedef struct command_t {
     struct {
       int sensor_num;
     } mock;
+
+    struct {
+      v_train_num train_num;
+      int type;
+    } random;
   } data;
 } command_t;
 
@@ -408,9 +413,26 @@ void shell() {
         cb_push_back(&command_cb, (void *)&command, false);
 
       } else if (strncmp(command_tokens[0], "random", strlen("random")) == 0) {
+        int rand_type = atoi(command_tokens[1]);
+        v_train_num train_num = p_v_train_num(atoi(command_tokens[2]));
 
-        print_debug("Starting random pathfinding, fingers crossed! \r\n");
+        if ((rand_type < 1) || (rand_type > 3)) {
+          print_debug("Please enter a valid random");
+          continue;
+        }
+
+        if (train_num < 0) {
+          print_debug("Please enter a valid train num");
+          continue;
+        }
+
+        sprintf(debug_buffer, "Starting random pathfinding %d with %d, fingers crossed\r\n",
+                rand_type, train_num);
+        print_debug(debug_buffer);
         command.type = COMMAND_RANDOM;
+        command.data.random.type = rand_type;
+        command.data.random.train_num = train_num;
+
         cb_push_back(&command_cb, (void *)&command, false);
 
       } else {
@@ -513,8 +535,18 @@ void shell() {
             Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
                  (char *)&res, sizeof(dispatchserver_response));
           } else if (command.type == COMMAND_RANDOM) {
-            Create(5, "random", random_goto1);
-            Create(5, "random", random_goto2);
+            task_tid rand_worker;
+            if (command.data.random.type == 1) {
+              rand_worker = Create(5, "random", random_goto1);
+            } else if (command.data.random.type == 2) {
+              rand_worker = Create(5, "random", random_goto2);
+            } else {
+              rand_worker = Create(5, "random", random_goto3);;
+            }
+
+            int junk;
+            Send(rand_worker, (char *)&command.data.random.train_num, sizeof(v_train_num), (char*)&junk, 0);
+
           }
         }
       }
