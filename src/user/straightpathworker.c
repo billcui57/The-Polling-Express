@@ -131,7 +131,7 @@ void task_straightpathworker() {
     process_path(&train, path, path_len, trainctl, 0);
     train.j = -1;
     train.dist = path_dist * 1000;
-    create_neutron(&train.n, train.train, train.dist);
+    create_neutron(&train.n, train.train, train.dist, false);
     train.speed = train.n.speed;
     int dist = 0;
     train.stop_marker = -1;
@@ -159,7 +159,22 @@ void task_straightpathworker() {
     int start_time = Time(clock);
     TrainCommand(trainctl, start_time, SPEED, train.train, train.speed);
     int marker_time = start_time;
-    if (train.stop_marker != -1) {
+    if (!train.n.dist_b && train.len) {
+      // short stop with atleast one sensor
+      dis_req.type = DISPATCHSERVER_SUBSCRIBE_SENSOR_LIST;
+      dis_req.data.subscribe_sensor_list.subscribed_sensors[0] = train.next[0];
+      dis_req.data.subscribe_sensor_list.len = 1;
+      dis_req.data.subscribe_sensor_list.train_num = train.train;
+      Send(dispatchserver, (char *)&dis_req, sizeof(dis_req),
+               (char *)&dis_res, sizeof(dis_res));
+      int lag = dis_res.data.subscribe_sensor_list.time - 100 - start_time;
+      adjust_offset(&train.n, train.train, lag);
+      marker_time = start_time;
+      train.stop_offset = train.n.time_a + train.n.time_b;
+      sprintf(debug_buffer, "Neutron Rebuild: %d(%d) %d(%d) %d", train.n.time_a,
+            train.n.dist_a, train.n.time_b, train.n.dist_b, train.n.time_c);
+      debugprint(debug_buffer, STRAIGHT_PATH_WORKER_DEBUG);
+    } else if (train.stop_marker != -1) {
       bool skip = false;
       for (int i = 0; i <= train.stop_marker; i++) {
         if (!skip) {
@@ -179,6 +194,7 @@ void task_straightpathworker() {
           skip = false;
         }
         train.time[i] = dis_res.data.subscribe_sensor_list.time;
+        if (i == 0) train.time[i]-= 100;
         if (i + 1 < train.len &&
             dis_res.data.subscribe_sensor_list.triggered_sensors[0] ==
                 train.next[i + 1]) {

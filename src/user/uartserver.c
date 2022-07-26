@@ -131,38 +131,9 @@ void uart_com1_tx_notifier() {
   memset(&req, 0, sizeof(req));
   req.type = NOTIFIER_TX_GOOD;
   req.data = 0;
-  volatile int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
-  volatile int *uart1_intr = (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
-  volatile int *uart1_mdmsts =
-      (int *)(get_base_addr(COM1) + UART_MDMSTS_OFFSET);
   while (true) {
     Send(parent, (char *)&req, sizeof(uartserver_request), (char *)&junk, 0);
-    *uart1_mdmsts;
-    *uart1_ctrl = *uart1_ctrl | TIEN_MASK | MSIEN_MASK;
-    int tx_ready = 0;
-    int cts_ready = 0;
-
-    while (true) {
-      AwaitEvent(UART1_INTR);
-      int status = *uart1_intr;
-      if (status & TIS_MASK) {
-        tx_ready = 1;
-        *uart1_ctrl = *uart1_ctrl & ~TIEN_MASK;
-      }
-      if ((status & MIS_MASK) && (*uart1_mdmsts & MSR_DCTS)) {
-        *uart1_intr = 0;
-        cts_ready++;
-        if (*uart1_mdmsts & MSR_CTS) {
-          cts_ready = 2;
-        }
-        if (cts_ready == 2) {
-          *uart1_ctrl = *uart1_ctrl & ~MSIEN_MASK;
-        }
-      }
-      if (tx_ready == 1 && cts_ready == 2) {
-        break;
-      }
-    }
+    AwaitEvent(UART1_TX_INTR);
   }
 }
 
@@ -173,11 +144,9 @@ void uart_com1_rx_notifier() {
   memset(&req, 0, sizeof(req));
   req.type = NOTIFIER_RX_GOOD;
   req.data = 0;
-  volatile int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
 
   while (true) {
     Send(parent, (char *)&req, sizeof(uartserver_request), (char *)&junk, 0);
-    *uart1_ctrl = *uart1_ctrl | RIEN_MASK;
     AwaitEvent(UART1_RX_INTR);
     req.data = uart_get_char(COM1);
   }

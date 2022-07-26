@@ -15,5 +15,6 @@ typedef struct {
   uint32_t steady;
 } neutron;
 
-void create_neutron(neutron *n, int train, uint32_t distance);
+void create_neutron(neutron *n, int train, uint32_t distance, bool force_slow);
 uint32_t find_time(const neutron *n, uint32_t distance);
+void adjust_offset(neutron *n, int train, int32_t offset);

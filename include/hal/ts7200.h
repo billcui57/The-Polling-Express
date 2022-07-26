@@ -108,6 +108,7 @@
 
 enum InterruptType {
   TC1,
+  UART1CTSINTR,
   UART1TXINTR,
   UART1RXINTR,
   UART1INTR,

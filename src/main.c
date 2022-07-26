@@ -81,6 +81,7 @@ void kmain() {
     event_mapping[i] = NULL;
   }
 
+  int uart1_tx_flag = 0;
   enable_irq();
 
   timer_init(TIMER1); // for ticks, interrupt enabled
@@ -224,12 +225,16 @@ void kmain() {
         read_timer(TIMER3, &end_time);
         set_return(&cur->context, start_time - end_time);
         add_to_ready_queue(cur);
-      } else if (event == UART1_INTR) {
-        enable_vic_interrupt(UART1INTR);
+      } else if (event == UART1_TX_INTR) {
+        volatile int *uart1_mdmsts = (int *)(get_base_addr(COM1) + UART_MDMSTS_OFFSET);
+        *uart1_mdmsts;
+        enable_interrupt(UART1TXINTR);
+        enable_interrupt(UART1CTSINTR);
         event_mapping[event] = cur;
+        uart1_tx_flag = 0;
         interrupt_tasks++;
       } else if (event == UART1_RX_INTR) {
-        enable_vic_interrupt(UART1RXINTR);
+        enable_interrupt(UART1RXINTR);
         event_mapping[event] = cur;
         interrupt_tasks++;
       } else if (event == UART2_TX_HALF_EMPTY) {
@@ -283,20 +288,34 @@ void kmain() {
         }
       }
 
-      int *uart1_ctrl = (int *)(get_base_addr(COM1) + UART_CTLR_OFFSET);
-      volatile int *uart1_intr =
-          (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
-
-      if (vic1_irq_status & VIC_UART1RXINTR_MASK) {
-        if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
-          disable_vic_interrupt(UART1RXINTR);
-          *uart1_ctrl = *uart1_ctrl & ~RIEN_MASK;
+      if (vic2_irq_status & VIC_INT_UART1_MASK) {
+        volatile int *uart1_intr = (int *)(get_base_addr(COM1) + UART_INTR_OFFSET);
+        volatile int *uart1_mdmsts = (int *)(get_base_addr(COM1) + UART_MDMSTS_OFFSET);
+        if (*uart1_intr & RIS_MASK) {
+          if (wake_up(UART1_RX_INTR, event_mapping, &interrupt_tasks)) {
+            disable_interrupt(UART1RXINTR);
+          } else {
+            KASSERT(0, "Nobody home");
+          }
         }
-      }
+        if (*uart1_intr & TIS_MASK) {
+          uart1_tx_flag |= 1;
+          disable_interrupt(UART1TXINTR);
+        }
+        if (*uart1_intr & MIS_MASK) {
+          *uart1_intr = 0;
+          if ((*uart1_mdmsts & MSR_DCTS) && (*uart1_mdmsts & MSR_CTS)){
+            uart1_tx_flag |= 2;
+            disable_interrupt(UART1CTSINTR);
+          }
+        }
 
-      if ((vic2_irq_status & VIC_INT_UART1_MASK) && (*uart1_intr & ~RIS_MASK)) {
-        if (wake_up(UART1_INTR, event_mapping, &interrupt_tasks)) {
-          disable_vic_interrupt(UART1INTR);
+        if (uart1_tx_flag == 3){
+           if (wake_up(UART1_TX_INTR, event_mapping, &interrupt_tasks)) {
+            uart1_tx_flag = 0;
+          } else {
+            KASSERT(0, "Nobody home");
+          }
         }
       }
 

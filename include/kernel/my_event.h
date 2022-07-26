@@ -7,7 +7,7 @@ enum Event {
   BREAK_IDLE,
   TIMER_TICK,
   UART1_RX_INTR,
-  UART1_INTR,
+  UART1_TX_INTR,
   UART2_TX_HALF_EMPTY,
   UART2_RX_INCOMING,
   NUMBER_OF_EVENTS // must always be last. First element
