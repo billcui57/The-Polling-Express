@@ -34,7 +34,7 @@ const uint32_t constants[][8] = {
 // speed 7 accel
 
 // 0-[a]->steady-[b]->deaccel-[c]->stop
-void create_neutron(neutron *n, int train, uint32_t distance) {
+void create_neutron(neutron *n, int train, uint32_t distance, bool force_slow) {
   const uint32_t *vals;
   int offset = 0;
   n->distance = distance;
@@ -88,6 +88,13 @@ uint32_t find_time(const neutron *n, uint32_t distance) {
            SquareRoot(n->time_c * n->time_c - 2 * distance * 1000 / n->deaccel);
   }
   KASSERT(0, "Impossible Distance");
+}
+
+void adjust_offset(neutron *n, int train, int32_t offset) {
+  if (offset < 0) return;
+  int len = n->accel * offset * offset / 2000;
+  create_neutron(n, train, n->distance + len, true);
+
 }
 
 // https://stackoverflow.com/questions/1100090/looking-for-an-efficient-integer-square-root-algorithm-for-arm-thumb2
