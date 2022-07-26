@@ -19,9 +19,8 @@ void pathfind_worker() {
 
   v_train_num train = res.data.whoami.train;
   char debug_buffer[MAX_DEBUG_STRING_LEN];
-  sprintf(debug_buffer, "[Pathworker] Got whoami as train %d",
-          v_p_train_num(train));
-  debugprint(debug_buffer, 5);
+  sprintf(debug_buffer, "Got whoami as train %d", v_p_train_num(train));
+  debugprint(debug_buffer, PATH_WORKER_DEBUG);
 
   while (true) {
     memset(&req, 0, sizeof(navigationserver_request));
@@ -31,9 +30,8 @@ void pathfind_worker() {
          sizeof(res));
 
     if (res.type == PATHFIND_WORKER_HERES_WORK) {
-      sprintf(debug_buffer, "[Pathworker] Got work for train %d",
-              v_p_train_num(train));
-      debugprint(debug_buffer, 5);
+      sprintf(debug_buffer, "Got work for train %d", v_p_train_num(train));
+      debugprint(debug_buffer, PATH_WORKER_DEBUG);
 
       // printf(BW_COM2, "got here\r\n");
 

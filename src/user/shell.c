@@ -110,12 +110,18 @@ bool handle_new_char(char c, char *input, int *input_length,
 }
 
 void shell_init() {
-  Create(5, "DebugPrinter", debugprinter);
+  clear_screen(COM2);
+  printf(COM2, "\033[%d;%dr", DEBUG_TABLE_ROW_BEGIN + 1,
+         DEBUG_TABLE_ROW_BEGIN + DEBUG_TABLE_HEIGHT); // for scrolling debug
+  cursor_to_pos(DEBUG_TABLE_ROW_BEGIN, DEBUG_TABLE_COL, DEBUG_TABLE_WIDTH);
+  printf(COM2, "[ Debug Prints ]\r\n");
+  done_print();
+
 #ifndef DEBUG_MODE
   Create(5, "TimerPrinter", timer_printer);
   Create(5, "SensorPrinter", sensor_printer);
 #endif
-  Create(5, "PathPrinter", path_printer);
+  Create(5, "TrainstatePrinter", trainstate_printer);
   Create(5, "ReservationPrinter", reservation_printer);
   Create(5, "SwitchPrinter", switch_printer);
   Create(5, "SubscribePrinter", subscribe_printer);
@@ -134,6 +140,7 @@ void print_art() {
   printf(COM2, "\r\n");
 
   printf(COM2, "|  The Polling Express (Track %c)  |\r\n", which_track);
+  printf(COM2, "|       By Edwin Z, Bill C        |\r\n");
 
   for (unsigned int i = 0; i < 35; i++) {
     printf(COM2, "\033[%dm=\033[0m", christmas_colours[i % 3]);
@@ -149,7 +156,8 @@ typedef enum {
   COMMAND_GT,
   COMMAND_DIE,
   COMMAND_REG,
-  COMMAND_MOCK
+  COMMAND_MOCK,
+  COMMAND_RANDOM
 } command_type_t;
 
 typedef struct command_t {
@@ -187,7 +195,6 @@ typedef struct command_t {
 } command_t;
 
 void shell() {
-  clear_screen(COM2);
 
   hide_cursor();
 
@@ -229,7 +236,8 @@ void shell() {
   for (;;) {
     char c = Getc(uart2_rx_tid, IGNORE);
     print_debug("");
-    for(int i=0;i<MAX_COMMAND_TOKENS;i++)command_tokens[i]=&empty;
+    for (int i = 0; i < MAX_COMMAND_TOKENS; i++)
+      command_tokens[i] = &empty;
     bool entered = handle_new_char(c, input, &input_length, command_tokens);
 
     if (entered == true) {
@@ -399,6 +407,12 @@ void shell() {
         command.data.mock.sensor_num = sensor_num;
         cb_push_back(&command_cb, (void *)&command, false);
 
+      } else if (strncmp(command_tokens[0], "random", strlen("random")) == 0) {
+
+        print_debug("Starting random pathfinding, fingers crossed! \r\n");
+        command.type = COMMAND_RANDOM;
+        cb_push_back(&command_cb, (void *)&command, false);
+
       } else {
         print_debug("Invalid Command Type");
       }
@@ -450,6 +464,7 @@ void shell() {
             req.data.navigation_request.train = command_train_num;
             req.data.navigation_request.destination_num = command_dest_num;
             req.data.navigation_request.offset = command_offset;
+            req.data.navigation_request.should_hang = false;
 
             Send(navigation_server, (char *)&req, sizeof(req), (char *)&res,
                  sizeof(res));
@@ -497,6 +512,9 @@ void shell() {
 
             Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
                  (char *)&res, sizeof(dispatchserver_response));
+          } else if (command.type == COMMAND_RANDOM) {
+            Create(5, "random", random_goto1);
+            Create(5, "random", random_goto2);
           }
         }
       }

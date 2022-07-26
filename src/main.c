@@ -41,10 +41,6 @@ bool wake_up(int event_id, TCB **event_mapping, int *interrupt_tasks) {
   return false;
 }
 
-circular_buffer *debug_cb;
-bool debug_changed;
-int debug_index;
-
 void kmain() {
   memset(&__bss_start, 0, &__bss_end - &__bss_start);
   while (uart_can_read(COM1))
@@ -53,16 +49,16 @@ void kmain() {
 
   int org_exc_stack, org_swi_vec, org_irq_vec;
   __asm__ volatile("MRS R0, CPSR\n\t"
-                  "BIC R0, R0, #0x1F\n\t"
-                  "ORR R0, R0, #0x12\n\r"
-                  "MSR CPSR_c, R0\n\r"
-                  "MOV %[org_exc_stack], SP\n\r"
-                  "MOV SP, %[irq_stack]\n\r"
-                  "ORR R0, R0, #1\n\r"
-                  "MSR CPSR_c, R0\n\r"
-                  :[org_exc_stack] "=&r" (org_exc_stack)
-                  :[irq_stack] "r"(&irq_stack[15])
-                  : "r0");
+                   "BIC R0, R0, #0x1F\n\t"
+                   "ORR R0, R0, #0x12\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   "MOV %[org_exc_stack], SP\n\r"
+                   "MOV SP, %[irq_stack]\n\r"
+                   "ORR R0, R0, #1\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   : [org_exc_stack] "=&r"(org_exc_stack)
+                   : [irq_stack] "r"(&irq_stack[15])
+                   : "r0");
 
   org_swi_vec = *(volatile int *)0x28;
   org_irq_vec = *(volatile int *)0x38;
@@ -73,19 +69,8 @@ void kmain() {
   if (org_exc_stack) { // not emulator
     unsigned int mac = *(unsigned int *)0x80010054;
     char c = ((mac == 0x0e6d) ? 'a' : ((mac == 0xc5da) ? 'b' : '?'));
-      which_track = c;
+    which_track = c;
   }
-
-  debug_changed = false;
-  debug_index = 0;
-  debug_cb = NULL;
-  circular_buffer cb;
-
-  char debug_backing[MAX_DEBUG_LINES * MAX_DEBUG_STRING_LEN];
-  cb_init(&cb, debug_backing, MAX_DEBUG_LINES,
-          sizeof(char) * MAX_DEBUG_STRING_LEN);
-
-  debug_cb = &cb;
 
   uart_init(COM2);
 
@@ -206,14 +191,14 @@ void kmain() {
         char debug_buffer[MAX_DEBUG_STRING_LEN];
         sprintf(debug_buffer, "[%s] Reply to [%s] EINVALIDTID", cur->task_name,
                 target->task_name);
-        debugprint(debug_buffer, CRITICAL);
+        debugprint(debug_buffer, CRITICAL_DEBUG);
       } else if (target->state != REPLY) {
         set_return(&cur->context, ENOTREPLYWAIT);
         add_to_ready_queue(cur);
         char debug_buffer[MAX_DEBUG_STRING_LEN];
         sprintf(debug_buffer, "[%s] Reply to [%s] ENOTREPLYWAIT",
                 cur->task_name, target->task_name);
-        debugprint(debug_buffer, CRITICAL);
+        debugprint(debug_buffer, CRITICAL_DEBUG);
       } else {
         send_args *s_args = (send_args *)get_data(&target->context);
         target->state = READY;
@@ -324,16 +309,14 @@ void kmain() {
   disable_cache();
 
   __asm__ volatile("MRS R0, CPSR\n\t"
-                  "BIC R0, R0, #0x1F\n\t"
-                  "ORR R0, R0, #0x12\n\r"
-                  "MSR CPSR_c, R0\n\r"
-                  "MOV SP, %[org_exc_stack]\n\r"
-                  "ORR R0, R0, #1\n\r"
-                  "MSR CPSR_c, R0\n\r"
-                  ::[org_exc_stack] "r"(org_exc_stack)
-                  : "r0");
+                   "BIC R0, R0, #0x1F\n\t"
+                   "ORR R0, R0, #0x12\n\r"
+                   "MSR CPSR_c, R0\n\r"
+                   "MOV SP, %[org_exc_stack]\n\r"
+                   "ORR R0, R0, #1\n\r"
+                   "MSR CPSR_c, R0\n\r" ::[org_exc_stack] "r"(org_exc_stack)
+                   : "r0");
 
   *(volatile int *)0x28 = org_swi_vec;
   *(volatile int *)0x38 = org_irq_vec;
-
 }

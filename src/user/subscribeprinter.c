@@ -22,12 +22,7 @@ void subscribe_printer() {
     cb_init(&(subscriptions[train_num]),
             (void *)subscriptions_backing[train_num], MAX_SUBSCRIBED_SENSORS,
             sizeof(int));
-    cursor_to_pos(SUBSCRIBE_TABLE_ROW_BEGIN + train_num + 1,
-                  SUBSCRIBE_TABLE_COL, SUBSCRIBE_TABLE_WIDTH);
-    printf(COM2, "Train %d: ", v_p_train_num(train_num));
   }
-
-  done_print();
 
   for (;;) {
 
@@ -38,8 +33,6 @@ void subscribe_printer() {
     Send(dispatchserver, (char *)&req, sizeof(dispatchserver_request),
          (char *)&res, sizeof(dispatchserver_response));
 
-    //debugprint("[Subscribe Printer] Got updates from dispatch server", 10);
-
     v_train_num *subscription_result =
         res.data.subscription_print.subscriptions;
 
@@ -47,11 +40,6 @@ void subscribe_printer() {
       if (subscription_result[i] >= 0) {
         cb_push_back(&(subscriptions[subscription_result[i]]), (void *)&i,
                      true);
-        char debug_buffer[MAX_DEBUG_STRING_LEN];
-        sprintf(debug_buffer,
-                "[Subscribe Printer] Got train %d subscription to [%s]",
-                v_p_train_num(subscription_result[i]), track[i].name);
-        //debugprint(debug_buffer, 10);
       }
     }
 
@@ -62,7 +50,7 @@ void subscribe_printer() {
       cb_to_array(&(subscriptions[train_num]), subscription_void);
 
       cursor_to_pos(SUBSCRIBE_TABLE_ROW_BEGIN + train_num + 1,
-                    SUBSCRIBE_TABLE_COL + 10, SUBSCRIBE_TABLE_WIDTH);
+                    SUBSCRIBE_TABLE_COL, SUBSCRIBE_TABLE_WIDTH);
 
       for (int i = 0; i < subscriptions[train_num].count; i++) {
         printf(COM2, "[%c%d]", (char)('A' + ((int)(subscription_void[i]) >> 4)),

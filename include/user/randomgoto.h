@@ -1,8 +1,8 @@
 #pragma once
 
 #include "debugprinter.h"
-#include "kprintf.h"
 #include "navigationserver.h"
-#include "syscall.h"
+#include "virtual.h"
 
-void path_printer();
+void random_goto1();
+void random_goto2();
