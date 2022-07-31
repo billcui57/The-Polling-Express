@@ -4,10 +4,7 @@
 
 ## Architecture
 
-<img width="687" alt="image" src="https://user-images.githubusercontent.com/30924631/182046396-063b771a-4797-4a59-af1f-7a1e5f085f90.png">
-
-
-
+<img width="708" alt="image" src="https://user-images.githubusercontent.com/30924631/182046411-c08b01ab-6441-4a12-a604-b8ad0447d39f.png">
 
 ## K1
 Documentation is located in `docs/` and the executable is at `build/kernel` once built.
