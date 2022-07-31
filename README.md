@@ -1,14 +1,15 @@
 # The Polling Express
 
+One part of the codebase is a small, real-time-capable operating system that runs on stand-alone computers and provides a low-level interface to control Märklin electric trains. The second part is concerned with building a control application for the trains. Built for the CS452 course
+
+The kernel and user programs are built for the TS-7200 single-board computer based on the EP9302 system-on-a-chip (SoC) that uses an ARM 920T processor. The processor implements ARM architecture version ARMv4T.
+
 <img width="1061" alt="image" src="https://user-images.githubusercontent.com/30924631/182046343-393f66cc-725e-450d-ad99-cfd1d8da68a3.png">
 
 ## Architecture
 
 <img width="708" alt="image" src="https://user-images.githubusercontent.com/30924631/182046411-c08b01ab-6441-4a12-a604-b8ad0447d39f.png">
 
-One part of the codebase is a small, real-time-capable operating system that runs on stand-alone computers and provides a low-level interface to control Märklin electric trains. The second part is concerned with building a control application for the trains.
-
-The kernel and user programs are built for the TS-7200 single-board computer based on the EP9302 system-on-a-chip (SoC) that uses an ARM 920T processor. The processor implements ARM architecture version ARMv4T.
 
 ## CS 452/652 Spring 2022 - Kernel Description
 
